@@ -122,7 +122,8 @@ describe("isIncomeActiveInMonth", () => {
 
 describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
   it("counts both a recurring item and its name-based override", () => {
-    // LEGACY: monthly totals do not resolve overrides (only the forecast does) – changed by #5.
+    // LEGACY: monthly totals do not resolve overrides (only the forecast does) – fixed in #5: resolveOccurrences
+    // applies overrides wherever occurrences are listed (test/occurrence-overrides.characterization.test.ts).
     // Arrange: November 2026 has "Rent (nadpisanie)", January 2027 has "Salary (nadpisanie)".
     const november = { month: 10, year: 2026 };
     const january = { month: 0, year: 2027 };

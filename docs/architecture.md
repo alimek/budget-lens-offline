@@ -9,6 +9,7 @@ What exists today in `packages/core`:
   and `en` without `Intl` (#2, see [domain/money.md](domain/money.md) and
   [ADR 0011](decisions/0011-money-formatting-without-intl.md));
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
+- occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
 - the `Settings` model (#76);
 - characterization tests of the legacy implementation (#3).
 
@@ -52,8 +53,8 @@ nothing app- or platform-specific.
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
-Planned content, one issue each: occurrence overrides (#5),
-forecast (#6), month closing (#84), NBP exchange-rate client with an injected offline cache (#8).
+Planned content, one issue each: forecast (#6), month closing (#84), NBP exchange-rate client with an injected
+offline cache (#8).
 Legacy behaviour is pinned by characterization tests first (#3).
 
 ## Planned app stack (Stage 1)

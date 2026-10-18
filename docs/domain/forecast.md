@@ -22,4 +22,5 @@ Status: **not implemented yet** in `packages/core` – tracked in #6.
 - Warnings are data (code + parameters), translated in the UI; thresholds come only from `Settings`
   (`lowBalanceThreshold`, `largeExpenseThreshold`) and the default horizon from `Settings.forecastHorizonMonths`
   (see [settings.md](settings.md)).
-- All amounts in `MinorUnits`, occurrences from `occurrencesInRange` ([recurrence.md](recurrence.md)), overrides from #5.
+- All amounts in `MinorUnits`, occurrences from `occurrencesInRange` ([recurrence.md](recurrence.md)), overrides
+  applied with `resolveOccurrences` ([occurrence-overrides.md](occurrence-overrides.md)).

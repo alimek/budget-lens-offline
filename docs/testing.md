@@ -122,11 +122,14 @@ line):
 - `src/money.property.test.ts`: property-based money arithmetic (see above).
 - `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
   validation (`it.each` tables).
+- `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
+  stored data) and orphaned overrides.
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
   AAA sections.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
-  schedules with legacy, #4), exchange rates, month closing and formatting (including the check that `formatMoney`
-  matches the legacy `formatCurrency`). They use explicit AAA sections and the frozen-clock exception from rule 5.
+  schedules with legacy, #4), occurrence overrides (legacy monthly totals compared with id-based overrides, #5),
+  exchange rates, month closing and formatting (including the check that `formatMoney` matches the legacy
+  `formatCurrency`). They use explicit AAA sections and the frozen-clock exception from rule 5.
 
 Follow-ups:
 - Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,
