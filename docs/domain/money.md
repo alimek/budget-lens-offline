@@ -27,6 +27,12 @@ codes with `unsupported-currency` ([settings.md](settings.md)). There are no flo
   as (`String(rate)`) and the product is computed with `bigint`, so `100 × 0.285` is exactly 28.5 → 29 (a float
   product gives 28.499999999999996). A negative or non-finite rate, or a result outside the safe range, throws
   `RangeError`.
+  - **The result keeps the scale of `amount`.** It is a correct conversion only when the source and target
+    currencies have the same exponent (e.g. EUR → PLN, both 2). When the exponents differ, the result must also be
+    scaled by `10^(targetExponent − sourceExponent)`: `multiplyByRate(10000 /* ¥10 000 */, 0.024574)` gives `246`,
+    i.e. 2,46 zł, while the correct value is 24 574 groszy = 245,74 zł (100× more). This scaling is not done by
+    `multiplyByRate`; it is handled by `convertMinor` (#39), planned with #8/#92. Until then, do not use
+    `multiplyByRate` alone to convert between currencies with different exponents (JPY, ISK, KRW, CLP).
 
 ### Parsing (`packages/core/src/money-parse.ts`)
 
