@@ -46,6 +46,21 @@ upgrade; the upgrade PR updates the config). `useLiteralKeys` is off because it 
 `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noPropertyAccessFromIndexSignature` and `verbatimModuleSyntax`.
 Index signatures (for example `process.env`) are read with brackets: `process.env["TZ"]`.
 
+Exception: in app code, read `EXPO_PUBLIC_*` variables with dot access (`process.env.EXPO_PUBLIC_API_URL`). Expo
+inlines their values at build time only for dot access; `process.env["EXPO_PUBLIC_API_URL"]` is silently left
+un-inlined and is `undefined` in the app (`useLiteralKeys` is off, so Biome does not catch it). Declare each variable
+in a typed `ProcessEnv` augmentation so that `noPropertyAccessFromIndexSignature` accepts the dot access:
+
+```ts
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      readonly EXPO_PUBLIC_API_URL?: string;
+    }
+  }
+}
+```
+
 ### Fallow
 
 `.fallowrc.json` sets every dead-code and dependency rule to `error`, without an allow-list. Entry points are
