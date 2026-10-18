@@ -81,6 +81,9 @@ function recurringErrors(schedule: UntrustedSchedule): ScheduleErrorCode[] {
  * UI to translate (empty when the schedule is valid).
  */
 export function validateSchedule(schedule: Schedule): ScheduleErrorCode[] {
+  if (typeof schedule !== "object" || schedule === null) {
+    return ["invalid-kind"];
+  }
   const untrusted: UntrustedSchedule = schedule;
   if (untrusted.kind !== "recurring" && untrusted.kind !== "one-time") {
     return ["invalid-kind"];

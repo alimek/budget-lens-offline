@@ -99,7 +99,7 @@ arithmetic properties exist today (`src/money.property.test.ts`). Still to add:
 - money parse/format round-trip (`parseMoney(formatMoney(x))`) and `multiplyByRate` rounding (half away from zero),
   once the parsing and formatting code from #2 (PR #117) is on `main`;
 - recurrence properties (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping),
-  together with #4.
+  tracked in [#122](https://github.com/alimek/budget-lens-offline/issues/122) (#4 lands without them).
 
 ## Characterization tests
 
