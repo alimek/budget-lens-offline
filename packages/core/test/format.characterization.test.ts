@@ -15,7 +15,7 @@ const NBSP = "\u00a0";
 
 describe("formatCurrency", () => {
   it("hides grosze by rounding to whole złoty", () => {
-    // LEGACY: 0 fraction digits – changed by #2 (2 fraction digits supported).
+    // LEGACY: 0 fraction digits – fixed in #2: formatMoney shows 2 by default (src/money-format.test.ts).
     // Arrange
     const amounts = [1234.49, 1234.5, -1234.5];
 
@@ -49,7 +49,7 @@ describe("formatMoney with the legacy options", () => {
 
 describe("formatCurrencyCompact", () => {
   it("compacts positive amounts but not negative ones", () => {
-    // LEGACY: -5000 → "-5000" instead of "-5k" – changed by #2.
+    // LEGACY: -5000 → "-5000" – fixed in #2: formatMoneyCompact compacts negatives (src/money-format.test.ts).
     // Arrange
     const amounts = [5000, -5000];
 
@@ -63,7 +63,7 @@ describe("formatCurrencyCompact", () => {
 
 describe("parseBalanceInput", () => {
   it("parses a dot decimal but turns a Polish decimal comma into a 100x larger amount", () => {
-    // LEGACY: "1234,56" → 123456 – changed by #2.
+    // LEGACY: "1234,56" → 123456 – fixed in #2: parseMoney takes a decimal comma (src/money-parse.test.ts).
     // Arrange
     const dotInput = "1234.56";
     const commaInput = "1 234,56 zł";
@@ -80,7 +80,7 @@ describe("parseBalanceInput", () => {
 
 describe("valueInPlnFromCurrency", () => {
   it("truncates a comma-decimal amount at the comma", () => {
-    // LEGACY: parseFloat("1,5") === 1 – changed by #2 and #8.
+    // LEGACY: parseFloat("1,5") === 1 – #2 part done (parseMoney, multiplyByRate); savings conversion in #8.
     // Arrange
     const amountInCurrency = "1,5";
     const rate = 4;

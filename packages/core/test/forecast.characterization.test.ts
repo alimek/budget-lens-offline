@@ -150,7 +150,8 @@ describe("legacyForecast – warnings", () => {
 
     // Assert
     expect(firstWarnings.map((w) => w?.type)).toEqual([undefined, "caution", "caution", undefined]);
-    // LEGACY: Polish message with toLocaleString() without a locale – changed by #2 and #6.
+    // LEGACY: Polish message with toLocaleString() without a locale – #2 part done (formatMoney takes the locale);
+    // the warnings are ported in #6.
     expect(firstWarnings[2]?.message).toBe(
       `Za 1 mies. niskie saldo: ${(4999.99).toLocaleString()} PLN`,
     );
