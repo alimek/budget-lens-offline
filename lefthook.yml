@@ -1,5 +1,5 @@
-# Konfiguracja hooków Git: https://lefthook.dev/configuration/
-# Hooki instalowane są automatycznie przez skrypt `prepare` (pnpm install).
+# Git hooks configuration: https://lefthook.dev/configuration/
+# Hooks are installed automatically by the `prepare` script (pnpm install).
 pre-commit:
   parallel: true
   jobs:
@@ -10,5 +10,5 @@ pre-commit:
 
     - name: typecheck
       glob: "*.{ts,tsx,mts,cts,json}"
-      # Typecheck tylko dla pakietów zmienionych względem HEAD (oraz pakietów od nich zależnych).
+      # Typecheck only packages changed relative to HEAD (and the packages that depend on them).
       run: pnpm exec turbo run typecheck --filter="...[HEAD]" --output-logs=errors-only

@@ -60,7 +60,7 @@
                       "@supabase/**",
                       "supabase"
                     ],
-                    "message": "packages/core musi pozostać czystym TypeScriptem – bez zależności od React Native/Expo/Next/Supabase."
+                    "message": "packages/core must stay pure TypeScript – no dependencies on React Native/Expo/Next/Supabase."
                   }
                 ]
               }

@@ -1,23 +1,23 @@
 /**
- * Kwota pieniężna w groszach (1 PLN = 100 groszy).
- * Zawsze liczba całkowita – unikamy błędów zaokrągleń liczb zmiennoprzecinkowych.
+ * Monetary amount expressed in minor currency units (e.g. 1 PLN = 100 minor units).
+ * Always an integer, which avoids floating-point rounding errors.
  */
-export type Grosze = number;
+export type MinorUnits = number;
 
-export function isGrosze(value: number): value is Grosze {
+export function isMinorUnits(value: number): value is MinorUnits {
   return Number.isSafeInteger(value);
 }
 
-export function sumGrosze(amounts: readonly Grosze[]): Grosze {
+export function sumMinorUnits(amounts: readonly MinorUnits[]): MinorUnits {
   let total = 0;
   for (const amount of amounts) {
-    if (!isGrosze(amount)) {
-      throw new RangeError(`Kwota musi być całkowitą liczbą groszy, otrzymano: ${amount}`);
+    if (!isMinorUnits(amount)) {
+      throw new RangeError(`Amount must be an integer number of minor units, received: ${amount}`);
     }
     total += amount;
   }
-  if (!isGrosze(total)) {
-    throw new RangeError("Suma przekracza bezpieczny zakres liczb całkowitych");
+  if (!isMinorUnits(total)) {
+    throw new RangeError("Sum exceeds the safe integer range");
   }
   return total;
 }

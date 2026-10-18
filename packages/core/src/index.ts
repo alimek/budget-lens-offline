@@ -1,2 +1,2 @@
-export type { Grosze } from "./money";
-export { isGrosze, sumGrosze } from "./money";
+export type { MinorUnits } from "./money";
+export { isMinorUnits, sumMinorUnits } from "./money";

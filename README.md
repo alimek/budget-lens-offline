@@ -1,50 +1,50 @@
 # Budget Lens (offline)
 
-Monorepo aplikacji Budget Lens w wersji offline.
+Monorepo for the offline version of the Budget Lens app.
 
-## Struktura
+## Structure
 
 ```
-apps/            # aplikacje (przyszła aplikacja Expo – osobny krok)
-packages/core/   # czysta logika domenowa w TypeScript (bez RN/Expo/Next/Supabase)
+apps/            # applications (the Expo app will be added in a separate step)
+packages/core/   # pure TypeScript domain logic (no RN/Expo/Next/Supabase)
 ```
 
-Kwoty pieniężne w `packages/core` przechowujemy jako liczby całkowite w groszach (`Grosze`).
+Monetary amounts in `packages/core` are stored as integers in minor currency units (`MinorUnits`).
 
-## Wymagania
+## Requirements
 
-- Node.js ≥ 22 (zalecana wersja w `.nvmrc`)
-- pnpm (wersja przypięta w polu `packageManager` – najprościej przez `corepack enable`)
+- Node.js ≥ 22 (recommended version in `.nvmrc`)
+- pnpm (version pinned in the `packageManager` field – the easiest way is `corepack enable`)
 
-## Uruchomienie
+## Usage
 
 ```sh
-pnpm install      # instaluje zależności i hooki Git (Lefthook, skrypt `prepare`)
-pnpm test         # testy (Vitest) wszystkich pakietów przez Turborepo
-pnpm typecheck    # typecheck (tsgo, tryb strict) wszystkich pakietów przez Turborepo
-pnpm lint         # Biome: lint + format (sprawdzenie)
-pnpm format       # Biome: automatyczne poprawki
-pnpm fallow       # Fallow: martwy kod, nieużywane eksporty i zależności, duplikacja
-pnpm check        # wszystko powyższe po kolei
+pnpm install      # installs dependencies and Git hooks (Lefthook, `prepare` script)
+pnpm test         # tests (Vitest) for all packages via Turborepo
+pnpm typecheck    # typecheck (tsgo, strict mode) for all packages via Turborepo
+pnpm lint         # Biome: lint + format (check only)
+pnpm format       # Biome: apply automatic fixes
+pnpm fallow       # Fallow: dead code, unused exports and dependencies, duplication
+pnpm check        # all of the above in sequence
 ```
 
-Testy pojedynczego pakietu:
+Tests for a single package:
 
 ```sh
 pnpm --filter @budget-lens/core test
-pnpm --filter @budget-lens/core exec vitest   # tryb watch
+pnpm --filter @budget-lens/core exec vitest   # watch mode
 ```
 
-## Narzędzia
+## Tooling
 
-| Obszar | Narzędzie | Konfiguracja |
+| Area | Tool | Configuration |
 | --- | --- | --- |
 | Workspace | pnpm workspaces + Turborepo | `pnpm-workspace.yaml`, `turbo.json` |
 | TypeScript | tsgo (`@typescript/native-preview`), `strict` | `tsconfig.base.json`, `packages/*/tsconfig.json` |
-| Testy jednostkowe | Vitest | `packages/core/vitest.config.ts` |
+| Unit tests | Vitest | `packages/core/vitest.config.ts` |
 | Lint + format | Biome | `biome.json` |
-| Martwy kod | Fallow | `.fallowrc.json` |
-| Pre-commit | Lefthook (Biome + typecheck zmienionych pakietów) | `lefthook.yml` |
+| Dead code | Fallow | `.fallowrc.json` |
+| Pre-commit | Lefthook (Biome + typecheck of changed packages) | `lefthook.yml` |
 
-`biome.json` blokuje w `packages/core` importy z `react-native`, `expo*`, `next` i `@supabase/*`
-(reguła `noRestrictedImports`).
+`biome.json` forbids imports from `react-native`, `expo*`, `next` and `@supabase/*` in `packages/core`
+(`noRestrictedImports` rule).
