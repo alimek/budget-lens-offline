@@ -1,0 +1,48 @@
+[
+  { "id": "exp-rent", "name": "Rent", "amount": 3000, "type": "recurring", "frequency": "monthly" },
+  {
+    "id": "exp-internet",
+    "name": "Internet",
+    "amount": 79.99,
+    "type": "recurring",
+    "frequency": "monthly"
+  },
+  { "id": "exp-gym", "name": "Gym", "amount": 150, "type": "recurring" },
+  {
+    "id": "exp-software",
+    "name": "Software licence",
+    "amount": 300,
+    "type": "recurring",
+    "frequency": "quarterly"
+  },
+  {
+    "id": "exp-car-insurance",
+    "name": "Car insurance",
+    "amount": 1200,
+    "type": "recurring",
+    "frequency": "yearly",
+    "startMonth": 3
+  },
+  {
+    "id": "exp-domain",
+    "name": "Domain",
+    "amount": 60,
+    "type": "recurring",
+    "frequency": "yearly"
+  },
+  {
+    "id": "exp-vacation",
+    "name": "Vacation",
+    "amount": 8000,
+    "type": "one-time",
+    "targetMonth": "2027-07"
+  },
+  { "id": "exp-laptop", "name": "Laptop", "amount": 6000, "type": "one-time" },
+  {
+    "id": "exp-rent-override",
+    "name": "Rent (nadpisanie)",
+    "amount": 3200,
+    "type": "one-time",
+    "targetMonth": "2026-11"
+  }
+]
