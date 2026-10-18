@@ -75,7 +75,7 @@ describe("legacyForecast – balance", () => {
 
 describe("legacyForecast – name-based overrides", () => {
   it("replaces a recurring expense by its override in the override month only", () => {
-    // Ported by #5: occurrence overrides keyed by item id; import in occurrence-overrides.characterization.test.ts.
+    // Ported by #5: occurrence overrides keyed by item id (src/occurrence-overrides.ts); no legacy import.
     // Arrange: "Rent (nadpisanie)" 3200 replaces Rent 3000 in November 2026.
 
     // Act

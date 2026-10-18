@@ -1,11 +1,6 @@
-import { type MinorUnits, sumMinorUnits } from "./money";
-import {
-  isActiveInMonth,
-  occurrencesInRange,
-  type Schedule,
-  scheduleFromLegacy,
-} from "./recurrence";
-import { toYearMonth, type YearMonth } from "./year-month";
+import type { MinorUnits } from "./money";
+import { isActiveInMonth, occurrencesInRange, type Schedule } from "./recurrence";
+import type { YearMonth } from "./year-month";
 
 export type ItemType = "expense" | "income";
 
@@ -100,82 +95,4 @@ export function resolveOccurrences<T extends ScheduledItem>(
     }
   }
   return resolved;
-}
-
-/** A legacy expense or income (`alimek/budget-lens`) with its amount already converted to minor units. */
-export interface LegacyOverrideCandidate {
-  readonly id: string;
-  readonly name: string;
-  readonly amount: MinorUnits;
-  readonly type: "recurring" | "one-time";
-  readonly frequency?: "monthly" | "quarterly" | "yearly";
-  readonly startMonth?: number;
-  readonly targetMonth?: string;
-}
-
-export interface LegacyOverrideMigration<T extends LegacyOverrideCandidate> {
-  /** The items to import: everything except the legacy override items that became override records. */
-  readonly items: T[];
-  readonly overrides: OccurrenceOverride[];
-}
-
-/** Legacy marks an override with this suffix in the item name (Polish legacy data, matched only during import). */
-const LEGACY_OVERRIDE_SUFFIX = " (nadpisanie)";
-
-/**
- * Converts legacy name-based overrides – a one-time item `"<name> (nadpisanie)"` in `targetMonth` – into override
- * records, keeping the legacy month totals. For each override month, every recurring item named `<name>` that legacy
- * shows in that month is overridden: the first one (in input order) gets the sum of the override amounts, any other
- * same-name item is skipped (legacy hid them all). An override item that matches no recurring item stays a regular
- * one-time item, as legacy counts it. Only this import matches by name.
- */
-export function overridesFromLegacy<T extends LegacyOverrideCandidate>(
-  legacyItems: readonly T[],
-  itemType: ItemType,
-  createId: () => string,
-): LegacyOverrideMigration<T> {
-  const groups = new Map<string, { name: string; month: YearMonth; sources: T[] }>();
-  for (const item of legacyItems) {
-    if (
-      item.type !== "one-time" ||
-      item.targetMonth === undefined ||
-      !item.name.includes(LEGACY_OVERRIDE_SUFFIX)
-    ) {
-      continue;
-    }
-    const month = toYearMonth(item.targetMonth);
-    const name = item.name.replace(LEGACY_OVERRIDE_SUFFIX, "");
-    const key = JSON.stringify([name, month]);
-    const group = groups.get(key) ?? { name, month, sources: [] };
-    group.sources.push(item);
-    groups.set(key, group);
-  }
-
-  const consumed = new Set<T>();
-  const overrides: OccurrenceOverride[] = [];
-  for (const { name, month, sources } of groups.values()) {
-    // Passing the override month as the start keeps exactly the legacy calendar check for that month.
-    const targets = legacyItems.filter((item) => {
-      const schedule = item.type === "recurring" ? scheduleFromLegacy(item, month) : null;
-      return item.name === name && schedule !== null && isActiveInMonth(schedule, month);
-    });
-    if (targets.length === 0) {
-      continue;
-    }
-    const amount = sumMinorUnits(sources.map((source) => source.amount));
-    targets.forEach((target, index) => {
-      overrides.push({
-        id: createId(),
-        itemType,
-        itemId: target.id,
-        month,
-        ...(index === 0 ? { amount } : { skipped: true }),
-      });
-    });
-    for (const source of sources) {
-      consumed.add(source);
-    }
-  }
-
-  return { items: legacyItems.filter((item) => !consumed.has(item)), overrides };
 }
