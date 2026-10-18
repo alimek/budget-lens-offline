@@ -6,7 +6,10 @@ const MINOR_UNIT_DIGITS = 2;
 export interface FormatMoneyOptions {
   /** BCP 47 locale, e.g. `"pl-PL"` or `"en"`. */
   readonly locale: string;
-  /** ISO 4217 currency code, e.g. `"PLN"`. */
+  /**
+   * ISO 4217 currency code, e.g. `"PLN"`. Used for display only (symbol and its position): the amount is always
+   * treated as 1/100 of the unit, so `JPY` 1234 is shown as `¥12.34`. The currency model is researched in #39.
+   */
   readonly currency: string;
   /** Fraction digits to show: 2 (default) or 0 (legacy `formatCurrency` behaviour, rounded half away from zero). */
   readonly fractionDigits?: 0 | 2;
