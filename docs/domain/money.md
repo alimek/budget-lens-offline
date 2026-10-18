@@ -19,8 +19,8 @@ floats in the public API.
 - `addMinorUnits(a, b)`, `subtractMinorUnits(a, b)`, `negateMinorUnits(amount)` – exact; a result outside the safe
   range throws `RangeError`.
 - `multiplyByRate(amount, rate)` – multiplies by a rate (e.g. an NBP `mid`, per 1 unit of the currency) and rounds
-  to whole minor units **half away from zero** (0.5 → 1, −0.5 → −1). The rate is taken as the decimal it prints as
-  (`String(rate)`) and the product is computed with `bigint`, so `100 × 0.285` is exactly 28.5 → 29 (a float
+  to whole minor units **half away from zero** (0.5 → 1, −0.5 → −1). The rate is taken as the decimal it prints
+  as (`String(rate)`) and the product is computed with `bigint`, so `100 × 0.285` is exactly 28.5 → 29 (a float
   product gives 28.499999999999996). A negative or non-finite rate, or a result outside the safe range, throws
   `RangeError`.
 
@@ -31,13 +31,14 @@ floats in the public API.
 `"empty"`, `"invalid-format"`, `"too-many-fraction-digits"`, `"out-of-range"`.
 
 - Optional leading minus (`-` or `−`), digits, at most **2 fraction digits** after a decimal **comma or dot**.
-- Thousands grouping: spaces (including no-break spaces) or the separator that is not the decimal one; groups after
-  the first must have 3 digits. Examples: `"1 234,56"`, `"1234.5"`, `"-12"`, `"1.234,56"`, `"1,234.56"`,
-  `"1.234.567"`.
+- Thousands grouping: spaces (U+0020, the no-break spaces U+00A0 and U+202F) or the separator that is not the
+  decimal one; groups after the first must have 3 digits. Examples: `"1 234,56"`, `"1234.5"`, `"-12"`,
+  `"1.234,56"`, `"1,234.56"`, `"1.234.567"`.
 - A single `,` or `.` is always the decimal separator, so `"1,234"` is rejected (`too-many-fraction-digits`) instead
   of being guessed.
-- Currency symbols and letters (`"1 234,56 zł"`), a trailing separator (`"12,"`) and malformed grouping (`"1 23"`)
-  are rejected (`invalid-format`).
+- Currency symbols and letters (`"1 234,56 zł"`), a leading plus (`"+12"`), a missing integer part (`",5"`), a
+  trailing separator (`"12,"`), tabs or line breaks inside the number (`"1\t234"`) and malformed grouping
+  (`"1 23"`) are rejected (`invalid-format`). Whitespace around the number is trimmed.
 
 ### Formatting (`packages/core/src/money-format.ts`)
 
@@ -46,11 +47,17 @@ The locale is always a parameter; nothing is hardcoded, and all text comes from 
 - `formatMoney(amount, { locale, currency, fractionDigits? })` – localized currency string with 2 fraction digits
   by default, e.g. `1234,56 zł` (`pl-PL`) or `PLN 1,234.56` (`en`). `fractionDigits: 0` reproduces the legacy
   `formatCurrency` (`pl-PL`, `PLN`, rounded half away from zero); a characterization test checks that they match.
+  `currency` is used for display only; the amount is always 1/100 of the unit (see "Not covered yet").
 - `formatMoneyCompact(amount, { locale })` – the locale's compact notation without a currency symbol, negative
   amounts included: `5 tys.`, `-5 tys.`, `1,5 mln` (`pl-PL`); `5K`, `-5K`, `1.5M` (`en`).
 
+Both functions pass the amount to `Intl.NumberFormat` as an exact decimal string built with `bigint` (e.g.
+`"90071992547409.91"`), not as `amount / 100`, so every safe amount is formatted exactly: `Number.MAX_SAFE_INTEGER`
+gives `90 071 992 547 409,91 zł`; a float division would show `…,90 zł`. A runtime without string support in
+`Intl.NumberFormat` (ES2023) converts the string to a number, which is the same as dividing.
+
 Exact output (spaces are no-break spaces, compact suffixes) comes from the runtime's `Intl` data. Tests run on
-Node.js; `Intl` support on Hermes (SDK 58) is researched in #38.
+Node.js and compare with no-break spaces normalized; `Intl` support on Hermes (SDK 58) is researched in #38.
 
 Rules: amounts never use floats; never pass plain numbers where `MinorUnits` is expected (the compiler rejects it).
 
