@@ -18,4 +18,5 @@ by Grzegorz on 2026-10-18
 | [0008](0008-money-minor-units.md) | Money as integer minor units | Accepted |
 | [0009](0009-english-and-i18n.md) | English codebase, i18n for UI | Accepted |
 | [0010](0010-dependency-versions.md) | Latest stable dependencies, pinned exactly | Accepted |
-| [0011](0011-money-formatting-without-intl.md) | Money formatting without native Intl, CLDR data in core | Accepted |
+| [0011](0011-money-formatting-without-intl.md) | Money formatting without native Intl, CLDR data in core | Superseded by [0012](0012-native-intl-money-formatting.md) |
+| [0012](0012-native-intl-money-formatting.md) | Native Intl money formatting, always full amounts | Accepted |

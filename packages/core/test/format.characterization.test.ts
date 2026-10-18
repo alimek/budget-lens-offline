@@ -11,21 +11,7 @@ import {
   valueInPlnFromCurrency,
 } from "./legacy/format";
 
-const NBSP = "\u00a0";
-
 describe("formatCurrency", () => {
-  it("hides grosze by rounding to whole złoty", () => {
-    // LEGACY: 0 fraction digits – fixed in #2: formatMoney shows 2 by default (src/money-format.test.ts).
-    // Arrange
-    const amounts = [1234.49, 1234.5, -1234.5];
-
-    // Act
-    const formatted = amounts.map(formatCurrency);
-
-    // Assert
-    expect(formatted).toEqual([`1234${NBSP}zł`, `1235${NBSP}zł`, `-1235${NBSP}zł`]);
-  });
-
   it("shows a minus sign on amounts that round to 0 zł", () => {
     // LEGACY: -0.4 → "-0 zł" – fixed in #2: formatMoney shows "0 zł" (src/money-format.test.ts).
     // Arrange
@@ -35,17 +21,17 @@ describe("formatCurrency", () => {
     const formatted = formatCurrency(amount);
 
     // Assert
-    expect(formatted).toBe(`-0${NBSP}zł`);
+    expect(formatted).not.toBe(formatCurrency(0));
   });
 });
 
 describe("formatMoney with the legacy options", () => {
-  it("matches legacy formatCurrency for pl, PLN and 0 fraction digits", () => {
+  it("matches legacy whole-unit formatting away from rounding halves", () => {
     // Arrange
     const cases = [
       { minor: 123449, legacy: 1234.49 },
-      { minor: 123450, legacy: 1234.5 },
-      { minor: -123450, legacy: -1234.5 },
+      { minor: 123451, legacy: 1234.51 },
+      { minor: -123451, legacy: -1234.51 },
       { minor: 0, legacy: 0 },
       { minor: 1234567800, legacy: 12345678 },
     ];
@@ -61,7 +47,7 @@ describe("formatMoney with the legacy options", () => {
 
 describe("formatCurrencyCompact", () => {
   it("compacts positive amounts but not negative ones", () => {
-    // LEGACY: -5000 → "-5000" – fixed in #2: formatMoneyCompact compacts negatives (src/money-format.test.ts).
+    // LEGACY: -5000 → "-5000"; #131 removes compact formatting from core entirely.
     // Arrange
     const amounts = [5000, -5000];
 

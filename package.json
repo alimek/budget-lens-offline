@@ -14,8 +14,7 @@
     "format": "biome check --write .",
     "fallow": "fallow",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm fallow",
-    "check:licenses": "node scripts/check-licenses.mjs",
-    "check:cldr-parity": "node scripts/check-cldr-parity.mjs"
+    "check:licenses": "node scripts/check-licenses.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
