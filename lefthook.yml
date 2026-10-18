@@ -1,0 +1,14 @@
+# Git hooks configuration: https://lefthook.dev/configuration/
+# Hooks are installed automatically by the `prepare` script (pnpm install).
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+    - name: typecheck
+      glob: "*.{ts,tsx,mts,cts,json}"
+      # Typecheck only packages changed relative to HEAD (and the packages that depend on them).
+      run: pnpm exec turbo run typecheck --filter="...[HEAD]" --output-logs=errors-only
