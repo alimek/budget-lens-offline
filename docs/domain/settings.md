@@ -47,18 +47,18 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | `invalid-language` | `language` | Not `system`, `pl` or `en` |
 | `invalid-currency` | `defaultCurrency`, `trackedCurrencies` | Not a string of three uppercase letters; for `trackedCurrencies`, not an array of such strings |
 | `duplicate-currency` | `trackedCurrencies` | The same code twice |
-| `default-currency-tracked` | `trackedCurrencies` | Contains `defaultCurrency`: the base currency has no exchange rate against itself (NBP table A has no PLN rate) |
+| `default-currency-tracked` | `trackedCurrencies` | Contains `defaultCurrency`: the base currency has no exchange rate against itself. To switch the base to a currently tracked currency, send `defaultCurrency` and the new `trackedCurrencies` in one patch. |
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
 | `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
 
 Errors name the field, not the element: one `trackedCurrencies` error covers the whole list, which fits a currency
-picker that shows one message per field.
+picker that shows one message per field. `updateSettings` checks every field at runtime, so a value of the wrong
+type is an error, never a thrown `TypeError`.
 
-Stored settings are loaded the same way: `updateSettings(DEFAULT_SETTINGS, stored)`, so missing fields get the
-defaults. `stored` is treated as untrusted: every field is checked at runtime, a value of the wrong type is an error
-(never a thrown `TypeError`), and keys that are not `Settings` fields (e.g. legacy `low_balance_threshold`) are
-dropped.
+`loadSettings(stored)` keeps valid stored fields, uses defaults for missing or invalid fields, drops unknown
+keys and returns frozen settings; non-object values and arrays return `DEFAULT_SETTINGS`. The loaded base
+currency is removed from tracked currencies, including when that list falls back to its default.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
 

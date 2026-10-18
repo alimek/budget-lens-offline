@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_SETTINGS,
+  loadSettings,
   MAX_FORECAST_HORIZON_MONTHS,
   toMinorUnits,
   updateSettings,
@@ -98,5 +99,36 @@ describe("updateSettings", () => {
 
     // Assert
     expect(result).toEqual({ ok: true, settings: { ...DEFAULT_SETTINGS, language: "pl" } });
+  });
+});
+
+describe("loadSettings", () => {
+  it("keeps valid stored fields, defaults invalid fields and drops unknown keys", () => {
+    // Arrange
+    const stored = JSON.parse('{ "language": "en", "forecastHorizonMonths": 0, "unknown": true }');
+
+    // Act
+    const settings = loadSettings(stored);
+
+    // Assert
+    expect(settings).toEqual({ ...DEFAULT_SETTINGS, language: "en" });
+    expect(Object.isFrozen(settings)).toBe(true);
+    expect(Object.isFrozen(settings.trackedCurrencies)).toBe(true);
+  });
+
+  it("removes the loaded base currency from the fallback tracked list", () => {
+    // Arrange
+    const stored = { defaultCurrency: "USD" };
+
+    // Act
+    const settings = loadSettings(stored);
+
+    // Assert
+    expect(settings).toEqual({
+      ...DEFAULT_SETTINGS,
+      defaultCurrency: "USD",
+      trackedCurrencies: ["EUR", "GBP"],
+    });
+    expect(updateSettings(settings, {}).ok).toBe(true);
   });
 });
