@@ -4,9 +4,12 @@
 
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
-What exists today in `packages/core`: money in integer minor units – the `MinorUnits` type, exact operations,
-parsing and CLDR-based formatting for `pl` and `en` (#2, see [domain/money.md](domain/money.md)) –, the `Settings`
-model (#76) and characterization tests of the legacy implementation (#3).
+What exists today in `packages/core`:
+- money in integer minor units: the `MinorUnits` type, exact operations, parsing and CLDR-based formatting for `pl`
+  and `en` without `Intl` (#2, see [domain/money.md](domain/money.md) and
+  [ADR 0011](decisions/0011-money-formatting-without-intl.md));
+- the `Settings` model (#76);
+- characterization tests of the legacy implementation (#3).
 
 ## Repository layout
 
