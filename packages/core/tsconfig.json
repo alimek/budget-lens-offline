@@ -1,7 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // packages/core is platform-agnostic: no Node.js or DOM types in src.
     "types": []
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src"]
 }

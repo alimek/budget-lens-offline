@@ -1,0 +1,8 @@
+{
+  // Tooling files that run on Node.js (e.g. vitest.config.ts), kept out of the src program.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["vitest.config.ts"]
+}

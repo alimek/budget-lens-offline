@@ -54,5 +54,9 @@ pnpm exec turbo telemetry disable   # or set TURBO_TELEMETRY_DISABLED=1
 | Dead code | Fallow | `.fallowrc.json` |
 | Pre-commit | Lefthook (Biome + typecheck of changed packages) | `lefthook.yml` |
 
+`packages/core/tsconfig.json` covers only `src` with `"types": []`, so Node.js APIs (`node:*`, `process`, `Buffer`)
+do not typecheck there; tooling files such as `vitest.config.ts` are checked by `tsconfig.node.json` (both run in
+`pnpm typecheck`). `src/__typetests__/no-node-types.ts` fails the typecheck if Node.js types ever leak into `src`.
+
 `biome.json` forbids imports from `react-native`, `expo*`, `next` and `@supabase/*` in `packages/core`
 (`noRestrictedImports` rule).
