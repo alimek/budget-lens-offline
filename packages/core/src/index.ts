@@ -3,11 +3,19 @@ export { isMinorUnits, sumMinorUnits, toMinorUnits } from "./money";
 export type {
   ItemType,
   OccurrenceOverride,
+  OrphanedOverride,
   OverrideErrorCode,
+  RejectedOverride,
+  ResolvedMonth,
   ResolvedOccurrence,
   ScheduledItem,
 } from "./occurrence-overrides";
-export { resolveOccurrences, validateOverride } from "./occurrence-overrides";
+export {
+  findOrphanedOverrides,
+  resolveOccurrences,
+  validateOverride,
+  validateStoredOverride,
+} from "./occurrence-overrides";
 export type {
   Occurrence,
   OneTimeSchedule,
