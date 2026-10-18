@@ -70,10 +70,11 @@ Each check is a separate job, and every task runs through Turborepo:
 | Job (status check) | Command |
 | --- | --- |
 | `lint` | `pnpm turbo run lint` (Biome check) |
-| `typecheck` | `pnpm turbo run typecheck` (tsgo) |
+| `typecheck` | `pnpm turbo run typecheck` (TypeScript 7 `tsc`) |
 | `test` | `pnpm turbo run test:coverage` (Vitest + coverage summary in the job summary and a `coverage` artifact) |
 | `fallow` | `pnpm turbo run fallow` |
 
+Third-party actions are pinned to commit SHAs (version in a trailing comment).
 Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmrc`,
 `pnpm install --frozen-lockfile`) lives in `.github/actions/setup/action.yml`.
 
