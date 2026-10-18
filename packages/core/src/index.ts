@@ -51,6 +51,11 @@ export type {
   SettingsErrorCode,
   UpdateSettingsResult,
 } from "./settings";
-export { DEFAULT_SETTINGS, MAX_FORECAST_HORIZON_MONTHS, updateSettings } from "./settings";
+export {
+  DEFAULT_SETTINGS,
+  loadSettings,
+  MAX_FORECAST_HORIZON_MONTHS,
+  updateSettings,
+} from "./settings";
 export type { YearMonth } from "./year-month";
 export { addMonths, daysInMonth, isYearMonth, monthsBetween, toYearMonth } from "./year-month";

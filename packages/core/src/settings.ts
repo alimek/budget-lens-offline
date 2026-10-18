@@ -90,7 +90,7 @@ function trackedCurrenciesError(
   tracked: unknown,
   defaultCurrency: unknown,
 ): SettingsErrorCode | undefined {
-  if (!Array.isArray(tracked) || !tracked.every(isIsoCode)) {
+  if (!Array.isArray(tracked) || !Array.from(tracked).every(isIsoCode)) {
     return "invalid-currency";
   }
   if (!tracked.every(isCurrencyCode)) {
@@ -111,37 +111,56 @@ function thresholdError(threshold: unknown): SettingsErrorCode | undefined {
   return threshold < 0 ? "negative-threshold" : undefined;
 }
 
+type Check = (settings: UntrustedSettings) => SettingsErrorCode | undefined;
+
 /** One check per field, in the order errors are reported. */
-const FIELD_CHECKS: readonly (readonly [
-  keyof Settings,
-  (settings: UntrustedSettings) => SettingsErrorCode | undefined,
-])[] = [
-  ["language", ({ language }) => (isLanguagePreference(language) ? undefined : "invalid-language")],
-  ["defaultCurrency", ({ defaultCurrency }) => currencyError(defaultCurrency)],
-  [
-    "trackedCurrencies",
-    ({ trackedCurrencies, defaultCurrency }) =>
-      trackedCurrenciesError(trackedCurrencies, defaultCurrency),
-  ],
-  ["lowBalanceThreshold", ({ lowBalanceThreshold }) => thresholdError(lowBalanceThreshold)],
-  ["largeExpenseThreshold", ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold)],
-  [
-    "forecastHorizonMonths",
-    ({ forecastHorizonMonths }) =>
-      isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
-  ],
-];
+const FIELD_CHECKS = {
+  language: ({ language }) => (isLanguagePreference(language) ? undefined : "invalid-language"),
+  defaultCurrency: ({ defaultCurrency }) => currencyError(defaultCurrency),
+  trackedCurrencies: ({ trackedCurrencies, defaultCurrency }) =>
+    trackedCurrenciesError(trackedCurrencies, defaultCurrency),
+  lowBalanceThreshold: ({ lowBalanceThreshold }) => thresholdError(lowBalanceThreshold),
+  largeExpenseThreshold: ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold),
+  forecastHorizonMonths: ({ forecastHorizonMonths }) =>
+    isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
+} satisfies Record<keyof Settings, Check>;
 
 function validate(settings: UntrustedSettings): SettingsError[] {
-  return FIELD_CHECKS.flatMap(([field, check]) => {
+  return Object.entries(FIELD_CHECKS).flatMap(([field, check]) => {
     const code = check(settings);
-    return code === undefined ? [] : [{ field, code }];
+    return code === undefined ? [] : [{ field: field as keyof Settings, code }];
+  });
+}
+
+/** Loads untrusted stored settings, falling back to defaults for each missing or invalid field. */
+export function loadSettings(stored: unknown): Settings {
+  if (
+    typeof stored !== "object" ||
+    stored === null ||
+    (Object.getPrototypeOf(stored) !== Object.prototype && Object.getPrototypeOf(stored) !== null)
+  ) {
+    return DEFAULT_SETTINGS;
+  }
+  const loaded: Record<keyof Settings, unknown> = { ...DEFAULT_SETTINGS, ...stored };
+  for (const field of Object.keys(FIELD_CHECKS) as (keyof Settings)[]) {
+    if (FIELD_CHECKS[field](loaded) !== undefined) {
+      loaded[field] = DEFAULT_SETTINGS[field];
+    }
+  }
+  // Every field has passed its check or received its default; only a fallback tracked list can still contain the
+  // loaded base currency, so it is filtered out below.
+  const next = loaded as Settings;
+  return freezeSettings({
+    ...next,
+    trackedCurrencies: next.trackedCurrencies.filter(
+      (currency) => currency !== next.defaultCurrency,
+    ),
   });
 }
 
 /**
  * Applies `changes` to `current` and validates the result. Returns every validation error at once and never
- * mutates `current`. Also used to load stored settings: `updateSettings(DEFAULT_SETTINGS, stored)`.
+ * mutates `current`. Use `loadSettings(stored)` to load stored settings with per-field defaults.
  *
  * `changes` may be untrusted (e.g. parsed from storage): every field is checked at runtime, a value of the wrong
  * type is reported as an error instead of throwing, and keys that are not `Settings` fields are dropped.
@@ -159,13 +178,17 @@ export function updateSettings(
   const next = merged as Settings;
   return {
     ok: true,
-    settings: Object.freeze({
-      language: next.language,
-      defaultCurrency: next.defaultCurrency,
-      trackedCurrencies: Object.freeze([...next.trackedCurrencies]),
-      lowBalanceThreshold: next.lowBalanceThreshold,
-      largeExpenseThreshold: next.largeExpenseThreshold,
-      forecastHorizonMonths: next.forecastHorizonMonths,
-    }),
+    settings: freezeSettings(next),
   };
+}
+
+function freezeSettings(next: Settings): Settings {
+  return Object.freeze({
+    language: next.language,
+    defaultCurrency: next.defaultCurrency,
+    trackedCurrencies: Object.freeze([...next.trackedCurrencies]),
+    lowBalanceThreshold: next.lowBalanceThreshold,
+    largeExpenseThreshold: next.largeExpenseThreshold,
+    forecastHorizonMonths: next.forecastHorizonMonths,
+  });
 }
