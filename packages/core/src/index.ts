@@ -15,6 +15,19 @@ export { formatMoney, formatMoneyCompact } from "./money-format";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
 export type {
+  Occurrence,
+  OneTimeSchedule,
+  RecurringSchedule,
+  Schedule,
+  ScheduleErrorCode,
+} from "./recurrence";
+export {
+  isActiveInMonth,
+  MAX_INTERVAL_MONTHS,
+  occurrencesInRange,
+  validateSchedule,
+} from "./recurrence";
+export type {
   Language,
   LanguagePreference,
   Settings,
@@ -28,3 +41,5 @@ export {
   MAX_FORECAST_HORIZON_MONTHS,
   updateSettings,
 } from "./settings";
+export type { YearMonth } from "./year-month";
+export { addMonths, daysInMonth, isYearMonth, monthsBetween, toYearMonth } from "./year-month";

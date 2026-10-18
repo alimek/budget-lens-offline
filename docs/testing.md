@@ -101,7 +101,7 @@ arithmetic properties exist today (`src/money.property.test.ts`). Still to add:
 - money parse/format round-trip (`parseMoney(formatMoney(x))`) and `multiplyByRate` rounding (half away from zero),
   now that the parsing and formatting code from #2 is in `packages/core`;
 - recurrence properties (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping),
-  together with #4.
+  tracked in [#122](https://github.com/alimek/budget-lens-offline/issues/122) (#4 lands without them).
 
 ## Characterization tests
 
@@ -120,11 +120,13 @@ line):
 - `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and CLDR-based formatting, with explicit
   AAA sections. Expected strings use the exact characters (e.g. `\u00a0`), not normalized spaces.
 - `src/money.property.test.ts`: property-based money arithmetic (see above).
+- `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
+  validation (`it.each` tables).
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
   AAA sections.
-- `test/*.characterization.test.ts` (#3): legacy forecast, recurrence, exchange rates, month closing and
-  formatting (including the check that `formatMoney` matches the legacy `formatCurrency`). They use explicit AAA
-  sections and the frozen-clock exception from rule 5.
+- `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
+  schedules with legacy, #4), exchange rates, month closing and formatting (including the check that `formatMoney`
+  matches the legacy `formatCurrency`). They use explicit AAA sections and the frozen-clock exception from rule 5.
 
 Follow-ups:
 - Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,
