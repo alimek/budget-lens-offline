@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SETTINGS, toMinorUnits, updateSettings } from "./index";
+import {
+  DEFAULT_SETTINGS,
+  MAX_FORECAST_HORIZON_MONTHS,
+  toMinorUnits,
+  updateSettings,
+} from "./index";
 
 describe("DEFAULT_SETTINGS", () => {
   it("keeps the legacy defaults: 5000 PLN low balance, 10000 PLN large expense, USD/EUR/GBP, 13 months", () => {
@@ -51,7 +56,7 @@ describe("updateSettings", () => {
       defaultCurrency: "pln",
       trackedCurrencies: ["USD", "USD"],
       largeExpenseThreshold: toMinorUnits(-1),
-      forecastHorizonMonths: 0,
+      forecastHorizonMonths: MAX_FORECAST_HORIZON_MONTHS + 1,
     };
 
     // Act
@@ -69,9 +74,25 @@ describe("updateSettings", () => {
     });
   });
 
-  it("rejects a stored language the app does not ship in", () => {
+  it("rejects tracking the default currency, which has no exchange rate against itself", () => {
     // Arrange
-    const stored = JSON.parse('{ "language": "de" }');
+    const changes = { trackedCurrencies: ["PLN", "USD"] };
+
+    // Act
+    const result = updateSettings(DEFAULT_SETTINGS, changes);
+
+    // Assert
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ field: "trackedCurrencies", code: "default-currency-tracked" }],
+    });
+  });
+
+  it("reports malformed stored settings as errors instead of throwing", () => {
+    // Arrange
+    const stored = JSON.parse(
+      '{ "language": "de", "lowBalanceThreshold": 1.5, "trackedCurrencies": "USD" }',
+    );
 
     // Act
     const result = updateSettings(DEFAULT_SETTINGS, stored);
@@ -79,7 +100,22 @@ describe("updateSettings", () => {
     // Assert
     expect(result).toEqual({
       ok: false,
-      errors: [{ field: "language", code: "invalid-language" }],
+      errors: [
+        { field: "language", code: "invalid-language" },
+        { field: "trackedCurrencies", code: "invalid-currency" },
+        { field: "lowBalanceThreshold", code: "invalid-threshold" },
+      ],
     });
+  });
+
+  it("drops stored keys that are not settings fields", () => {
+    // Arrange
+    const stored = JSON.parse('{ "language": "pl", "low_balance_threshold": 5000, "foo": 1 }');
+
+    // Act
+    const result = updateSettings(DEFAULT_SETTINGS, stored);
+
+    // Assert
+    expect(result).toEqual({ ok: true, settings: { ...DEFAULT_SETTINGS, language: "pl" } });
   });
 });

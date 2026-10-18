@@ -8,4 +8,4 @@ export type {
   SettingsErrorCode,
   UpdateSettingsResult,
 } from "./settings";
-export { DEFAULT_SETTINGS, updateSettings } from "./settings";
+export { DEFAULT_SETTINGS, MAX_FORECAST_HORIZON_MONTHS, updateSettings } from "./settings";
