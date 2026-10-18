@@ -1,7 +1,8 @@
 # Architecture decision records
 
-Short records of stack decisions. Each has a status (`Proposed`, `Accepted`, `Superseded by …`). Add a new ADR instead of
-rewriting an accepted one when a decision changes. Unless noted, decisions were made by Grzegorz on 2026-10-18
+Short records of stack decisions. Each has a status (`Proposed`, `Accepted`, `Superseded by …`). Add a
+new ADR instead of rewriting an accepted one when a decision changes. Unless noted, decisions were made
+by Grzegorz on 2026-10-18
 (see the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427), the
 "Decyzje" section of #1 and the research in #10).
 
@@ -17,4 +18,4 @@ rewriting an accepted one when a decision changes. Unless noted, decisions were 
 | [0008](0008-money-minor-units.md) | Money as integer minor units | Accepted |
 | [0009](0009-english-and-i18n.md) | English codebase, i18n for UI | Accepted |
 | [0010](0010-dependency-versions.md) | Latest stable dependencies, pinned exactly | Accepted |
-| [0011](0011-money-formatting-without-intl.md) | Money formatting without native Intl, CLDR data in core | Proposed |
+| [0011](0011-money-formatting-without-intl.md) | Money formatting without native Intl, CLDR data in core | Accepted |

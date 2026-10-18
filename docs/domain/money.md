@@ -54,14 +54,17 @@ returns
 
 ### Formatting (`packages/core/src/money-format.ts`)
 
-Formatting does **not** use `Intl.NumberFormat` ([ADR 0011](../decisions/0011-money-formatting-without-intl.md)). Hermes on iOS ignores `notation: "compact"` and `signDisplay`,
+Formatting does **not** use `Intl.NumberFormat`
+([ADR 0011](../decisions/0011-money-formatting-without-intl.md)). Hermes on iOS ignores
+`notation: "compact"` and `signDisplay`,
 and its iOS (`NSNumberFormatter`) and Android (ICU4J) output can differ (#38). `packages/core` formats with its own
 integer-only code and a small table of CLDR data for the two app languages (`money-locale.ts`), so the output is
 the same in Vitest, on iOS and on Android. Digits are built from the integer amount with `bigint`, never from
 `amount / 100`, so every safe amount is exact: `Number.MAX_SAFE_INTEGER` PLN minor units give
 `90 071 992 547 409,91 zł`.
 
-The language is always a parameter: `lang: "pl" | "en"` (`Language` from `Settings`, i.e. the app language with `"system"` resolved by the app; #38). `currency` is a `CurrencyCode`.
+The language is always a parameter: `lang: "pl" | "en"` (`Language` from `Settings`, i.e. the app language
+with `"system"` resolved by the app; #38). `currency` is a `CurrencyCode`.
 
 | | `pl` (CLDR `pl`) | `en` (CLDR `en-GB` currency conventions, `en` compact suffixes) |
 | --- | --- | --- |

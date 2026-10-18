@@ -1,8 +1,8 @@
 # 0011 – Money formatting without native Intl, with CLDR data in core
 
-Status: Proposed (#2), based on the research and recommendation in
-[#38](https://github.com/alimek/budget-lens-offline/issues/38); implemented in PR #117. It becomes Accepted when
-Grzegorz approves #117 (the compact output still waits for his sign-off there).
+Status: Accepted (#2; [owner decision on
+#117](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254736816)), based on the research and
+recommendation in [#38](https://github.com/alimek/budget-lens-offline/issues/38); implemented in PR #117.
 
 **Context.** The app runs on Hermes (Expo SDK 58, RN 0.88), whose `Intl` is partial and differs by platform (#38):
 - on iOS, `Intl.NumberFormat` ignores `notation: "compact"`, `compactDisplay` and `signDisplay` and returns the
