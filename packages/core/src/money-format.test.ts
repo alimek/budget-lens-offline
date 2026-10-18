@@ -1,7 +1,12 @@
+/**
+ * The expected strings are Node.js ICU (CLDR) output: symbol position, separators and compact suffixes may differ on
+ * Hermes or after a CLDR update. Device output is checked in #38 and by e2e tests. Spaces are normalized because ICU
+ * uses no-break spaces (U+00A0 or U+202F, depending on the CLDR version).
+ */
 import { describe, expect, it } from "vitest";
 import { formatMoney, formatMoneyCompact, toMinorUnits } from "./index";
 
-const NBSP = "\u00a0";
+const withPlainSpaces = (text: string): string => text.replace(/[\u00a0\u202f]/g, " ");
 
 describe("formatMoney", () => {
   it("formats pl-PL amounts with grosze, negative and large amounts", () => {
@@ -10,14 +15,10 @@ describe("formatMoney", () => {
     const amounts = [123456, -123450, 1234567890].map(toMinorUnits);
 
     // Act
-    const formatted = amounts.map((amount) => formatMoney(amount, options));
+    const formatted = amounts.map((amount) => withPlainSpaces(formatMoney(amount, options)));
 
     // Assert
-    expect(formatted).toEqual([
-      `1234,56${NBSP}zł`,
-      `-1234,50${NBSP}zł`,
-      `12${NBSP}345${NBSP}678,90${NBSP}zł`,
-    ]);
+    expect(formatted).toEqual(["1234,56 zł", "-1234,50 zł", "12 345 678,90 zł"]);
   });
 
   it("formats the largest safe amount exactly, without losing the last grosz", () => {
@@ -28,7 +29,7 @@ describe("formatMoney", () => {
     const formatted = formatMoney(largest, { locale: "pl-PL", currency: "PLN" });
 
     // Assert
-    expect(formatted).toBe(`90${NBSP}071${NBSP}992${NBSP}547${NBSP}409,91${NBSP}zł`);
+    expect(withPlainSpaces(formatted)).toBe("90 071 992 547 409,91 zł");
   });
 
   it("formats in the given locale and with 0 fraction digits when asked", () => {
@@ -40,8 +41,8 @@ describe("formatMoney", () => {
     const wholeZloty = formatMoney(amount, { locale: "pl-PL", currency: "PLN", fractionDigits: 0 });
 
     // Assert
-    expect(english).toBe(`PLN${NBSP}1,234.50`);
-    expect(wholeZloty).toBe(`1235${NBSP}zł`);
+    expect(withPlainSpaces(english)).toBe("PLN 1,234.50");
+    expect(withPlainSpaces(wholeZloty)).toBe("1235 zł");
   });
 });
 
@@ -51,11 +52,13 @@ describe("formatMoneyCompact", () => {
     const amounts = [500000, -500000, 150000000].map(toMinorUnits);
 
     // Act
-    const polish = amounts.map((amount) => formatMoneyCompact(amount, { locale: "pl-PL" }));
+    const polish = amounts.map((amount) =>
+      withPlainSpaces(formatMoneyCompact(amount, { locale: "pl-PL" })),
+    );
     const english = amounts.map((amount) => formatMoneyCompact(amount, { locale: "en" }));
 
     // Assert
-    expect(polish).toEqual([`5${NBSP}tys.`, `-5${NBSP}tys.`, `1,5${NBSP}mln`]);
+    expect(polish).toEqual(["5 tys.", "-5 tys.", "1,5 mln"]);
     expect(english).toEqual(["5K", "-5K", "1.5M"]);
   });
 });
