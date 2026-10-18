@@ -16,10 +16,12 @@ export function isMinorUnits(value: number): value is MinorUnits {
  * Throws a `RangeError` when the value is not a safe integer. `-0` is normalized to `0`.
  */
 export function toMinorUnits(value: number): MinorUnits {
-  if (!isMinorUnits(value)) {
+  // CI demo (#18): deliberately broken (rounds fractions instead of rejecting them); reverted.
+  const rounded = Math.round(value);
+  if (!isMinorUnits(rounded)) {
     throw new RangeError(`Amount must be a safe integer number of minor units, received: ${value}`);
   }
-  return (value === 0 ? 0 : value) as MinorUnits;
+  return (rounded === 0 ? 0 : rounded) as MinorUnits;
 }
 
 /**
@@ -37,3 +39,6 @@ export function sumMinorUnits(amounts: readonly MinorUnits[]): MinorUnits {
   }
   return toMinorUnits(total);
 }
+
+// CI demo (#18): deliberately unused export, reverted.
+export const unusedHelper = 1;
