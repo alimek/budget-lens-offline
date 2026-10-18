@@ -5,7 +5,7 @@
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
 What exists today in `packages/core`: the `MinorUnits` money type (`isMinorUnits`, `toMinorUnits`, `sumMinorUnits`),
-`YearMonth` months and recurrence schedules (#4), and characterization tests of the legacy implementation (#3).
+`YearMonth` months and recurrence schedules (#4), occurrence overrides (#5), and characterization tests of the legacy implementation (#3).
 
 ## Repository layout
 
@@ -45,7 +45,7 @@ nothing app- or platform-specific.
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
-Planned content, one issue each: money operations and formatting (#2), occurrence overrides (#5),
+Planned content, one issue each: money operations and formatting (#2),
 forecast (#6), month closing and `Settings` (#7), NBP exchange-rate client with an injected offline cache (#8).
 Legacy behaviour is pinned by characterization tests first (#3).
 
