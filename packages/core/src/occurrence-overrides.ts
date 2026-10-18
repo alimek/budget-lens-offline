@@ -68,10 +68,13 @@ export interface ResolvedMonth<T extends ScheduledItem> {
   readonly invalidItems: readonly T[];
 }
 
-/** An override that no longer matches an occurrence: its item is unknown, or has no occurrence in that month. */
+/**
+ * An override that no longer matches an occurrence: its item is unknown, is a one-time item, or has no occurrence in
+ * that month.
+ */
 export interface OrphanedOverride {
   readonly override: OccurrenceOverride;
-  readonly reason: "unknown-item" | "no-occurrence";
+  readonly reason: "unknown-item" | "no-occurrence" | "one-time-item";
 }
 
 /** Override fields as they may come from storage or a backup: the static types are not trusted at runtime. */
@@ -176,8 +179,23 @@ function normalized({
   };
 }
 
-/** Valid overrides by key; invalid ones and every copy of a duplicated key are rejected. */
-function acceptOverrides(overrides: readonly OccurrenceOverride[]) {
+const itemKeyOf = (itemType: ItemType, itemId: string): string =>
+  JSON.stringify([itemType, itemId]);
+
+/** Whether `item` has a valid one-time schedule, so overrides of it are rejected. */
+const isOneTimeItem = (item: ScheduledItem | undefined): boolean =>
+  item !== undefined &&
+  validateSchedule(item.schedule).length === 0 &&
+  item.schedule.kind === "one-time";
+
+/**
+ * Valid overrides by key; invalid ones, every copy of a duplicated key and overrides of one-time items are
+ * rejected.
+ */
+function acceptOverrides(
+  overrides: readonly OccurrenceOverride[],
+  itemsByKey: ReadonlyMap<string, ScheduledItem>,
+) {
   const rejected: RejectedOverride[] = [];
   const groups = new Map<string, OccurrenceOverride[]>();
   for (const override of overrides) {
@@ -194,7 +212,11 @@ function acceptOverrides(overrides: readonly OccurrenceOverride[]) {
   const byKey = new Map<string, OccurrenceOverride>();
   for (const [key, [only, ...others]] of groups) {
     if (only !== undefined && others.length === 0) {
-      byKey.set(key, normalized(only));
+      if (isOneTimeItem(itemsByKey.get(itemKeyOf(only.itemType, only.itemId)))) {
+        rejected.push({ override: only, errors: ["one-time-item"] });
+      } else {
+        byKey.set(key, normalized(only));
+      }
     } else {
       rejected.push(
         ...[only, ...others].map((override) => ({
@@ -207,21 +229,25 @@ function acceptOverrides(overrides: readonly OccurrenceOverride[]) {
   return { byKey, rejected };
 }
 
+const itemsByItemKey = (items: readonly ScheduledItem[]): ReadonlyMap<string, ScheduledItem> =>
+  new Map(items.map((item) => [itemKeyOf(item.itemType, item.id), item]));
+
 /**
  * The effective occurrences of `items` in `month`: overridden amounts applied, skipped occurrences removed, in item
  * order. Items are matched to overrides by `(itemType, itemId)` only, never by name. Overrides for a month in which
  * the item has no occurrence, or for an unknown item, are ignored (see `findOrphanedOverrides`).
  *
- * Bad stored data never breaks the month: an override that fails `validateStoredOverride`, or shares
- * `(itemType, itemId, month)` with another one (all copies), is left out and reported in `rejectedOverrides`; an
- * item with an invalid schedule is left out and reported in `invalidItems`.
+ * Bad stored data never breaks the month: an override that fails `validateStoredOverride`, shares
+ * `(itemType, itemId, month)` with another one (all copies), or belongs to a one-time item (`one-time-item`) is left
+ * out and reported in `rejectedOverrides`; an item with an invalid schedule is left out and reported in
+ * `invalidItems`.
  */
 export function resolveOccurrences<T extends ScheduledItem>(
   items: readonly T[],
   overrides: readonly OccurrenceOverride[],
   month: YearMonth,
 ): ResolvedMonth<T> {
-  const { byKey, rejected } = acceptOverrides(overrides);
+  const { byKey, rejected } = acceptOverrides(overrides, itemsByItemKey(items));
   const occurrences: ResolvedOccurrence<T>[] = [];
   const invalidItems: T[] = [];
   for (const item of items) {
@@ -246,8 +272,9 @@ export function resolveOccurrences<T extends ScheduledItem>(
 }
 
 /**
- * Valid overrides that `resolveOccurrences` ignores: the item is unknown (e.g. deleted), or has no occurrence in the
- * override month (e.g. after a new end month, anchor or interval). Edit flows use it to warn before a rule change
+ * Valid overrides that `resolveOccurrences` does not apply: the item is unknown (e.g. deleted), is a one-time item
+ * (e.g. after a rule change from recurring to one-time), or has no occurrence in the override month (e.g. after a
+ * new end month, anchor or interval). Edit flows use it to warn before a rule change
  * drops overrides; loading can count them. Invalid overrides and items with an invalid schedule are not reported
  * here (`resolveOccurrences` reports them).
  */
@@ -255,14 +282,17 @@ export function findOrphanedOverrides(
   items: readonly ScheduledItem[],
   overrides: readonly OccurrenceOverride[],
 ): readonly OrphanedOverride[] {
-  const itemsByKey = new Map(items.map((item) => [JSON.stringify([item.itemType, item.id]), item]));
+  const itemsByKey = itemsByItemKey(items);
   return overrides.flatMap((override): OrphanedOverride[] => {
     if (validateStoredOverride(override).length > 0) {
       return [];
     }
-    const item = itemsByKey.get(JSON.stringify([override.itemType, override.itemId]));
+    const item = itemsByKey.get(itemKeyOf(override.itemType, override.itemId));
     if (item === undefined) {
       return [{ override, reason: "unknown-item" }];
+    }
+    if (isOneTimeItem(item)) {
+      return [{ override, reason: "one-time-item" }];
     }
     const hasOccurrence =
       validateSchedule(item.schedule).length > 0 || isActiveInMonth(item.schedule, override.month);

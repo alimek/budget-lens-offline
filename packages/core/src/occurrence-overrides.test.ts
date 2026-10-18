@@ -100,6 +100,9 @@ describe("resolveOccurrences", () => {
 
   it("skips and reports malformed and duplicate stored overrides instead of failing the month", () => {
     // Arrange: rows as they may come from a corrupt database or a JSON backup.
+    const withoutSchedule: ScheduledItem = JSON.parse(
+      JSON.stringify({ ...monthly("gym", "Gym", 12_000), schedule: null }),
+    );
     const base = { itemType: "expense", itemId: "rent", month: "2026-11" };
     const stored = JSON.parse(
       JSON.stringify([
@@ -115,8 +118,8 @@ describe("resolveOccurrences", () => {
     );
 
     // Act
-    const { occurrences, rejectedOverrides } = resolveOccurrences(
-      [rent, internet],
+    const { occurrences, rejectedOverrides, invalidItems } = resolveOccurrences(
+      [rent, internet, withoutSchedule],
       stored,
       ym("2026-11"),
     );
@@ -135,12 +138,19 @@ describe("resolveOccurrences", () => {
       ["duplicate-override"],
       ["duplicate-override"],
     ]);
+    expect(invalidItems).toEqual([withoutSchedule]);
   });
 });
 
 describe("findOrphanedOverrides", () => {
-  it("reports overrides of an unknown item or of a month without occurrence, which resolving ignores", () => {
-    // Arrange: rent ends in October; the "deleted" item no longer exists.
+  it("reports overrides of an unknown item, a one-time item or a month without occurrence, which resolving ignores", () => {
+    // Arrange: rent ends in October; the "deleted" item no longer exists; the TV is a one-time item.
+    const tv: ScheduledItem = {
+      id: "tv",
+      itemType: "expense",
+      amount: toMinorUnits(200_000),
+      schedule: { kind: "one-time", month: ym("2026-11") },
+    };
     const ended = { ...rent, schedule: { ...rent.schedule, endMonth: ym("2026-10") } };
     const afterEnd: OccurrenceOverride = {
       id: "o1",
@@ -150,17 +160,30 @@ describe("findOrphanedOverrides", () => {
       amount: toMinorUnits(320_000),
     };
     const ofDeleted: OccurrenceOverride = { ...afterEnd, id: "o2", itemId: "deleted" };
+    const ofOneTime: OccurrenceOverride = {
+      ...afterEnd,
+      id: "o3",
+      itemId: "tv",
+      amount: toMinorUnits(1),
+    };
+    const overrides = [afterEnd, ofDeleted, ofOneTime];
 
     // Act
-    const orphans = findOrphanedOverrides([ended], [afterEnd, ofDeleted]);
-    const november = amountsIn([ended], [afterEnd, ofDeleted], "2026-11");
+    const orphans = findOrphanedOverrides([ended, tv], overrides);
+    const november = resolveOccurrences([ended, tv], overrides, ym("2026-11"));
 
     // Assert
     expect(orphans).toEqual([
       { override: afterEnd, reason: "no-occurrence" },
       { override: ofDeleted, reason: "unknown-item" },
+      { override: ofOneTime, reason: "one-time-item" },
     ]);
-    expect(november).toEqual([]);
+    expect(november.occurrences.map(({ item, amount }) => [item.id, amount])).toEqual([
+      ["tv", 200_000],
+    ]);
+    expect(november.rejectedOverrides).toEqual([
+      { override: ofOneTime, errors: ["one-time-item"] },
+    ]);
   });
 });
 
@@ -172,6 +195,7 @@ describe("validateOverride", () => {
     schedule: { kind: "one-time", month: ym("2026-11") },
   };
   const broken = { ...rent, schedule: { ...rent.schedule, intervalMonths: 0 } };
+  const withoutSchedule: ScheduledItem = JSON.parse(JSON.stringify({ ...rent, schedule: null }));
 
   it.each<[string, Record<string, unknown>, ScheduledItem, string[]]>([
     ["neither an amount nor a skip", {}, rent, ["empty-override"]],
@@ -188,6 +212,7 @@ describe("validateOverride", () => {
     ["a month that does not exist", { month: "2026-13", skipped: true }, rent, ["invalid-month"]],
     ["a one-time item", { skipped: true }, laptop, ["one-time-item"]],
     ["an item with an invalid schedule", { skipped: true }, broken, ["invalid-schedule"]],
+    ["an item without a schedule", { skipped: true }, withoutSchedule, ["invalid-schedule"]],
   ])("reports an override with %s", (_case, fields, item, expected) => {
     // Arrange
     const override = {
