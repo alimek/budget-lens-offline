@@ -81,7 +81,7 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 | `pr-title` | PR title in Conventional Commits format (pull requests only) |
 | `pr-body` | PR description contains `Closes #N`, `Fixes #N` or `Resolves #N` (pull requests only) |
 
-Planned when `apps/mobile` exists: `expo-doctor`, `expo-export`, `migrations`, `e2e-android`, `bundle-size`.
+Planned when `apps/mobile` exists (#109): `expo-doctor`, `expo-export`, `migrations`, `e2e-android`, `bundle-size`.
 
 Third-party actions are pinned to commit SHAs (version in a trailing comment).
 Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmrc`,
@@ -91,6 +91,6 @@ Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmr
 
 1. Open **Settings → Rules → Rulesets** (or **Settings → Branches → Branch protection rules**) for `main`.
 2. Enable **Require status checks to pass** (and optionally **Require branches to be up to date before merging**).
-3. Add the status checks `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` and `pr-body` (they appear in the search after the workflow has run
-   at least once).
+3. Add the status checks `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` and `pr-body`
+   (they appear in the search after the workflow has run at least once).
 4. Save the rule.
