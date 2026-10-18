@@ -18,6 +18,15 @@ const unchecked = (values: number[]): MinorUnits[] => values as MinorUnits[];
 
 const amounts = (values: number[]): MinorUnits[] => values.map(toMinorUnits);
 
+const errorThrownBy = (action: () => unknown): unknown => {
+  try {
+    action();
+    return undefined;
+  } catch (error) {
+    return error;
+  }
+};
+
 describe("isMinorUnits", () => {
   it("accepts integers", () => {
     expect(isMinorUnits(0)).toBe(true);
@@ -165,13 +174,12 @@ describe("multiplyByRate", () => {
   it("rejects a negative or non-finite rate", () => {
     // Arrange
     const amount = toMinorUnits(100);
-
-    // Act
     const invalidRates = [-1, Number.NaN, Number.POSITIVE_INFINITY];
 
+    // Act
+    const errors = invalidRates.map((rate) => errorThrownBy(() => multiplyByRate(amount, rate)));
+
     // Assert
-    for (const rate of invalidRates) {
-      expect(() => multiplyByRate(amount, rate)).toThrow(RangeError);
-    }
+    expect(errors).toEqual(invalidRates.map(() => expect.any(RangeError)));
   });
 });
