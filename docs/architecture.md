@@ -19,7 +19,7 @@ nothing app- or platform-specific.
   override in `biome.json`), no I/O, no `Date.now()` / `new Date()` inside domain functions. Anything
   environment-dependent (current month, `fetch`, rate storage) is passed in as an argument or an injected interface.
 - Money is `MinorUnits` (integer minor units); see [domain/money.md](domain/money.md).
-- Unit tests with Vitest next to the code (`src/**/*.test.ts`).
+- Minimal unit tests (business logic only) with Vitest next to the code (`src/**/*.test.ts`).
 
 Planned content, one issue each: money operations and formatting (#2), recurrence (#4), occurrence overrides (#5),
 forecast (#6), month closing and `Settings` (#7), NBP exchange-rate client with an injected offline cache (#8).
@@ -33,6 +33,7 @@ correction comment):
 | Concern | Choice |
 | --- | --- |
 | Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) |
+| Navigation | Expo Router |
 | UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views |
 | Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store |
 | Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) |
@@ -40,7 +41,7 @@ correction comment):
 | Network data | TanStack Query only when network requests are added (NBP rates, license) |
 | i18n | Polish and English; no hardcoded UI strings |
 | Sync / backup | The user's own iCloud / Google Drive; no Budget Lens backend |
-| E2E tests | TesterArmy `e2e` on simulators/emulators (#15) |
+| Testing | TesterArmy `e2e` on simulators/emulators as the main testing (#15); minimal Vitest unit tests in core |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build
@@ -50,7 +51,6 @@ without SQLCipher, so the app must verify `PRAGMA cipher_version` before using t
 
 Not decided yet; do not treat these as part of the stack:
 
-- **Navigation library** – Expo Router is a candidate, but no decision has been recorded.
 - From the SDK 58 research (#10): DB key and recovery model, MVP sync scope (snapshot backup/restore vs record sync),
   chart library (Expo UI has no Android charts), lint (Biome only vs Biome + minimal ESLint), minimum OS versions.
 

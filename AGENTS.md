@@ -30,6 +30,9 @@ docs/                    # architecture, domain, decisions (ADRs), testing
 ```
 
 Planned packages: `apps/mobile` (Expo app), `packages/db` (Drizzle schema and migrations for expo-sqlite).
+
+Decided app stack (not implemented yet): Expo SDK 58 with development builds, Expo Router, Expo UI + Uniwind,
+Zustand (provider pattern), Drizzle on expo-sqlite with SQLCipher, TanStack Query only for network requests.
 See [docs/architecture.md](docs/architecture.md).
 
 ## Commands
@@ -67,7 +70,8 @@ planned in #18.
 - **TypeScript 7** (`typescript` package, CLI `tsc`), `strict` plus `noUncheckedIndexedAccess` and
   `exactOptionalPropertyTypes` (`tsconfig.base.json`).
 - **Biome** for lint and format, **Fallow** must stay clean, **Lefthook** pre-commit runs Biome and typecheck.
-- **Tests** follow [docs/testing.md](docs/testing.md): Arrange-Act-Assert, business behaviour only, no 100% coverage goal.
+- **Tests** follow [docs/testing.md](docs/testing.md): TesterArmy e2e is the main testing; unit tests are minimal
+  (business logic only, Arrange-Act-Assert); no percentage coverage thresholds.
 
 ## Workflow
 

@@ -1,10 +1,20 @@
 # Testing guidelines
 
+## Strategy
+
+- **E2E tests with TesterArmy are the main way the app is tested** (#15). They cover user flows on the app.
+- **Unit tests are minimal:** only business logic in `packages/core`, written as Arrange-Act-Assert. The fewer, the
+  better – add a unit test only when it protects a business rule that is not obvious from the code.
+- **There are no percentage coverage thresholds**, anywhere (Vitest config or CI). Coverage is only reported.
+
 ## Tools
 
 - **Unit tests:** Vitest in `packages/core` (`src/**/*.test.ts`, next to the code). Run with `pnpm test`.
 - **Coverage:** `pnpm --filter @budget-lens/core test:coverage`; CI shows a coverage summary and uploads the report.
-- **E2E (app):** TesterArmy `e2e` on iOS simulators and Android emulators, using `testID` selectors (#15).
+  It is informational only: no percentage threshold is configured or enforced.
+- **E2E (app):** TesterArmy `e2e` on iOS simulators and Android emulators, using `testID` selectors (#15). Per #15
+  the first tests run in deterministic mode (`getByTestId` locators only, no agent steps or model provider); the
+  setup, `testID` convention and CI plan are defined in #15.
   - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
     development build.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
@@ -20,8 +30,8 @@
    modules), wiring (that a module exports something, that a provider renders) or framework/library behaviour
    (Drizzle, Expo, React, Vitest itself). **Reviewers flag tests that only exercise trivial code, wiring or framework
    behaviour** and ask for them to be removed or replaced by a business-behaviour test.
-3. **No 100% coverage goal and no coverage thresholds in CI.** Aim for meaningful coverage of the domain logic:
-   edge cases, boundaries, invalid input, regressions.
+3. **No percentage coverage thresholds and no coverage goal.** Do not add tests to raise coverage. Keep unit tests
+   few and focused on business rules (edge cases, boundaries, invalid input, regressions); user flows belong in e2e.
 4. **Test names describe the business behaviour**, not the implementation: `"sums amounts without rounding errors"`,
    not `"calls reduce"`. Group with `describe` per function or behaviour.
 5. **Deterministic.** New `packages/core` code takes the current month/time as an argument, so its tests pass fixed
