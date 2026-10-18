@@ -1,0 +1,14 @@
+# Konfiguracja hooków Git: https://lefthook.dev/configuration/
+# Hooki instalowane są automatycznie przez skrypt `prepare` (pnpm install).
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+    - name: typecheck
+      glob: "*.{ts,tsx,mts,cts,json}"
+      # Typecheck tylko dla pakietów zmienionych względem HEAD (oraz pakietów od nich zależnych).
+      run: pnpm exec turbo run typecheck --filter="...[HEAD]" --output-logs=errors-only

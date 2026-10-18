@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  "workspaces": {
+    "patterns": ["apps/*", "packages/*"]
+  },
+  "duplicates": {
+    "minOccurrences": 3
+  },
+  "rules": {
+    "unused-dependencies": "error"
+  }
+}
