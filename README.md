@@ -2,6 +2,9 @@
 
 Monorepo for the offline version of the Budget Lens app.
 
+Contributors and AI agents: start with [AGENTS.md](AGENTS.md); architecture, domain notes, decisions (ADRs) and
+testing guidelines are in [docs/](docs/).
+
 ## Structure
 
 ```

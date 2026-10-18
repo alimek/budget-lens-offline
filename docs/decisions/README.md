@@ -1,0 +1,18 @@
+# Architecture decision records
+
+Short records of stack decisions. Each has a status (`Accepted`, `Superseded by …`). Add a new ADR instead of
+rewriting an accepted one when a decision changes. Unless noted, decisions were made by Grzegorz on 2026-10-18
+(see the "Decyzje" section of #1 and the research in #10).
+
+| ADR | Decision | Status |
+| --- | --- | --- |
+| [0001](0001-monorepo-pnpm-turborepo.md) | pnpm workspaces + Turborepo | Accepted |
+| [0002](0002-typescript-7.md) | TypeScript 7 `tsc` for typechecking | Accepted |
+| [0003](0003-biome.md) | Biome for lint and format | Accepted |
+| [0004](0004-testing-tools.md) | Vitest for unit tests, TesterArmy e2e for the app | Accepted |
+| [0005](0005-fallow-lefthook-ci.md) | Fallow, Lefthook and required CI checks | Accepted |
+| [0006](0006-app-stack.md) | Expo SDK 58 app stack | Accepted |
+| [0007](0007-local-database.md) | expo-sqlite + SQLCipher + Drizzle | Accepted |
+| [0008](0008-money-minor-units.md) | Money as integer minor units | Accepted |
+| [0009](0009-english-and-i18n.md) | English codebase, i18n for UI | Accepted |
+| [0010](0010-dependency-versions.md) | Latest stable dependencies, pinned exactly | Accepted |
