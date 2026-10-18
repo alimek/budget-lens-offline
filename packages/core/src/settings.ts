@@ -1,4 +1,4 @@
-import { isCurrencyCode } from "./currency";
+import { type CurrencyCode, isCurrencyCode } from "./currency";
 import { isMinorUnits, type MinorUnits, toMinorUnits } from "./money";
 
 /** UI languages the app ships in. */
@@ -11,14 +11,17 @@ export type LanguagePreference = Language | "system";
  * The single local settings model. Every calculation that needs a currency, a warning threshold or the forecast
  * horizon reads it from here, never from constants.
  *
- * Thresholds are amounts in minor units of `defaultCurrency`.
+ * Thresholds are amounts in minor units of `baseCurrency`.
  */
 export interface Settings {
   readonly language: LanguagePreference;
-  /** ISO 4217 code of the currency all budget amounts are kept in. */
-  readonly defaultCurrency: string;
-  /** ISO 4217 codes of the currencies whose exchange rates are tracked (savings in other currencies). */
-  readonly trackedCurrencies: readonly string[];
+  /**
+   * Code of the currency all budget amounts are kept in; renamed from the legacy `default_currency` (#39).
+   * Limited to the supported currencies, `CurrencyCode` (#126).
+   */
+  readonly baseCurrency: CurrencyCode;
+  /** Codes of the currencies whose exchange rates are tracked (savings in other currencies). */
+  readonly trackedCurrencies: readonly CurrencyCode[];
   /** Low-balance warning: a forecast balance below this amount. */
   readonly lowBalanceThreshold: MinorUnits;
   /** Large-outflow warning: a month whose net change is lower than minus this amount. */
@@ -33,8 +36,8 @@ export const MAX_FORECAST_HORIZON_MONTHS = 120;
 /** Defaults for a new installation; values match the legacy app (see docs/domain/settings.md). */
 export const DEFAULT_SETTINGS: Settings = Object.freeze({
   language: "system",
-  defaultCurrency: "PLN",
-  trackedCurrencies: Object.freeze(["USD", "EUR", "GBP"]),
+  baseCurrency: "PLN",
+  trackedCurrencies: Object.freeze(["USD", "EUR", "GBP"] as const),
   lowBalanceThreshold: toMinorUnits(500_000),
   largeExpenseThreshold: toMinorUnits(1_000_000),
   forecastHorizonMonths: 13,
@@ -45,7 +48,7 @@ export type SettingsErrorCode =
   | "invalid-currency"
   | "unsupported-currency"
   | "duplicate-currency"
-  | "default-currency-tracked"
+  | "base-currency-tracked"
   | "invalid-threshold"
   | "negative-threshold"
   | "invalid-forecast-horizon";
@@ -88,7 +91,7 @@ const isForecastHorizon = (value: unknown): boolean =>
 
 function trackedCurrenciesError(
   tracked: unknown,
-  defaultCurrency: unknown,
+  baseCurrency: unknown,
 ): SettingsErrorCode | undefined {
   if (!Array.isArray(tracked) || !Array.from(tracked).every(isIsoCode)) {
     return "invalid-currency";
@@ -99,8 +102,8 @@ function trackedCurrenciesError(
   if (new Set(tracked).size !== tracked.length) {
     return "duplicate-currency";
   }
-  return isCurrencyCode(defaultCurrency) && tracked.includes(defaultCurrency)
-    ? "default-currency-tracked"
+  return isCurrencyCode(baseCurrency) && tracked.includes(baseCurrency)
+    ? "base-currency-tracked"
     : undefined;
 }
 
@@ -116,9 +119,9 @@ type Check = (settings: UntrustedSettings) => SettingsErrorCode | undefined;
 /** One check per field, in the order errors are reported. */
 const FIELD_CHECKS = {
   language: ({ language }) => (isLanguagePreference(language) ? undefined : "invalid-language"),
-  defaultCurrency: ({ defaultCurrency }) => currencyError(defaultCurrency),
-  trackedCurrencies: ({ trackedCurrencies, defaultCurrency }) =>
-    trackedCurrenciesError(trackedCurrencies, defaultCurrency),
+  baseCurrency: ({ baseCurrency }) => currencyError(baseCurrency),
+  trackedCurrencies: ({ trackedCurrencies, baseCurrency }) =>
+    trackedCurrenciesError(trackedCurrencies, baseCurrency),
   lowBalanceThreshold: ({ lowBalanceThreshold }) => thresholdError(lowBalanceThreshold),
   largeExpenseThreshold: ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold),
   forecastHorizonMonths: ({ forecastHorizonMonths }) =>
@@ -152,9 +155,7 @@ export function loadSettings(stored: unknown): Settings {
   const next = loaded as Settings;
   return freezeSettings({
     ...next,
-    trackedCurrencies: next.trackedCurrencies.filter(
-      (currency) => currency !== next.defaultCurrency,
-    ),
+    trackedCurrencies: next.trackedCurrencies.filter((currency) => currency !== next.baseCurrency),
   });
 }
 
@@ -185,7 +186,7 @@ export function updateSettings(
 function freezeSettings(next: Settings): Settings {
   return Object.freeze({
     language: next.language,
-    defaultCurrency: next.defaultCurrency,
+    baseCurrency: next.baseCurrency,
     trackedCurrencies: Object.freeze([...next.trackedCurrencies]),
     lowBalanceThreshold: next.lowBalanceThreshold,
     largeExpenseThreshold: next.largeExpenseThreshold,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Settings } from "./index";
 import {
   DEFAULT_SETTINGS,
   loadSettings,
@@ -6,6 +7,10 @@ import {
   toMinorUnits,
   updateSettings,
 } from "./index";
+
+/** Changes as they may come from the UI or storage: typed fields are not trusted at runtime (#126). */
+const untrusted = (changes: Record<string, unknown>): Partial<Settings> =>
+  changes as Partial<Settings>;
 
 describe("updateSettings", () => {
   it("applies valid changes and leaves the current settings untouched", () => {
@@ -34,12 +39,12 @@ describe("updateSettings", () => {
 
   it("rejects invalid values and reports every invalid field at once", () => {
     // Arrange
-    const changes = {
-      defaultCurrency: "pln",
+    const changes = untrusted({
+      baseCurrency: "pln",
       trackedCurrencies: ["USD", "USD"],
       largeExpenseThreshold: toMinorUnits(-1),
       forecastHorizonMonths: MAX_FORECAST_HORIZON_MONTHS + 1,
-    };
+    });
 
     // Act
     const result = updateSettings(DEFAULT_SETTINGS, changes);
@@ -48,7 +53,7 @@ describe("updateSettings", () => {
     expect(result).toEqual({
       ok: false,
       errors: [
-        { field: "defaultCurrency", code: "invalid-currency" },
+        { field: "baseCurrency", code: "invalid-currency" },
         { field: "trackedCurrencies", code: "duplicate-currency" },
         { field: "largeExpenseThreshold", code: "negative-threshold" },
         { field: "forecastHorizonMonths", code: "invalid-forecast-horizon" },
@@ -56,9 +61,9 @@ describe("updateSettings", () => {
     });
   });
 
-  it("rejects tracking the default currency, which has no exchange rate against itself", () => {
+  it("rejects tracking the base currency, which has no exchange rate against itself", () => {
     // Arrange
-    const changes = { trackedCurrencies: ["PLN", "USD"] };
+    const changes = { trackedCurrencies: ["PLN", "USD"] as const };
 
     // Act
     const result = updateSettings(DEFAULT_SETTINGS, changes);
@@ -66,13 +71,13 @@ describe("updateSettings", () => {
     // Assert
     expect(result).toEqual({
       ok: false,
-      errors: [{ field: "trackedCurrencies", code: "default-currency-tracked" }],
+      errors: [{ field: "trackedCurrencies", code: "base-currency-tracked" }],
     });
   });
 
   it("rejects well-formed codes outside the supported currencies, which cannot be formatted", () => {
     // Arrange
-    const changes = { defaultCurrency: "BGN", trackedCurrencies: ["USD", "XAU"] };
+    const changes = untrusted({ baseCurrency: "BGN", trackedCurrencies: ["USD", "XAU"] });
 
     // Act
     const result = updateSettings(DEFAULT_SETTINGS, changes);
@@ -81,7 +86,7 @@ describe("updateSettings", () => {
     expect(result).toEqual({
       ok: false,
       errors: [
-        { field: "defaultCurrency", code: "unsupported-currency" },
+        { field: "baseCurrency", code: "unsupported-currency" },
         { field: "trackedCurrencies", code: "unsupported-currency" },
       ],
     });
@@ -123,7 +128,7 @@ describe("loadSettings", () => {
   it("keeps valid stored fields, defaults invalid fields and drops unknown keys", () => {
     // Arrange
     const stored = JSON.parse(
-      '{ "language": "en", "defaultCurrency": "BGN", "forecastHorizonMonths": 0, "unknown": true }',
+      '{ "language": "en", "baseCurrency": "BGN", "forecastHorizonMonths": 0, "unknown": true }',
     );
 
     // Act
@@ -137,7 +142,7 @@ describe("loadSettings", () => {
 
   it("removes the loaded base currency from the fallback tracked list", () => {
     // Arrange
-    const stored = { defaultCurrency: "USD" };
+    const stored = { baseCurrency: "USD" };
 
     // Act
     const settings = loadSettings(stored);
@@ -145,9 +150,20 @@ describe("loadSettings", () => {
     // Assert
     expect(settings).toEqual({
       ...DEFAULT_SETTINGS,
-      defaultCurrency: "USD",
+      baseCurrency: "USD",
       trackedCurrencies: ["EUR", "GBP"],
     });
     expect(updateSettings(settings, {}).ok).toBe(true);
+  });
+
+  it("ignores the legacy defaultCurrency key instead of migrating it", () => {
+    // Arrange: the rename of #39 has no migration helper, so the legacy key is just an unknown key here.
+    const stored = JSON.parse('{ "defaultCurrency": "EUR" }');
+
+    // Act
+    const settings = loadSettings(stored);
+
+    // Assert
+    expect(settings).toEqual(DEFAULT_SETTINGS);
   });
 });
