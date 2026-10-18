@@ -1,6 +1,6 @@
-# Month closing and settings
+# Month closing
 
-Status: **not implemented yet** in `packages/core` – tracked in #7.
+Status: **not implemented yet** in `packages/core` – tracked in #84 (split from #7).
 
 ## Legacy behaviour (`lib/actions/months.ts`, `close-month-dialog.tsx`)
 
@@ -10,15 +10,11 @@ Status: **not implemented yet** in `packages/core` – tracked in #7.
 - Closing and creating the next month are two separate queries without a transaction.
 - The first month is created automatically with `opening_balance: 0`.
 - The close dialog sums all items as floats and ignores overrides.
-- Warning thresholds are hardcoded in `use-forecast.ts`; `user_settings.low_balance_threshold` is unused and not
-  shown in the settings panel.
 
-## Target (#7)
+## Target (#84)
 
 - `closeMonth(activeMonth, { items, overrides, paymentStatuses, closingBalance })` → `{ closed, next }`: the closed
   month carries `totalIncome`, `totalExpenses`, `netChange`; `next.openingBalance = closingBalance`.
 - Validation: exactly one active month, no closing a future month, a list of unpaid/unreceived items to confirm.
 - `updateBalance(activeMonth, balance)`.
-- **Settings-driven thresholds:** a `Settings` model in core with `lowBalanceThreshold`, `largeExpenseThreshold`
-  (`MinorUnits`), `defaultCurrency`, `trackedCurrencies`. Defaults match legacy: 5000 PLN / 10000 PLN, PLN,
-  USD/EUR/GBP. The forecast (#6) takes thresholds only from `Settings`.
+- Thresholds and currencies come only from `Settings` ([settings.md](settings.md)).
