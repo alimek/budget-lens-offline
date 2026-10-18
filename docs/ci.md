@@ -98,4 +98,4 @@ Vite (Vitest), never modified or shipped in the app.
 
 `expo-doctor`, `expo-export` (matrix `ios` / `android`), `migrations` (`drizzle-kit check`), `e2e-android`
 (TesterArmy smoke tests, #15) and `bundle-size` (JS bundle size against a committed budget). They are added
-together with the app scaffold.
+together with the app scaffold and tracked in [#109](https://github.com/alimek/budget-lens-offline/issues/109).
