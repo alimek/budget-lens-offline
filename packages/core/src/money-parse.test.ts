@@ -59,7 +59,7 @@ describe("parseMoney", () => {
 
   it("rejects invalid input with an error code", () => {
     // Arrange
-    const inputs = ["  ", "1,234", "1 234,56 zł", "12,", "1 23", "1.234,5.6", "abc"];
+    const inputs = ["  ", "1,234", "1 234,56 zł", "12,", "1 23", "1.234,5.6", "abc", "1\t234"];
 
     // Act
     const errors = inputs.map((input) => {
@@ -71,6 +71,7 @@ describe("parseMoney", () => {
     expect(errors).toEqual([
       "empty",
       "too-many-fraction-digits",
+      "invalid-format",
       "invalid-format",
       "invalid-format",
       "invalid-format",

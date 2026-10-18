@@ -12,7 +12,8 @@ export type ParseMoneyResult =
   | { readonly ok: false; readonly error: ParseMoneyError };
 
 const MINUS_SIGNS = ["-", "\u2212"];
-const SPACES = /[\s\u00a0\u202f]/g;
+/** Grouping spaces: space, no-break space and narrow no-break space. Tabs and line breaks are not grouping. */
+const SPACES = /[ \u00a0\u202f]/g;
 const MAX_FRACTION_DIGITS = 2;
 
 /**
@@ -22,7 +23,8 @@ const MAX_FRACTION_DIGITS = 2;
  * thousands grouping with spaces (including no-break spaces) or with the separator that is not the decimal one:
  * `"1 234,56"`, `"1234.5"`, `"-12"`, `"1.234,56"`, `"1,234.56"`, `"1.234.567"`.
  * A single `,` or `.` is always the decimal separator, so `"1,234"` is rejected (3 fraction digits) instead of
- * being guessed. Currency symbols, letters and malformed grouping are rejected.
+ * being guessed. Currency symbols, letters, a leading `+`, a missing integer part (`",5"`), tabs or line breaks
+ * inside the number and malformed grouping are rejected.
  */
 export function parseMoney(input: string): ParseMoneyResult {
   let text = input.trim();
