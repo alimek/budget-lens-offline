@@ -5,7 +5,8 @@
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
 What exists today in `packages/core`: the `MinorUnits` money type (`isMinorUnits`, `toMinorUnits`, `sumMinorUnits`),
-`YearMonth` months and recurrence schedules (#4), and characterization tests of the legacy implementation (#3).
+`YearMonth` months and recurrence schedules (#4), the `Settings` model (#76) and characterization tests of the
+legacy implementation (#3).
 
 ## Repository layout
 
@@ -41,12 +42,14 @@ nothing app- or platform-specific.
   override in `biome.json`), no I/O, no `Date.now()` / `new Date()` inside domain functions. Anything
   environment-dependent (current month, `fetch`, rate storage) is passed in as an argument or an injected interface.
 - Money is `MinorUnits` (integer minor units); see [domain/money.md](domain/money.md).
+- `Settings` (`src/settings.ts`, #76): the single local settings model with defaults and validation; see
+  [domain/settings.md](domain/settings.md).
 - Minimal unit tests (business logic only) with Vitest next to the code (`src/**/*.test.ts`);
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
 Planned content, one issue each: money operations and formatting (#2), occurrence overrides (#5),
-forecast (#6), month closing and `Settings` (#7), NBP exchange-rate client with an injected offline cache (#8).
+forecast (#6), month closing (#84), NBP exchange-rate client with an injected offline cache (#8).
 Legacy behaviour is pinned by characterization tests first (#3).
 
 ## Planned app stack (Stage 1)

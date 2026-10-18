@@ -83,7 +83,7 @@ it("opens the next month with the closing balance of the closed month", () => {
 });
 ```
 
-(Illustrative only – `closeMonth` is planned in #7.)
+(Illustrative only – `closeMonth` is planned in #84.)
 
 ## Property-based tests
 
@@ -117,6 +117,8 @@ line):
 - `src/money.property.test.ts`: property-based money arithmetic (see above).
 - `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
   validation (`it.each` tables).
+- `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
+  AAA sections.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
   schedules with legacy, #4), exchange rates, month closing and formatting. They use explicit AAA sections and the
   frozen-clock exception from rule 5.

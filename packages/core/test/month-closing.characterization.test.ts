@@ -62,7 +62,7 @@ describe("legacyCloseMonth", () => {
   });
 
   it("closes the month without storing its totals", () => {
-    // LEGACY: total_income / total_expenses / net_change of the closed month are not written – changed by #7.
+    // LEGACY: total_income / total_expenses / net_change of the closed month are not written – changed by #84.
     // Arrange
     const october = activeMonth();
 
@@ -89,7 +89,7 @@ describe("legacyUpdateMonthBalance", () => {
 
 describe("legacyInitialMonth", () => {
   it("starts the first month at 0, taking the month from local time and started_at from UTC", () => {
-    // LEGACY: opening_balance 0 and mixed time bases – changed by #7.
+    // LEGACY: opening_balance 0 and mixed time bases – changed by #84.
     // Arrange: 23:30 UTC on 31 January is already February in Warsaw.
     freezeClockAt("2026-01-31T23:30:00.000Z", "Europe/Warsaw");
 
