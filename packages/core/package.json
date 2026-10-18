@@ -16,7 +16,6 @@
     "@vitest/coverage-v8": "5.0.5",
     "fast-check": "4.10.2",
     "typescript": "7.0.2",
-    "vitest": "5.0.5",
-    "is-number": "7.0.0"
+    "vitest": "5.0.5"
   }
 }
