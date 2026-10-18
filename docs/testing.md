@@ -28,6 +28,8 @@
   - `packages/core/test/tsconfig.json` adds `types: ["node"]` and also checks `vitest.config.ts`.
   - The core `typecheck` script runs both: `tsc --noEmit && tsc --noEmit -p test`.
   - `@types/node` (24.x, matching `.nvmrc`) is a core devDependency used only by the tests.
+- **CLDR parity (dev-only, not in CI):** `pnpm check:cldr-parity` compares the Intl-free money formatters with
+  Node.js ICU; see [domain/money.md](domain/money.md#formatting-packagescoresrcmoney-formatts).
 - **Coverage:** `pnpm --filter @budget-lens/core test:coverage`; CI shows a coverage summary and uploads the report.
   It is informational only: no percentage threshold is configured or enforced.
 - **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and

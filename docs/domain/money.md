@@ -89,10 +89,19 @@ ISO 4217 code (`5,00 USD`, `CHF 5.00`), which differs from CLDR for a few `en` s
   (`1,5 mln`), whole numbers from 10 (`12 tys.`), half away from zero; a value that rounds up to 1000 moves to the
   next suffix (999 999,99 zł → `1 mln`). Amounts below 1000 units are not compacted (`12`, `0,05`).
 
-The data was checked against Node.js ICU (CLDR 48; #38 checked CLDR 46): about 109 000 random and boundary cases for
-`pl-PL`/`en-GB` currency and `pl-PL`/`en` compact output matched exactly, except for the intended `-0` change.
-Known differences from `Intl`: `HUF` is shown with its ISO exponent (2 digits), where ICU shows 0. CLDR data:
-Copyright © Unicode, Inc., [Unicode License v3](https://www.unicode.org/license.txt).
+**ICU parity check (dev-only, not in CI).** `pnpm check:cldr-parity` (`scripts/check-cldr-parity.mjs`, Node.js
+24 or later, no build step and no extra dependencies) compares `formatMoney` and `formatMoneyCompact` with Node.js ICU
+(`Intl.NumberFormat`): boundary and seeded random amounts up to ±`Number.MAX_SAFE_INTEGER`, every supported currency
+× `pl-PL`/`en-GB` × `fractionDigits` `"currency"`/`0` (symbol display where the table has a symbol, code display
+otherwise; digits fixed to the exponent; `halfExpand`; `signDisplay: "negative"` for the intended no-`-0` change),
+and compact output for `pl-PL`/`en` (PLN, EUR, JPY). It prints the Node.js, ICU and CLDR versions and exits with
+code 1 on any difference. An optional argument sets the number of random amounts (default 4000). Run it after a
+Node.js upgrade or a change to `money-locale.ts`. With Node.js 24 (ICU 78.3, CLDR 48; #38 checked CLDR 46) it
+reports no differences.
+
+Known differences from `Intl` defaults: `HUF` and `IDR` are shown with their ISO 4217 exponent (2 digits, #39),
+where CLDR/ICU show 0 by default; the parity check fixes the digits to the exponent, so it does not report them.
+CLDR data: Copyright © Unicode, Inc., [Unicode License v3](https://www.unicode.org/license.txt).
 
 Tests compare exact strings, with `\u00a0` written out.
 
