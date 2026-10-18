@@ -79,7 +79,10 @@ through `loadSettings` and user input is checked with `isCurrencyCode` before it
 
 `loadSettings(stored)` keeps valid stored fields, uses defaults for missing or invalid fields, drops unknown
 keys and returns frozen settings; non-object values and arrays return `DEFAULT_SETTINGS`. The loaded base
-currency is removed from tracked currencies, including when that list falls back to its default. The pre-rename
+currency is removed from the stored tracked list before validation, preserving the remaining valid choices
+(e.g. `baseCurrency: "USD"` with `["USD", "EUR"]` keeps `["EUR"]`). Lists with other invalid entries still fall
+back to the default, with the base currency removed. An empty tracked list is valid (`["USD"]` with base `USD`
+loads as `[]`). The pre-rename
 `defaultCurrency` key is an unknown key here: it is dropped and `baseCurrency` keeps its stored value or default.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)

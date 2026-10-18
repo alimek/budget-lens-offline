@@ -125,6 +125,39 @@ describe("updateSettings", () => {
 });
 
 describe("loadSettings", () => {
+  it.each([
+    { trackedCurrencies: ["USD", "EUR"], expected: ["EUR"] },
+    { trackedCurrencies: ["USD"], expected: [] },
+    { trackedCurrencies: ["USD", "BGN"], expected: ["EUR", "GBP"] },
+    { trackedCurrencies: ["USD", "EUR", "EUR"], expected: ["EUR", "GBP"] },
+    { trackedCurrencies: Array(2), expected: ["EUR", "GBP"] },
+  ])(
+    "removes the stored base from tracked, or falls back for invalid lists: $trackedCurrencies",
+    ({ trackedCurrencies, expected }) => {
+      // Arrange
+      const stored = { baseCurrency: "USD", trackedCurrencies };
+
+      // Act
+      const settings = loadSettings(stored);
+
+      // Assert
+      expect(settings.trackedCurrencies).toEqual(expected);
+      expect(updateSettings(settings, {}).ok).toBe(true);
+    },
+  );
+
+  it("removes the default base from tracked when the stored base is invalid", () => {
+    // Arrange: relies on baseCurrency being resolved before trackedCurrencies.
+    const stored = { baseCurrency: "BGN", trackedCurrencies: ["PLN", "EUR"] };
+
+    // Act
+    const settings = loadSettings(stored);
+
+    // Assert
+    expect(settings.baseCurrency).toBe(DEFAULT_SETTINGS.baseCurrency);
+    expect(settings.trackedCurrencies).toEqual(["EUR"]);
+  });
+
   it("keeps valid stored fields, defaults invalid fields and drops unknown keys", () => {
     // Arrange
     const stored = JSON.parse(

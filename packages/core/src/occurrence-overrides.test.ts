@@ -181,13 +181,22 @@ describe("findOrphanedOverrides", () => {
     expect(november.occurrences.map(({ item, amount }) => [item.id, amount])).toEqual([
       ["tv", 200_000],
     ]);
-    expect(november.rejectedOverrides).toEqual([
-      { override: ofOneTime, errors: ["one-time-item"] },
-    ]);
+    expect(november.rejectedOverrides).toEqual([]);
   });
 });
 
 describe("validateOverride", () => {
+  it("reports a null override instead of throwing", () => {
+    // Arrange
+    const override: OccurrenceOverride = JSON.parse("null");
+
+    // Act
+    const errors = validateOverride(override, rent);
+
+    // Assert
+    expect(errors).toEqual(["invalid-override"]);
+  });
+
   const laptop: ScheduledItem = {
     id: "rent",
     itemType: "expense",
