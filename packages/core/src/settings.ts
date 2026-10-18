@@ -67,39 +67,66 @@ type UntrustedSettings = { readonly [Field in keyof Settings]: unknown };
 const isCurrencyCode = (value: unknown): value is string =>
   typeof value === "string" && CURRENCY_CODE.test(value);
 
+const isLanguagePreference = (value: unknown): boolean =>
+  typeof value === "string" && LANGUAGE_PREFERENCES.includes(value);
+
+const isForecastHorizon = (value: unknown): boolean =>
+  typeof value === "number" &&
+  Number.isSafeInteger(value) &&
+  value >= 1 &&
+  value <= MAX_FORECAST_HORIZON_MONTHS;
+
+function trackedCurrenciesError(
+  tracked: unknown,
+  defaultCurrency: unknown,
+): SettingsErrorCode | undefined {
+  if (!Array.isArray(tracked) || !tracked.every(isCurrencyCode)) {
+    return "invalid-currency";
+  }
+  if (new Set(tracked).size !== tracked.length) {
+    return "duplicate-currency";
+  }
+  return typeof defaultCurrency === "string" && tracked.includes(defaultCurrency)
+    ? "default-currency-tracked"
+    : undefined;
+}
+
+function thresholdError(threshold: unknown): SettingsErrorCode | undefined {
+  if (typeof threshold !== "number" || !isMinorUnits(threshold)) {
+    return "invalid-threshold";
+  }
+  return threshold < 0 ? "negative-threshold" : undefined;
+}
+
+/** One check per field, in the order errors are reported. */
+const FIELD_CHECKS: readonly (readonly [
+  keyof Settings,
+  (settings: UntrustedSettings) => SettingsErrorCode | undefined,
+])[] = [
+  ["language", ({ language }) => (isLanguagePreference(language) ? undefined : "invalid-language")],
+  [
+    "defaultCurrency",
+    ({ defaultCurrency }) => (isCurrencyCode(defaultCurrency) ? undefined : "invalid-currency"),
+  ],
+  [
+    "trackedCurrencies",
+    ({ trackedCurrencies, defaultCurrency }) =>
+      trackedCurrenciesError(trackedCurrencies, defaultCurrency),
+  ],
+  ["lowBalanceThreshold", ({ lowBalanceThreshold }) => thresholdError(lowBalanceThreshold)],
+  ["largeExpenseThreshold", ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold)],
+  [
+    "forecastHorizonMonths",
+    ({ forecastHorizonMonths }) =>
+      isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
+  ],
+];
+
 function validate(settings: UntrustedSettings): SettingsError[] {
-  const errors: SettingsError[] = [];
-  const { language, defaultCurrency, trackedCurrencies, forecastHorizonMonths } = settings;
-  if (typeof language !== "string" || !LANGUAGE_PREFERENCES.includes(language)) {
-    errors.push({ field: "language", code: "invalid-language" });
-  }
-  if (!isCurrencyCode(defaultCurrency)) {
-    errors.push({ field: "defaultCurrency", code: "invalid-currency" });
-  }
-  if (!Array.isArray(trackedCurrencies) || !trackedCurrencies.every(isCurrencyCode)) {
-    errors.push({ field: "trackedCurrencies", code: "invalid-currency" });
-  } else if (new Set(trackedCurrencies).size !== trackedCurrencies.length) {
-    errors.push({ field: "trackedCurrencies", code: "duplicate-currency" });
-  } else if (typeof defaultCurrency === "string" && trackedCurrencies.includes(defaultCurrency)) {
-    errors.push({ field: "trackedCurrencies", code: "default-currency-tracked" });
-  }
-  for (const field of ["lowBalanceThreshold", "largeExpenseThreshold"] as const) {
-    const threshold = settings[field];
-    if (typeof threshold !== "number" || !isMinorUnits(threshold)) {
-      errors.push({ field, code: "invalid-threshold" });
-    } else if (threshold < 0) {
-      errors.push({ field, code: "negative-threshold" });
-    }
-  }
-  if (
-    typeof forecastHorizonMonths !== "number" ||
-    !Number.isSafeInteger(forecastHorizonMonths) ||
-    forecastHorizonMonths < 1 ||
-    forecastHorizonMonths > MAX_FORECAST_HORIZON_MONTHS
-  ) {
-    errors.push({ field: "forecastHorizonMonths", code: "invalid-forecast-horizon" });
-  }
-  return errors;
+  return FIELD_CHECKS.flatMap(([field, check]) => {
+    const code = check(settings);
+    return code === undefined ? [] : [{ field, code }];
+  });
 }
 
 /**
