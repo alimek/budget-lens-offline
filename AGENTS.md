@@ -6,13 +6,13 @@ live in `docs/`. If a PR changes domain behaviour, architecture or conventions, 
 ## Product and scope
 
 Budget Lens is a **fully offline personal budget app** built with Expo (iOS and Android). It ports the business logic
-of the legacy web app [`alimek/budget-lens`](https://github.com/alimek/budget-lens) (Next.js + Supabase) into a
+of the legacy web app [`alimek/budget-lens`](https://github.com/alimek/budget-lens) (private; Next.js + Supabase) into a
 platform-agnostic TypeScript package.
 
 - No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google
   Drive.
-- A multi-user shared wallet is out of scope. Encrypted backup/restore is a planned epic; its details are still open
-  (research in #10).
+- A multi-user shared wallet is out of scope. Encrypted backup/restore is a planned epic (#30, E8,
+  `epic:cloud-backup`); its details are still open.
 - One-time license; the core logic is open source under the MIT license (`LICENSE`).
 
 ## Hard rules

@@ -133,7 +133,7 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
   });
 
   it("sums float amounts with floating-point rounding errors", () => {
-    // LEGACY: amounts are PLN floats – changed by #2 (integer grosze).
+    // LEGACY: amounts are PLN floats – fixed in #2: integer minor units, sumMinorUnits (src/money-parse.test.ts).
     // Arrange
     const items: LegacyExpense[] = [
       { id: "a", name: "A", amount: 0.1, type: "recurring", frequency: "monthly" },

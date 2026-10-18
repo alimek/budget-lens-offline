@@ -39,7 +39,8 @@ Source: [#15 e2e decisions comment](https://github.com/alimek/budget-lens-offlin
 
 - Secrets and API keys (for example the model provider API key for e2e tests) **never appear on GitHub**: not
   committed, not in PR or issue descriptions, comments or screenshots, and not in CI logs.
-- Keep them only in the local environment (on the Mac Studio for e2e) or in GitHub Actions secrets if CI needs them.
+- Keep them only in the local environment (on the local dev machine for e2e) or in GitHub Actions secrets if CI needs
+  them.
 - `.env*` files are gitignored. CI steps never echo or print secrets; secrets are masked in CI logs.
 - Setup that needs a secret is documented in `docs/` by variable name only, never with a value.
 

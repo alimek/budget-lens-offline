@@ -28,6 +28,8 @@
   - `packages/core/test/tsconfig.json` adds `types: ["node"]` and also checks `vitest.config.ts`.
   - The core `typecheck` script runs both: `tsc --noEmit && tsc --noEmit -p test`.
   - `@types/node` (24.x, matching `.nvmrc`) is a core devDependency used only by the tests.
+- **CLDR parity (dev-only, not in CI):** `pnpm check:cldr-parity` compares the Intl-free money formatters with
+  Node.js ICU; see [domain/money.md](domain/money.md#formatting-packagescoresrcmoney-formatts).
 - **Coverage:** `pnpm --filter @budget-lens/core test:coverage`; CI shows a coverage summary and uploads the report.
   It is informational only: no percentage threshold is configured or enforced.
 - **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and
@@ -39,8 +41,8 @@
     ([e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). Set `E2E_TELEMETRY_DISABLED=1` in every
     environment, local and CI, like `TURBO_TELEMETRY_DISABLED` in `.github/workflows/ci.yml` ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
-  - The model provider API key comes from the local environment on the Mac Studio (later GitHub Actions secrets if
-    CI needs it) and never appears on GitHub ([#15 e2e decisions
+  - The model provider API key comes from the local environment on the local dev machine (later GitHub Actions
+    secrets if CI needs it) and never appears on GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
   - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
@@ -89,7 +91,7 @@ it("opens the next month with the closing balance of the closed month", () => {
 
 Use [fast-check](https://fast-check.dev/) (`fc.assert(fc.property(...))` inside a Vitest `it`) for business
 invariants that must hold for every input, not just a few examples: money arithmetic and parse/format round-trips
-(#2), recurrence (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping, #4). The same
+(#122), recurrence (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping, #4). The same
 rules apply: few properties, business-behaviour names, AAA inside the property. Keep the generated ranges realistic
 (for example amounts whose sums stay safe integers) and do not fix a seed; on failure fast-check prints the seed and
 the shrunk counterexample to reproduce it.
@@ -97,7 +99,7 @@ the shrunk counterexample to reproduce it.
 **Deferred from #18, tracked in [#122](https://github.com/alimek/budget-lens-offline/issues/122).** Only the money
 arithmetic properties exist today (`src/money.property.test.ts`). Still to add:
 - money parse/format round-trip (`parseMoney(formatMoney(x))`) and `multiplyByRate` rounding (half away from zero),
-  once the parsing and formatting code from #2 (PR #117) is on `main`;
+  now that the parsing and formatting code from #2 is in `packages/core`;
 - recurrence properties (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping),
   together with #4.
 
@@ -112,15 +114,18 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 What is tested and where in `packages/core` (no test counts: they conflict between PRs; each PR adds its own
 line):
-- `src/money.test.ts`: `MinorUnits` operations. It follows the business-behaviour and naming rules and is left
-  as-is; its tests are one-line act-and-assert checks, so explicit AAA sections are not needed there.
+- `src/money.test.ts`: `MinorUnits` operations. It follows the business-behaviour and naming rules; the original
+  tests are one-line act-and-assert checks, so explicit AAA sections are not needed there, and the newer ones
+  (#2) use explicit AAA sections.
+- `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and CLDR-based formatting, with explicit
+  AAA sections. Expected strings use the exact characters (e.g. `\u00a0`), not normalized spaces.
 - `src/money.property.test.ts`: property-based money arithmetic (see above).
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
   AAA sections.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence, exchange rates, month closing and
-  formatting. They use explicit AAA sections and the frozen-clock exception from rule 5.
+  formatting (including the check that `formatMoney` matches the legacy `formatCurrency`). They use explicit AAA
+  sections and the frozen-clock exception from rule 5.
 
 Follow-ups:
-- When `money.test.ts` grows multi-step cases (e.g. parsing and formatting in #2), split them into explicit AAA
-  sections.
-- Property-based tests deferred from #18 (money round-trip and rounding, recurrence): #122.
+- Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,
+  recurrence): #122.
