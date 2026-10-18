@@ -9,7 +9,7 @@ apps/            # applications (the Expo app will be added in a separate step)
 packages/core/   # pure TypeScript domain logic (no RN/Expo/Next/Supabase)
 ```
 
-Monetary amounts in `packages/core` are stored as integers in minor currency units (`MinorUnits`).
+Monetary amounts in `packages/core` are stored as integers in minor currency units (branded `MinorUnits` type; create values with `toMinorUnits`).
 
 ## Requirements
 
