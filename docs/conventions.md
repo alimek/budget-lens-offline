@@ -22,7 +22,7 @@ the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/
   `exactOptionalPropertyTypes` (`tsconfig.base.json`).
 - **Biome** for lint and format, **Fallow** must stay clean, **Lefthook** pre-commit runs Biome and typecheck.
 - **Test files:** `src/**/*.test.ts` next to the code, or `packages/core/test/**/*.test.ts` for the legacy
-  characterization tests added by [#19](https://github.com/alimek/budget-lens-offline/pull/19); both locations are allowed.
+  characterization tests (#3); both locations are allowed.
 - **Tests** follow [testing.md](testing.md): e2e tests are the main testing; unit tests are minimal (business logic
   only, Arrange-Act-Assert); no percentage coverage thresholds.
 
@@ -47,7 +47,8 @@ Source: [#15 e2e decisions comment](https://github.com/alimek/budget-lens-offlin
 Tool telemetry is disabled through environment variables, locally and in CI:
 - Turborepo: `TURBO_TELEMETRY_DISABLED=1` (set in `.github/workflows/ci.yml`).
 - `e2e` CLI (sends anonymous usage telemetry by default): `E2E_TELEMETRY_DISABLED=1` in every environment, local
-  and CI ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); behaviour: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). The CLI also honours
+  and CI ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252);
+  behaviour: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). The CLI also honours
   `DO_NOT_TRACK=1`, but the repo standard is `E2E_TELEMETRY_DISABLED=1`.
 
 ## Workflow

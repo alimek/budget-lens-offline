@@ -1,6 +1,8 @@
 # 0004 – Testing strategy and tools
 
-Status: Accepted (#1, #15; e2e framework, models, telemetry and secrets: [#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); testing strategy and UI verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427))
+Status: Accepted (#1, #15; e2e framework, models, telemetry and secrets: [#15 e2e decisions
+comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); testing strategy and UI
+verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427))
 
 **Decision.**
 - **E2E tests with the open-source [e2e](https://github.com/tester-army/e2e) framework** made by TesterArmy

@@ -1,6 +1,7 @@
 # 0005 – Fallow, Lefthook and CI
 
-Status: Accepted (#1, #9; merge rule: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427))
+Status: Accepted (#1, #9; merge rule: [#1 decisions
+comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427))
 
 **Decision.**
 - **Fallow** checks dead code, unused exports and unused dependencies from the first commit (`.fallowrc.json`,

@@ -12,7 +12,8 @@ apps/            # applications (the Expo app will be added in a separate step)
 packages/core/   # pure TypeScript domain logic (no RN/Expo/Next/Supabase)
 ```
 
-Monetary amounts in `packages/core` are stored as integers in minor currency units (branded `MinorUnits` type; create values with `toMinorUnits`).
+Monetary amounts in `packages/core` are stored as integers in minor currency units (branded `MinorUnits` type; create
+values with `toMinorUnits`).
 
 ## Requirements
 
@@ -81,5 +82,6 @@ Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmr
 
 1. Open **Settings → Rules → Rulesets** (or **Settings → Branches → Branch protection rules**) for `main`.
 2. Enable **Require status checks to pass** (and optionally **Require branches to be up to date before merging**).
-3. Add the status checks `lint`, `typecheck`, `test` and `fallow` (they appear in the search after the workflow has run at least once).
+3. Add the status checks `lint`, `typecheck`, `test` and `fallow` (they appear in the search after the workflow has run
+   at least once).
 4. Save the rule.

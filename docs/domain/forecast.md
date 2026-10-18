@@ -16,7 +16,8 @@ Status: **not implemented yet** in `packages/core` – tracked in #6.
 
 ## Target (#6)
 
-- A pure function, e.g. `forecast({ items, overrides, paymentStatuses, currentBalance, totalSavings, fromMonth, months, settings })`.
+- A pure function, e.g. `forecast({ items, overrides, paymentStatuses, currentBalance, totalSavings, fromMonth, months,
+  settings })`.
 - Horizon is a parameter (legacy default 13); the start month is an argument – no system clock.
 - Warnings are data (code + parameters), translated in the UI; thresholds come only from `Settings`
   (see [month-closing.md](month-closing.md)).

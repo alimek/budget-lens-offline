@@ -14,7 +14,8 @@ Status: **not implemented yet** in `packages/core` – tracked in #5.
 
 ## Target model (#5)
 
-- `occurrence_overrides` records: `{ id, itemType: "expense" | "income", itemId, month: YYYY-MM, amount?, skipped?, note? }`
+- `occurrence_overrides` records: `{ id, itemType: "expense" | "income", itemId, month: YYYY-MM, amount?, skipped?,
+  note? }`
   with `amount` in `MinorUnits`; unique per `(itemType, itemId, month)`.
 - `resolveOccurrences(items, overrides, month)` returns the effective occurrences (overridden amounts, skipped
   ones removed). **No matching by name.**

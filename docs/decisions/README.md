@@ -2,7 +2,8 @@
 
 Short records of stack decisions. Each has a status (`Accepted`, `Superseded by …`). Add a new ADR instead of
 rewriting an accepted one when a decision changes. Unless noted, decisions were made by Grzegorz on 2026-10-18
-(see the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427), the "Decyzje" section of #1 and the research in #10).
+(see the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427), the
+"Decyzje" section of #1 and the research in #10).
 
 | ADR | Decision | Status |
 | --- | --- | --- |
