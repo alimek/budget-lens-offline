@@ -12,6 +12,20 @@ import {
 } from "./legacy/format";
 
 describe("formatCurrency", () => {
+  it("hides grosze by rounding to whole złoty", () => {
+    // LEGACY: 0 fraction digits – fixed in #2: formatMoney shows 2 by default (src/money-format.test.ts).
+    // Arrange
+    const amounts = [1234.49, 1234.51, -1234.51];
+
+    // Act
+    const formatted = amounts.map(formatCurrency);
+
+    // Assert: no decimal part on any platform; the rounding of halves is platform-dependent.
+    for (const value of formatted) {
+      expect(value).not.toMatch(/,\d/);
+    }
+  });
+
   it("shows a minus sign on amounts that round to 0 zł", () => {
     // LEGACY: -0.4 → "-0 zł" – fixed in #2: formatMoney shows "0 zł" (src/money-format.test.ts).
     // Arrange
@@ -21,7 +35,7 @@ describe("formatCurrency", () => {
     const formatted = formatCurrency(amount);
 
     // Assert
-    expect(formatted).not.toBe(formatCurrency(0));
+    expect(formatted).toMatch(/^-0(?!\d)/);
   });
 });
 
