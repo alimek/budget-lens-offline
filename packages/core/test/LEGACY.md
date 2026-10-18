@@ -37,9 +37,9 @@ done and which issues remain.
 | Recurrence | Yearly items without `startMonth` default to January | #4 | **Fixed in #4:** every recurring schedule has an explicit `anchor` (`src/recurrence.test.ts`) |
 | Recurrence | Recurring items have no start/end date (active also before creation) | #4 | **Fixed in #4:** schedules start at `anchor` and may have an `endMonth` (`src/recurrence.test.ts`) |
 | Recurrence | Incomes support only monthly recurrence | #4 | **Fixed in #4:** incomes and expenses share `Schedule`, with any interval (`src/recurrence.test.ts`) |
-| Overrides | Overrides are one-time items named `"<name> (nadpisanie)"`, matched by name | #5 | Open |
-| Overrides | Monthly totals (`calculateMonthly*`) count both the item and its override | #5 | Open |
-| Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 | Open |
+| Overrides | Overrides are one-time items named `"<name> (nadpisanie)"`, matched by name | #5 | **Fixed in #5:** id-based `OccurrenceOverride`s matched by `(itemType, itemId)`; no legacy import (`src/occurrence-overrides.test.ts`) |
+| Overrides | Monthly totals (`calculateMonthly*`) count both the item and its override | #5 | **Fixed in #5:** `resolveOccurrences` uses the overridden amount instead of the item's (`test/occurrence-overrides.characterization.test.ts`) |
+| Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 | **Fixed in #5:** overrides match by item id, so same-name items and renames are unaffected (`src/occurrence-overrides.test.ts`) |
 | Forecast | The start month comes from `new Date()` in the device time zone | #6 | Open |
 | Forecast | Balance exactly 0 produces no warning | #6 | Open |
 | Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #6, #76 | Open |

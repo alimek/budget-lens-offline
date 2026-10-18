@@ -15,6 +15,22 @@ export { formatMoney, formatMoneyCompact } from "./money-format";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
 export type {
+  ItemType,
+  OccurrenceOverride,
+  OrphanedOverride,
+  OverrideErrorCode,
+  RejectedOverride,
+  ResolvedMonth,
+  ResolvedOccurrence,
+  ScheduledItem,
+} from "./occurrence-overrides";
+export {
+  findOrphanedOverrides,
+  resolveOccurrences,
+  validateOverride,
+  validateStoredOverride,
+} from "./occurrence-overrides";
+export type {
   Occurrence,
   OneTimeSchedule,
   RecurringSchedule,
