@@ -36,7 +36,8 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("schedules quarterly expenses in January, April, July and October only", () => {
-    // Ported by #4: any anchor month; legacy items map to a January/April/July/October anchor (see below).
+    // LEGACY: quarter months are fixed regardless of the start date – fixed in #4: any anchor month
+    // (src/recurrence.test.ts); legacy items map to a January/April/July/October anchor (see below).
     // Arrange
     const quarterly = byId(expenses, "exp-software");
 
@@ -59,7 +60,8 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("schedules yearly expenses without startMonth in January", () => {
-    // Ported by #4: the new model always has an explicit anchor month.
+    // LEGACY: implicit January anchor – fixed in #4: every recurring schedule has an explicit anchor
+    // (src/recurrence.test.ts).
     // Arrange
     const yearlyWithoutStart = byId(expenses, "exp-domain");
 
@@ -71,7 +73,8 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("treats recurring expenses as active long before they were created", () => {
-    // Ported by #4: schedules start at their anchor and may end (see "legacy → ported schedule" below).
+    // LEGACY: no start/end date for recurring items – fixed in #4: schedules start at their anchor and may end
+    // (src/recurrence.test.ts; see "legacy fixtures → ported schedules" below).
     // Arrange
     const rent = byId(expenses, "exp-rent");
 
@@ -101,7 +104,8 @@ describe("isExpenseActiveInMonth", () => {
 
 describe("isIncomeActiveInMonth", () => {
   it("treats recurring incomes as monthly and one-time incomes as active in targetMonth only", () => {
-    // Ported by #4: incomes use the same schedule as expenses, with any interval.
+    // LEGACY: incomes support only monthly recurrence – fixed in #4: incomes use the same schedule as expenses,
+    // with any interval (src/recurrence.test.ts).
     // Arrange
     const salary = byId(incomes, "inc-salary");
     const bonus = byId(incomes, "inc-bonus"); // targetMonth 2026-12
@@ -135,7 +139,7 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
   });
 
   it("sums float amounts with floating-point rounding errors", () => {
-    // LEGACY: amounts are PLN floats – changed by #2 (integer grosze).
+    // LEGACY: amounts are PLN floats – fixed in #2: integer minor units, sumMinorUnits (src/money-parse.test.ts).
     // Arrange
     const items: LegacyExpense[] = [
       { id: "a", name: "A", amount: 0.1, type: "recurring", frequency: "monthly" },

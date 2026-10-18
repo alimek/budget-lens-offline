@@ -31,6 +31,10 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 - An injected `RateStore` cache (`get`, `set`, `getAll`); in-memory implementation in core for tests, SQLite in the app.
 - `getRate(currency, { now, maxAgeHours })` – fresh cached rate, otherwise try to refresh; without network return the
   last rate with `stale: true` and its `effectiveDate` (weekends/holidays have no new table).
-- Convert an amount in a currency to PLN `MinorUnits` using the rate as returned (per 1 unit), with explicit
-  rounding (#2).
+- Convert an amount in a currency to PLN `MinorUnits` using the rate as returned (per 1 unit) with `convertMinor`
+  (#39, #8/#92). It multiplies by the rate with `multiplyByRate` (#2, rounds half away from zero) **and** scales by
+  `10^(targetExponent − sourceExponent)`: `multiplyByRate` keeps the scale of the source amount, so on its own it is
+  only correct when both currencies have the same exponent. Example: ¥10 000 (`10000` JPY minor units, exponent 0)
+  × 0.024574 is 245,74 zł = `24574` groszy (exponent 2); `multiplyByRate` alone gives `246` (2,46 zł, 100× too
+  small). See [money.md](money.md#type-and-operations-packagescoresrcmoneyts).
 - Currencies come from `Settings.trackedCurrencies` ([settings.md](settings.md)).

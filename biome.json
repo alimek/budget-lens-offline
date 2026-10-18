@@ -103,6 +103,23 @@
       }
     },
     {
+      "includes": ["packages/core/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "Intl": "packages/core formats money without Intl (Hermes on iOS ignores compact notation): use formatMoney/formatMoneyCompact and the CLDR data in money-locale.ts (ADR 0011)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": ["scripts/**"],
       "linter": {
         "rules": {
