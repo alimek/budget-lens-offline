@@ -27,12 +27,12 @@ Legacy behaviour is pinned by characterization tests first (#3).
 
 ## Planned app stack (Stage 1)
 
-Decided, not implemented yet (see [decisions/](decisions/)):
+Decided, not implemented yet (see [decisions/](decisions/); sources: #1 "Decyzje" and the #10 research with its
+correction comment):
 
 | Concern | Choice |
 | --- | --- |
 | Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) |
-| Navigation | Expo Router |
 | UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views |
 | Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store |
 | Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) |
@@ -45,6 +45,14 @@ Decided, not implemented yet (see [decisions/](decisions/)):
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build
 without SQLCipher, so the app must verify `PRAGMA cipher_version` before using the database.
+
+## Open questions
+
+Not decided yet; do not treat these as part of the stack:
+
+- **Navigation library** – Expo Router is a candidate, but no decision has been recorded.
+- From the SDK 58 research (#10): DB key and recovery model, MVP sync scope (snapshot backup/restore vs record sync),
+  chart library (Expo UI has no Android charts), lint (Biome only vs Biome + minimal ESLint), minimum OS versions.
 
 ## Tooling
 

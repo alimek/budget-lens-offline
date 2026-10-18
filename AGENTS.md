@@ -47,7 +47,8 @@ pnpm check            # all of the above
 pnpm --filter @budget-lens/core test:coverage   # coverage report (no thresholds)
 ```
 
-CI runs the same tasks as four required jobs: `lint`, `typecheck`, `test`, `fallow`.
+CI runs the same tasks as four required jobs: `lint`, `typecheck`, `test`, `fallow`. Additional quality gates are
+planned in #18.
 
 ## Conventions (must follow)
 
@@ -61,8 +62,8 @@ CI runs the same tasks as four required jobs: `lint`, `typecheck`, `test`, `fall
 - **`packages/core` is pure TypeScript**: no imports from React Native, Expo, Next.js or Supabase (enforced by
   Biome `noRestrictedImports`), no network or storage side effects, no reading the system clock – pass the current
   month/time in as arguments.
-- **Dependencies: always the latest stable version, pinned exactly** (no `^`/`~`, no pre-releases unless there is
-  no stable release). Node version is pinned in `.nvmrc` (latest LTS).
+- **Dependencies: always the latest stable version, pinned exactly** (no `^`/`~`, no RC/beta; a pre-release only
+  when a package has no stable release at all). See [ADR 0010](docs/decisions/0010-dependency-versions.md). Node version is pinned in `.nvmrc` (latest LTS).
 - **TypeScript 7** (`typescript` package, CLI `tsc`), `strict` plus `noUncheckedIndexedAccess` and
   `exactOptionalPropertyTypes` (`tsconfig.base.json`).
 - **Biome** for lint and format, **Fallow** must stay clean, **Lefthook** pre-commit runs Biome and typecheck.
@@ -75,7 +76,11 @@ CI runs the same tasks as four required jobs: `lint`, `typecheck`, `test`, `fall
 - PR to `main` with an English description ending in `Closes #<n>`. Stacked PRs are allowed (base on the parent
   branch and say so in the description).
 - All CI checks must be green. The **Reviewer squash-merges** the PR (with an English commit message).
-- **UI PRs** must include e2e evidence (TesterArmy `e2e` test run or `e2e explore` output) from a development build.
+- **UI PRs** must include e2e evidence with **screenshots or a video**, from a TesterArmy `e2e` test run or
+  `e2e explore` on a development build.
+- Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.
+- Metro runs on the repo's **fixed port**. The port number is not chosen yet; it will be defined together with
+  `apps/mobile` in #15.
 - **Docs rule:** every PR that changes domain behaviour or architecture updates the relevant file in `docs/`
   (and this file if needed). The Reviewer checks this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board
@@ -94,7 +99,7 @@ CI runs the same tasks as four required jobs: `lint`, `typecheck`, `test`, `fall
 | Forecast | Month-by-month projection of the balance (rolling balance, total funds, warnings). | [forecast](docs/domain/forecast.md) |
 | Month closing | Closing the active month: record its totals and open the next month with opening balance = closing balance. | [month-closing](docs/domain/month-closing.md) |
 | Settings-driven thresholds | Warning thresholds (low balance, large expense) come from user `Settings`, never constants. | [month-closing](docs/domain/month-closing.md) |
-| NBP exchange rates | Average rates (table A) from the National Bank of Poland API, cached on the device for offline use. Some currencies (e.g. JPY) are quoted per 100 units. | [exchange-rates](docs/domain/exchange-rates.md) |
+| NBP exchange rates | Average rates (table A) from the National Bank of Poland API, cached on the device for offline use. Rates are used exactly as the API returns them (per 1 unit of the currency). | [exchange-rates](docs/domain/exchange-rates.md) |
 | `LEGACY:` | Comment marking legacy behaviour kept on purpose in characterization tests, linked to the issue that changes it. | [testing](docs/testing.md) |
 
 ## Documentation map

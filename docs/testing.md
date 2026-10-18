@@ -4,8 +4,12 @@
 
 - **Unit tests:** Vitest in `packages/core` (`src/**/*.test.ts`, next to the code). Run with `pnpm test`.
 - **Coverage:** `pnpm --filter @budget-lens/core test:coverage`; CI shows a coverage summary and uploads the report.
-- **E2E (app):** TesterArmy `e2e` on iOS simulators and Android emulators, using `testID` selectors (#15). UI PRs
-  include e2e evidence (test run or `e2e explore` output) from a development build.
+- **E2E (app):** TesterArmy `e2e` on iOS simulators and Android emulators, using `testID` selectors (#15).
+  - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
+    development build.
+  - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
+  - Metro runs on the repo's **fixed port**; the number is not chosen yet and will be defined with `apps/mobile`
+    in #15.
 
 ## Rules
 
@@ -14,13 +18,16 @@
    is longer than a few lines). One action per test.
 2. **Test business cases and logic only.** Do not write tests for trivial code (plain getters, re-exports, type-only
    modules), wiring (that a module exports something, that a provider renders) or framework/library behaviour
-   (Drizzle, Expo, React, Vitest itself).
+   (Drizzle, Expo, React, Vitest itself). **Reviewers flag tests that only exercise trivial code, wiring or framework
+   behaviour** and ask for them to be removed or replaced by a business-behaviour test.
 3. **No 100% coverage goal and no coverage thresholds in CI.** Aim for meaningful coverage of the domain logic:
    edge cases, boundaries, invalid input, regressions.
 4. **Test names describe the business behaviour**, not the implementation: `"sums amounts without rounding errors"`,
    not `"calls reduce"`. Group with `describe` per function or behaviour.
-5. **Deterministic.** Domain code takes the current month/time as an argument; tests pass fixed values instead of
-   mocking the clock. Inject `fetch` and storage interfaces instead of hitting the network.
+5. **Deterministic.** New `packages/core` code takes the current month/time as an argument, so its tests pass fixed
+   values instead of mocking the clock. Inject `fetch` and storage interfaces instead of hitting the network.
+   **Exception:** characterization tests of legacy code (#3) run the legacy reference functions with a frozen clock
+   (`vi.setSystemTime`), because legacy code reads `new Date()`.
 6. **Money in tests** is created with `toMinorUnits`; never compare money with floats.
 
 Example:
@@ -54,4 +61,4 @@ Its tests are one-line act-and-assert checks, so explicit AAA sections are not n
 Follow-ups:
 - When `money.test.ts` grows multi-step cases (e.g. parsing and formatting in #2), split them into explicit AAA
   sections.
-- Apply these rules to the characterization tests from #3 when they land.
+- Apply these rules to the characterization tests from #3 when they land, with the frozen-clock exception from rule 5.

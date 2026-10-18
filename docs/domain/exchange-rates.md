@@ -12,11 +12,11 @@ Status: **not implemented yet** in `packages/core` – tracked in #8.
 - `shouldRefreshRates` checks `updated_at` of a single arbitrary row.
 - Savings are valued with `parseFloat(amount) * rate` and `toFixed(2)` (floats).
 
-### JPY per-100-units quirk
+## Rate units
 
-NBP quotes some currencies (e.g. **JPY**, HUF) **per 100 units**, but legacy stores the returned `mid` as a per-unit
-rate. The seed in `002_create_exchange_rates.sql` is `0.027` per 1 JPY, while NBP returns ~2.6 per 100 JPY, so after a
-refresh JPY savings are overvalued about **100×** (reported in #8; the characterization tests in #19 assert it).
+Rates are used exactly as the NBP API returns them: `mid` is the PLN value of **1 unit** of the currency (e.g. table
+202/A/NBP/2026 of 2026-10-16: JPY `mid` = 0.024574). No multiplier is applied. This will be covered by a test against
+a recorded NBP response fixture (planned with #8).
 
 ## Target (#8)
 
@@ -24,5 +24,6 @@ refresh JPY savings are overvalued about **100×** (reported in #8; the characte
 - An injected `RateStore` cache (`get`, `set`, `getAll`); in-memory implementation in core for tests, SQLite in the app.
 - `getRate(currency, { now, maxAgeHours })` – fresh cached rate, otherwise try to refresh; without network return the
   last rate with `stale: true` and its `effectiveDate` (weekends/holidays have no new table).
-- Apply the NBP multiplier (per 100 units) and convert to PLN `MinorUnits` with explicit rounding (#2).
+- Convert an amount in a currency to PLN `MinorUnits` using the rate as returned (per 1 unit), with explicit
+  rounding (#2).
 - Currencies come from `Settings.trackedCurrencies` (#7).
