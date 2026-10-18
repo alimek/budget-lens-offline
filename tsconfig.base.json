@@ -11,6 +11,8 @@
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "resolveJsonModule": true,

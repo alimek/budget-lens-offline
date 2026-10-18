@@ -1,0 +1,53 @@
+name: PR
+
+# Checks of the pull request metadata. A separate workflow so that editing the title or body
+# re-runs only these jobs, not the whole CI.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-title:
+    name: pr-title
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Title follows Conventional Commits
+        env:
+          # Passed through env, never interpolated into the script.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        shell: bash
+        run: |
+          pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9][a-z0-9/-]*\))?!?: [^ ].*$'
+          # Also accept the title of GitHub's "Revert" button: Revert "feat: ...".
+          revert_pattern='^Revert ".+"$'
+          if [[ ! "$PR_TITLE" =~ $pattern && ! "$PR_TITLE" =~ $revert_pattern ]]; then
+            echo "::error title=pr-title::PR title must follow Conventional Commits, e.g. 'feat(core): add money parsing' or 'ci: add audit job'."
+            exit 1
+          fi
+          echo "PR title follows Conventional Commits."
+
+  pr-body:
+    name: pr-body
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Body links an issue
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        shell: bash
+        run: |
+          shopt -s nocasematch
+          pattern='(^|[^[:alnum:]_])(close[sd]?|fix(e[sd])?|resolve[sd]?):? #[0-9]+'
+          if [[ ! "$PR_BODY" =~ $pattern ]]; then
+            echo "::error title=pr-body::PR description must link an issue with 'Closes #N', 'Fixes #N' or 'Resolves #N'."
+            exit 1
+          fi
+          echo "PR description links an issue."

@@ -11,6 +11,7 @@ verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offli
   use is still an open decision in #15. Telemetry is disabled with `E2E_TELEMETRY_DISABLED=1` in every environment.
   Setup, `testID` conventions and the CI plan are defined in #15.
 - **Unit tests are minimal:** Vitest in `packages/core`, business logic only, Arrange-Act-Assert.
+- **Property-based tests** with fast-check for business invariants of money and recurrence (#18).
 - **No percentage coverage thresholds** in any configuration or CI job; coverage is reported for information only.
 
 **Consequences.** Guidelines are in [../testing.md](../testing.md). UI PRs must include e2e evidence (screenshots or
