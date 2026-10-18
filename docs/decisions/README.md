@@ -9,7 +9,7 @@ rewriting an accepted one when a decision changes. Unless noted, decisions were 
 | [0001](0001-monorepo-pnpm-turborepo.md) | pnpm workspaces + Turborepo | Accepted |
 | [0002](0002-typescript-7.md) | TypeScript 7 `tsc` for typechecking | Accepted |
 | [0003](0003-biome.md) | Biome for lint and format | Accepted |
-| [0004](0004-testing-tools.md) | TesterArmy e2e as main testing, minimal Vitest unit tests, no coverage thresholds | Accepted |
+| [0004](0004-testing-tools.md) | Open-source e2e framework as main testing, minimal Vitest unit tests, no coverage thresholds | Accepted |
 | [0005](0005-fallow-lefthook-ci.md) | Fallow, Lefthook and required CI checks | Accepted |
 | [0006](0006-app-stack.md) | Expo SDK 58 app stack (incl. Expo Router) | Accepted |
 | [0007](0007-local-database.md) | expo-sqlite + SQLCipher + Drizzle | Accepted |

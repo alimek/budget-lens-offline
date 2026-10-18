@@ -2,7 +2,9 @@
 
 ## Strategy
 
-- **E2E tests with TesterArmy are the main way the app is tested** (#15). They cover user flows on the app.
+- **E2E tests are the main way the app is tested** (#15). They cover user flows on the app and use the open-source
+  [e2e](https://github.com/tester-army/e2e) framework made by TesterArmy, configured with **our own models**.
+  The hosted TesterArmy service is not used.
 - **Unit tests are minimal:** only business logic in `packages/core`, written as Arrange-Act-Assert. The fewer, the
   better – add a unit test only when it protects a business rule that is not obvious from the code.
 - **There are no percentage coverage thresholds**, anywhere (Vitest config or CI). Coverage is only reported.
@@ -12,9 +14,13 @@
 - **Unit tests:** Vitest in `packages/core` (`src/**/*.test.ts`, next to the code). Run with `pnpm test`.
 - **Coverage:** `pnpm --filter @budget-lens/core test:coverage`; CI shows a coverage summary and uploads the report.
   It is informational only: no percentage threshold is configured or enforced.
-- **E2E (app):** TesterArmy `e2e` on iOS simulators and Android emulators, using `testID` selectors (#15). Per #15
-  the first tests run in deterministic mode (`getByTestId` locators only, no agent steps or model provider); the
-  setup, `testID` convention and CI plan are defined in #15.
+- **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and
+  Android emulators. `screen.getByTestId()` finds elements by their React Native `testID`. Tests without agent steps
+  (`agent.act()`, `agent.assert()`) need no model; agent steps and `e2e explore` use a model we configure ourselves.
+  Per #15 the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention,
+  model configuration and CI plan are defined in #15.
+  - Model API keys stay in a local env or a secret store only; they never go into the repo, PR or issue text, or CI
+    logs, and CI never echoes them (see [conventions.md](conventions.md#secrets)).
   - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
     development build.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.

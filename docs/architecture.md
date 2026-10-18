@@ -1,5 +1,21 @@
 # Architecture
 
+## Current state
+
+Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
+issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
+What exists today in `packages/core`: the `MinorUnits` money type (`isMinorUnits`, `toMinorUnits`, `sumMinorUnits`).
+
+## Repository layout
+
+```
+apps/                    # applications; apps/mobile (Expo) will be added in Stage 1
+packages/core/           # pure TypeScript domain logic, tested with Vitest
+  src/index.ts           # public API – everything exported from here
+docs/                    # architecture, conventions, glossary, domain, decisions (ADRs), testing
+.github/workflows/ci.yml # CI: lint, typecheck, test, fallow
+```
+
 ## Overview
 
 ```
@@ -44,7 +60,7 @@ research with its correction comment):
 | Network data | TanStack Query only when network requests are added (NBP rates, license) |
 | i18n | Polish and English; no hardcoded UI strings |
 | Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (details open) |
-| Testing | TesterArmy `e2e` on simulators/emulators as the main testing (#15); minimal Vitest unit tests in core |
+| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models, on simulators/emulators, as the main testing (#15); minimal Vitest unit tests in core |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build
