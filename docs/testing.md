@@ -110,15 +110,17 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 ## Existing tests and follow-ups
 
-`packages/core` has 63 tests:
-- `src/money.test.ts` (19 tests) follows the business-behaviour and naming rules and is left as-is. Its tests are
-  one-line act-and-assert checks, so explicit AAA sections are not needed there.
-- `src/money.property.test.ts` (2 property-based tests, see below).
-- `src/settings.test.ts` (5 tests): `Settings` updates and validation, including malformed stored data, with explicit
+What is tested and where in `packages/core` (no test counts: they conflict between PRs; each PR adds its own
+line):
+- `src/money.test.ts`: `MinorUnits` operations. It follows the business-behaviour and naming rules and is left
+  as-is; its tests are one-line act-and-assert checks, so explicit AAA sections are not needed there.
+- `src/money.property.test.ts`: property-based money arithmetic (see above).
+- `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
   AAA sections.
-- 37 characterization tests in `packages/core/test/` (#3): forecast 11, recurrence 9, exchange rates 8, month
-  closing 5, formatting 4. They use explicit AAA sections and the frozen-clock exception from rule 5.
+- `test/*.characterization.test.ts` (#3): legacy forecast, recurrence, exchange rates, month closing and
+  formatting. They use explicit AAA sections and the frozen-clock exception from rule 5.
 
 Follow-ups:
 - When `money.test.ts` grows multi-step cases (e.g. parsing and formatting in #2), split them into explicit AAA
   sections.
+- Property-based tests deferred from #18 (money round-trip and rounding, recurrence): #122.
