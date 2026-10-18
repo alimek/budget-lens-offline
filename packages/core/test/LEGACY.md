@@ -29,10 +29,6 @@ implementation's tests and remove the `LEGACY:` marker.
 | Money | Balance input drops the decimal comma: `"1 234,56 zł"` → `123456` | #2 |
 | Money | Savings conversion uses `parseFloat`: `"1,5"` → `1` | #2, #8 |
 | Money | Warning messages use `toLocaleString()` without a locale | #2, #6 |
-| Recurrence | Quarterly items are always active in Jan/Apr/Jul/Oct | #4 |
-| Recurrence | Yearly items without `startMonth` default to January | #4 |
-| Recurrence | Recurring items have no start/end date (active also before creation) | #4 |
-| Recurrence | Incomes support only monthly recurrence | #4 |
 | Overrides | Overrides are one-time items named `"<name> (nadpisanie)"`, matched by name | #5 |
 | Overrides | Monthly totals (`calculateMonthly*`) count both the item and its override | #5 |
 | Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 |

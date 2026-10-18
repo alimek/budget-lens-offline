@@ -3,6 +3,7 @@
  * Month arguments are 0-11 (January = 0), as in legacy.
  */
 import { describe, expect, it } from "vitest";
+import { addMonths, isActiveInMonth, scheduleFromLegacy, toYearMonth } from "../src/index";
 import { byId, expenses, incomes } from "./fixtures";
 import {
   calculateMonthlyExpenses,
@@ -10,7 +11,7 @@ import {
   isExpenseActiveInMonth,
   isIncomeActiveInMonth,
 } from "./legacy/recurrence";
-import type { LegacyExpense } from "./legacy/types";
+import type { LegacyExpense, LegacyIncome } from "./legacy/types";
 
 const ALL_MONTHS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -34,7 +35,7 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("schedules quarterly expenses in January, April, July and October only", () => {
-    // LEGACY: quarter months are fixed regardless of the start date – changed by #4.
+    // Ported by #4: any anchor month; legacy items map to a January/April/July/October anchor (see below).
     // Arrange
     const quarterly = byId(expenses, "exp-software");
 
@@ -57,7 +58,7 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("schedules yearly expenses without startMonth in January", () => {
-    // LEGACY: implicit January anchor – changed by #4.
+    // Ported by #4: the new model always has an explicit anchor month.
     // Arrange
     const yearlyWithoutStart = byId(expenses, "exp-domain");
 
@@ -69,7 +70,7 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("treats recurring expenses as active long before they were created", () => {
-    // LEGACY: no start/end date for recurring items – changed by #4.
+    // Ported by #4: schedules start at their anchor and may end (see "legacy → ported schedule" below).
     // Arrange
     const rent = byId(expenses, "exp-rent");
 
@@ -99,7 +100,7 @@ describe("isExpenseActiveInMonth", () => {
 
 describe("isIncomeActiveInMonth", () => {
   it("treats recurring incomes as monthly and one-time incomes as active in targetMonth only", () => {
-    // LEGACY: incomes support only monthly recurrence – changed by #4.
+    // Ported by #4: incomes use the same schedule as expenses, with any interval.
     // Arrange
     const salary = byId(incomes, "inc-salary");
     const bonus = byId(incomes, "inc-bonus"); // targetMonth 2026-12
@@ -145,5 +146,52 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
 
     // Assert
     expect(total).toBe(0.30000000000000004);
+  });
+});
+
+describe("legacy → ported schedule (#4)", () => {
+  const START = toYearMonth("2026-01");
+  const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-01 … 2027-12
+
+  function portedActiveMonths(item: LegacyExpense | LegacyIncome): string[] {
+    const schedule = scheduleFromLegacy(item, START);
+    return schedule === null ? [] : MONTHS.filter((month) => isActiveInMonth(schedule, month));
+  }
+
+  /** Months in which a legacy predicate (0-11 month index) reports the item as active. */
+  function legacyActiveMonths<T>(
+    item: T,
+    isActive: (item: T, month: number, year: number) => boolean,
+  ) {
+    return MONTHS.filter((month) =>
+      isActive(item, Number(month.slice(5, 7)) - 1, Number(month.slice(0, 4))),
+    );
+  }
+
+  it("matches the legacy months of every fixture item from the start month on", () => {
+    // Arrange
+    const legacy = [
+      ...expenses.map((expense) => legacyActiveMonths(expense, isExpenseActiveInMonth)),
+      ...incomes.map((income) => legacyActiveMonths(income, isIncomeActiveInMonth)),
+    ];
+
+    // Act
+    const ported = [...expenses, ...incomes].map(portedActiveMonths);
+
+    // Assert
+    expect(ported).toEqual(legacy);
+  });
+
+  it("is not active before the start month, unlike legacy", () => {
+    // Arrange
+    const rent = scheduleFromLegacy(byId(expenses, "exp-rent"), START);
+
+    // Act
+    const activeIn1900 = rent !== null && isActiveInMonth(rent, toYearMonth("1900-01"));
+    const activeInStartMonth = rent !== null && isActiveInMonth(rent, START);
+
+    // Assert
+    expect(activeIn1900).toBe(false);
+    expect(activeInStartMonth).toBe(true);
   });
 });
