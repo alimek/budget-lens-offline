@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { isMinorUnits, type MinorUnits, sumMinorUnits, toMinorUnits } from "./index";
+import {
+  addMinorUnits,
+  isMinorUnits,
+  type MinorUnits,
+  multiplyByRate,
+  negateMinorUnits,
+  subtractMinorUnits,
+  sumMinorUnits,
+  toMinorUnits,
+} from "./index";
 
 const MAX = Number.MAX_SAFE_INTEGER;
 const MIN = Number.MIN_SAFE_INTEGER;
@@ -112,5 +121,57 @@ describe("sumMinorUnits", () => {
     const input = Object.freeze(amounts([10, 20, 30]));
     expect(sumMinorUnits(input)).toBe(60);
     expect(input).toEqual([10, 20, 30]);
+  });
+});
+
+describe("addMinorUnits / subtractMinorUnits", () => {
+  it("adds and subtracts exactly and rejects a result outside the safe integer range", () => {
+    // Arrange
+    const ten = toMinorUnits(10);
+    const twenty = toMinorUnits(20);
+    const max = toMinorUnits(MAX);
+
+    // Act
+    const sum = addMinorUnits(ten, twenty);
+    const difference = subtractMinorUnits(ten, twenty);
+
+    // Assert
+    expect(sum).toBe(30);
+    expect(difference).toBe(-10);
+    expect(() => addMinorUnits(max, ten)).toThrow(RangeError);
+    expect(() => subtractMinorUnits(negateMinorUnits(max), ten)).toThrow(RangeError);
+  });
+});
+
+describe("multiplyByRate", () => {
+  it("converts with a per-unit rate exactly and rounds half away from zero", () => {
+    // Arrange
+    const cases: [amount: number, rate: number][] = [
+      [1_000_000, 0.024574], // 10 000 JPY in minor units at the NBP mid of 202/A/NBP/2026
+      [100, 0.285], // 28.5 exactly; a float product would give 28.499999999999996
+      [1, 0.5],
+      [-1, 0.5],
+      [3, 0.5],
+      [1, 0.49],
+    ];
+
+    // Act
+    const results = cases.map(([amount, rate]) => multiplyByRate(toMinorUnits(amount), rate));
+
+    // Assert
+    expect(results).toEqual([24574, 29, 1, -1, 2, 0]);
+  });
+
+  it("rejects a negative or non-finite rate", () => {
+    // Arrange
+    const amount = toMinorUnits(100);
+
+    // Act
+    const invalidRates = [-1, Number.NaN, Number.POSITIVE_INFINITY];
+
+    // Assert
+    for (const rate of invalidRates) {
+      expect(() => multiplyByRate(amount, rate)).toThrow(RangeError);
+    }
   });
 });

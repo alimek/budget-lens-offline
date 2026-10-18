@@ -38,7 +38,8 @@
     ([e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). Set `E2E_TELEMETRY_DISABLED=1` in every
     environment, local and CI, like `TURBO_TELEMETRY_DISABLED` in `.github/workflows/ci.yml` ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
-  - The model provider API key comes from the local environment on the Mac Studio (later GitHub Actions secrets if
+  - The model provider API key comes from the local environment on the local dev machine (later GitHub Actions secrets
+    if
     CI needs it) and never appears on GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
@@ -93,12 +94,10 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 ## Existing tests and follow-ups
 
-`packages/core` has 56 tests:
-- `src/money.test.ts` (19 tests) follows the business-behaviour and naming rules and is left as-is. Its tests are
-  one-line act-and-assert checks, so explicit AAA sections are not needed there.
-- 37 characterization tests in `packages/core/test/` (#3): forecast 11, recurrence 9, exchange rates 8, month
-  closing 5, formatting 4. They use explicit AAA sections and the frozen-clock exception from rule 5.
-
-Follow-ups:
-- When `money.test.ts` grows multi-step cases (e.g. parsing and formatting in #2), split them into explicit AAA
-  sections.
+`packages/core` has 68 tests:
+- Money (#2): `src/money.test.ts` (22), `src/money-parse.test.ts` (5), `src/money-format.test.ts` (3). The 19
+  original `money.test.ts` tests are one-line act-and-assert checks, so explicit AAA sections are not needed there;
+  the newer money tests use explicit AAA sections.
+- 38 characterization tests in `packages/core/test/` (#3): forecast 11, recurrence 9, exchange rates 8, month
+  closing 5, formatting 5 (including the check that `formatMoney` matches the legacy `formatCurrency`). They use
+  explicit AAA sections and the frozen-clock exception from rule 5.

@@ -4,8 +4,9 @@
 
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
-What exists today in `packages/core`: the `MinorUnits` money type (`isMinorUnits`, `toMinorUnits`, `sumMinorUnits`)
-and characterization tests of the legacy implementation (#3).
+What exists today in `packages/core`: money in integer minor units – the `MinorUnits` type, exact operations,
+parsing and locale-aware formatting (#2, see [domain/money.md](domain/money.md)) – and characterization tests of the
+legacy implementation (#3).
 
 ## Repository layout
 
@@ -29,7 +30,7 @@ apps/mobile  (planned, Stage 1)   Expo app: UI, navigation, state, platform inte
 
 Scope: No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google
 Drive. A multi-user shared wallet is out of scope; encrypted backup/restore is a
-planned epic with details still open.
+planned epic with details still open (#30, E8, `epic:cloud-backup`).
 
 Dependencies point inwards: `apps/mobile` may use `packages/db` and `packages/core`; `packages/core` depends on
 nothing app- or platform-specific.
@@ -45,7 +46,7 @@ nothing app- or platform-specific.
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
-Planned content, one issue each: money operations and formatting (#2), recurrence (#4), occurrence overrides (#5),
+Planned content, one issue each: recurrence (#4), occurrence overrides (#5),
 forecast (#6), month closing and `Settings` (#7), NBP exchange-rate client with an injected offline cache (#8).
 Legacy behaviour is pinned by characterization tests first (#3).
 
@@ -65,7 +66,7 @@ research with its correction comment):
 | App state | Zustand with the provider pattern (store created inside a React provider) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) |
 | i18n | Polish and English; no hardcoded UI strings |
-| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (details open) |
+| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) |
 | Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table

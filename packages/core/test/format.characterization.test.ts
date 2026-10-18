@@ -3,6 +3,7 @@
  * (mock-data.ts, update-balance-sheet.tsx, add-saving-dialog.tsx).
  */
 import { describe, expect, it } from "vitest";
+import { formatMoney, toMinorUnits } from "../src/index";
 import {
   formatCurrency,
   formatCurrencyCompact,
@@ -23,6 +24,26 @@ describe("formatCurrency", () => {
 
     // Assert
     expect(formatted).toEqual([`1234${NBSP}zł`, `1235${NBSP}zł`, `-1235${NBSP}zł`]);
+  });
+});
+
+describe("formatMoney with the legacy options", () => {
+  it("matches legacy formatCurrency for pl-PL, PLN and 0 fraction digits", () => {
+    // Arrange
+    const cases = [
+      { minor: 123449, legacy: 1234.49 },
+      { minor: 123450, legacy: 1234.5 },
+      { minor: -123450, legacy: -1234.5 },
+      { minor: 0, legacy: 0 },
+      { minor: 1234567800, legacy: 12345678 },
+    ];
+    const legacyOptions = { locale: "pl-PL", currency: "PLN", fractionDigits: 0 } as const;
+
+    // Act
+    const formatted = cases.map(({ minor }) => formatMoney(toMinorUnits(minor), legacyOptions));
+
+    // Assert
+    expect(formatted).toEqual(cases.map(({ legacy }) => formatCurrency(legacy)));
   });
 });
 
