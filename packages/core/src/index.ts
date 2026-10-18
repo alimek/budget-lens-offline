@@ -1,4 +1,5 @@
 export type { CurrencyCode } from "./currency";
+export { isCurrencyCode } from "./currency";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,

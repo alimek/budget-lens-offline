@@ -43,11 +43,19 @@ const CURRENCY_EXPONENTS = {
 export type CurrencyCode = keyof typeof CURRENCY_EXPONENTS;
 
 /**
+ * Whether `value` is a supported currency code: PLN or an NBP table A currency except XDR (owner decision on #117).
+ * Use it to narrow an unchecked code (e.g. from storage) before formatting or parsing.
+ */
+export function isCurrencyCode(value: unknown): value is CurrencyCode {
+  return typeof value === "string" && Object.hasOwn(CURRENCY_EXPONENTS, value);
+}
+
+/**
  * Minor-unit exponent of a currency: 2 for PLN (1 zł = 100 groszy), 0 for JPY.
  * Throws a `RangeError` for a code outside the table (e.g. an unchecked string read from storage).
  */
 export function currencyExponent(currency: CurrencyCode): number {
-  if (!Object.hasOwn(CURRENCY_EXPONENTS, currency)) {
+  if (!isCurrencyCode(currency)) {
     throw new RangeError(`Unsupported currency: ${currency}`);
   }
   return CURRENCY_EXPONENTS[currency];

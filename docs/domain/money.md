@@ -4,8 +4,10 @@
 
 Amounts are integers in **minor units** of their currency. The scale is the currency's ISO 4217 exponent
 (`packages/core/src/currency.ts`): 2 for PLN (1 zł = 100 groszy), EUR, USD and most others, 0 for JPY, ISK, KRW
-and CLP. The table holds PLN and the currencies of NBP table A except XDR (#39). There are no floats in the public
-API.
+and CLP. The table holds PLN and the currencies of NBP table A except XDR (#39); these are the only supported
+currencies ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752)).
+`isCurrencyCode(value)` narrows an unchecked string (e.g. from storage) to `CurrencyCode`; `Settings` rejects other
+codes with `unsupported-currency` ([settings.md](settings.md)). There are no floats in the public API.
 
 ### Type and operations (`packages/core/src/money.ts`)
 

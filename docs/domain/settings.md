@@ -10,8 +10,8 @@ horizon. No warning threshold or default currency is a constant anywhere else in
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `language` | `"system" \| "pl" \| "en"` | `"system"` | UI language; `"system"` follows the device language (resolved by the app's i18n layer, not by core) |
-| `defaultCurrency` | ISO 4217 code | `"PLN"` | Currency all budget amounts are kept in |
-| `trackedCurrencies` | ISO 4217 codes | `["USD", "EUR", "GBP"]` | Currencies whose exchange rates are tracked ([exchange-rates.md](exchange-rates.md)) |
+| `defaultCurrency` | supported ISO 4217 code | `"PLN"` | Currency all budget amounts are kept in |
+| `trackedCurrencies` | supported ISO 4217 codes | `["USD", "EUR", "GBP"]` | Currencies whose exchange rates are tracked ([exchange-rates.md](exchange-rates.md)) |
 | `lowBalanceThreshold` | `MinorUnits` | `500_000` (5000 PLN) | Low-balance warning: forecast balance below this amount ([forecast.md](forecast.md)) |
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
@@ -24,8 +24,13 @@ decided with the forecast warnings in #6.
 The maximum horizon is `MAX_FORECAST_HORIZON_MONTHS` (120 months, 10 years), so a corrupted stored value cannot make
 the forecast build an unbounded number of months.
 
-`defaultCurrency` is the budget's base currency and may be any currency, not only PLN
-([owner decision](https://github.com/alimek/budget-lens-offline/pull/121#issuecomment-6254392885)).
+`defaultCurrency` is the budget's base currency and is not limited to PLN
+([owner decision](https://github.com/alimek/budget-lens-offline/pull/121#issuecomment-6254392885)). Both
+`defaultCurrency` and `trackedCurrencies` must be **supported currencies**: PLN or a currency of NBP table A except
+XDR, i.e. the codes of the exponent table in `packages/core/src/currency.ts` (`isCurrencyCode`), so every stored
+code can be formatted and parsed ([money.md](money.md)). Arbitrary ISO 4217 codes with manually entered rates are
+out of scope ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752),
+which narrows the earlier "any base currency" decision).
 
 **Open question (cross-rates, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
 ([exchange-rates.md](exchange-rates.md)), so converting tracked currencies into a non-PLN base needs cross-rates.
@@ -46,6 +51,7 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | --- | --- | --- |
 | `invalid-language` | `language` | Not `system`, `pl` or `en` |
 | `invalid-currency` | `defaultCurrency`, `trackedCurrencies` | Not a string of three uppercase letters; for `trackedCurrencies`, not an array of such strings |
+| `unsupported-currency` | `defaultCurrency`, `trackedCurrencies` | A well-formed code that is not a supported currency (e.g. `BGN`, `XAU`); for `trackedCurrencies`, any such element |
 | `duplicate-currency` | `trackedCurrencies` | The same code twice |
 | `default-currency-tracked` | `trackedCurrencies` | Contains `defaultCurrency`: the base currency has no exchange rate against itself (NBP table A has no PLN rate) |
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
