@@ -30,6 +30,8 @@ pnpm lint         # Biome: lint + format (check only)
 pnpm format       # Biome: apply automatic fixes
 pnpm fallow       # Fallow: dead code, unused exports and dependencies, duplication
 pnpm check        # all of the above in sequence
+pnpm audit        # dependency audit (high and critical advisories)
+pnpm check:licenses # license check of all dependencies
 ```
 
 Tests for a single package:
@@ -64,15 +66,22 @@ pnpm exec turbo telemetry disable   # or set TURBO_TELEMETRY_DISABLED=1
 
 ## CI
 
-GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request and on every push to `main`.
-Each check is a separate job, and every task runs through Turborepo:
+GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request and on every push to `main`;
+`.github/workflows/pr.yml` checks the PR title and description. Each gate is a separate job with a stable id
+(status check); every job must pass. Policies and how to handle findings: [docs/ci.md](docs/ci.md).
 
 | Job (status check) | Command |
 | --- | --- |
-| `lint` | `pnpm turbo run lint` (Biome check) |
-| `typecheck` | `pnpm turbo run typecheck` (TypeScript 7 `tsc`) |
+| `lint` | `pnpm turbo run lint` (Biome check, `--error-on-warnings`) |
+| `typecheck` | `pnpm turbo run typecheck` (TypeScript 7 `tsc`, strict options) |
 | `test` | `pnpm turbo run test:coverage` (Vitest + coverage summary in the job summary and a `coverage` artifact) |
 | `fallow` | `pnpm turbo run fallow` |
+| `audit` | `pnpm audit --audit-level high` |
+| `licenses` | `pnpm check:licenses` (MIT-compatible licenses only) |
+| `pr-title` | PR title in Conventional Commits format (pull requests only) |
+| `pr-body` | PR description contains `Closes #N`, `Fixes #N` or `Resolves #N` (pull requests only) |
+
+Planned when `apps/mobile` exists: `expo-doctor`, `expo-export`, `migrations`, `e2e-android`, `bundle-size`.
 
 Third-party actions are pinned to commit SHAs (version in a trailing comment).
 Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmrc`,
@@ -82,6 +91,6 @@ Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmr
 
 1. Open **Settings → Rules → Rulesets** (or **Settings → Branches → Branch protection rules**) for `main`.
 2. Enable **Require status checks to pass** (and optionally **Require branches to be up to date before merging**).
-3. Add the status checks `lint`, `typecheck`, `test` and `fallow` (they appear in the search after the workflow has run
+3. Add the status checks `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` and `pr-body` (they appear in the search after the workflow has run
    at least once).
 4. Save the rule.
