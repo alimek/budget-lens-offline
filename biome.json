@@ -45,8 +45,7 @@
         "useExportType": "error",
         "useDefaultParameterLast": "error",
         "useNumberNamespace": "error",
-        "useTemplate": "error",
-        "useBlockStatements": "warn"
+        "useTemplate": "error"
       },
       "nursery": {
         "noFloatingPromises": "error",
