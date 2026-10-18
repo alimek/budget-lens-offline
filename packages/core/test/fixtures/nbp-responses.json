@@ -1,0 +1,16 @@
+{
+  "usd": {
+    "table": "A",
+    "code": "USD",
+    "rates": [{ "no": "202/A/NBP/2026", "effectiveDate": "2026-10-16", "mid": 3.6512 }]
+  },
+  "jpy": {
+    "table": "A",
+    "code": "JPY",
+    "rates": [{ "no": "202/A/NBP/2026", "effectiveDate": "2026-10-16", "mid": 0.024574 }]
+  },
+  "emptyRates": { "table": "A", "code": "USD", "rates": [] },
+  "zeroMid": { "rates": [{ "effectiveDate": "2026-10-16", "mid": 0 }] },
+  "stringMid": { "rates": [{ "effectiveDate": "2026-10-16", "mid": "3.6512" }] },
+  "missingEffectiveDate": { "rates": [{ "mid": 3.6512 }] }
+}
