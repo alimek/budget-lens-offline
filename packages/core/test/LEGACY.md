@@ -29,9 +29,6 @@ implementation's tests and remove the `LEGACY:` marker.
 | Money | Balance input drops the decimal comma: `"1 234,56 zł"` → `123456` | #2 |
 | Money | Savings conversion uses `parseFloat`: `"1,5"` → `1` | #2, #8 |
 | Money | Warning messages use `toLocaleString()` without a locale | #2, #6 |
-| Overrides | Overrides are one-time items named `"<name> (nadpisanie)"`, matched by name | #5 |
-| Overrides | Monthly totals (`calculateMonthly*`) count both the item and its override | #5 |
-| Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 |
 | Forecast | The start month comes from `new Date()` in the device time zone | #6 |
 | Forecast | Balance exactly 0 produces no warning | #6 |
 | Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #7 |

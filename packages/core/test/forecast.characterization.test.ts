@@ -75,7 +75,7 @@ describe("legacyForecast – balance", () => {
 
 describe("legacyForecast – name-based overrides", () => {
   it("replaces a recurring expense by its override in the override month only", () => {
-    // LEGACY: overrides are matched by name + " (nadpisanie)" suffix – replaced by #5.
+    // Ported by #5: occurrence overrides keyed by item id; import in occurrence-overrides.characterization.test.ts.
     // Arrange: "Rent (nadpisanie)" 3200 replaces Rent 3000 in November 2026.
 
     // Act
@@ -88,7 +88,7 @@ describe("legacyForecast – name-based overrides", () => {
   });
 
   it("replaces every recurring item that shares the overridden name", () => {
-    // LEGACY: one override hides all same-name items – changed by #5.
+    // Ported by #5: overrides match by item id, so same-name items are independent.
     // Arrange
     const items: LegacyExpense[] = [
       { id: "a", name: "Rent", amount: 3000, type: "recurring", frequency: "monthly" },
@@ -104,7 +104,7 @@ describe("legacyForecast – name-based overrides", () => {
   });
 
   it("double-counts once the recurring item is renamed", () => {
-    // LEGACY: renaming the item silently breaks its overrides – changed by #5.
+    // Ported by #5: overrides match by item id, so renaming keeps them.
     // Arrange
     const items: LegacyExpense[] = [
       { ...byId(expenses, "exp-rent"), name: "Flat rent" },
