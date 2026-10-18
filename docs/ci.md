@@ -14,7 +14,9 @@ status check. Making checks required in the `main` ruleset is the repository own
   run on push to `main` (there is no PR there).
 - Shared setup: `.github/actions/setup` (pnpm from `packageManager` with the pnpm store cache, Node.js from `.nvmrc`,
   `pnpm install --frozen-lockfile`). `typecheck` and `test` also restore the local Turborepo cache
-  (`.turbo/cache`, via `actions/cache`). Third-party actions are pinned to commit SHAs.
+  (`.turbo/cache`, via `actions/cache`). `.nvmrc` is a Turborepo `globalDependencies` entry, so a Node.js bump
+  (which can also change `Intl`/ICU output) invalidates every cached task. Third-party actions are pinned to commit
+  SHAs.
 
 ## Gates
 
