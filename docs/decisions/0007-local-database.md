@@ -1,0 +1,16 @@
+# 0007 – Local database: expo-sqlite + SQLCipher + Drizzle
+
+Status: Accepted per the #10 research (closed) and its correction comment; not implemented yet. Drizzle on
+expo-sqlite with `useLiveQuery` also comes from #1 "Decyzje". Offline scope: [#1 decisions
+comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427).
+
+**Decision.** expo-sqlite with SQLCipher enabled (`useSQLCipher: true` config plugin), Drizzle ORM + drizzle-kit
+(latest stable line) for schema and migrations, database key stored in expo-secure-store. op-sqlite is a fallback only.
+
+**Consequences.**
+- The app must verify `PRAGMA cipher_version` after opening the database: without SQLCipher in the build,
+  `PRAGMA key` silently does nothing and data would be written in plaintext.
+- `useLiveQuery` is used for simple single-table queries; it ignores joins and re-runs on every row change.
+- Scope: No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud /
+  Google Drive.
+- Open decisions (#10): key and recovery model, details of the encrypted backup/restore epic (planned).
