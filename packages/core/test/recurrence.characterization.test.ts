@@ -3,6 +3,7 @@
  * Month arguments are 0-11 (January = 0), as in legacy.
  */
 import { describe, expect, it } from "vitest";
+import { addMonths, isActiveInMonth, toYearMonth } from "../src/index";
 import { byId, expenses, incomes } from "./fixtures";
 import {
   calculateMonthlyExpenses,
@@ -10,7 +11,8 @@ import {
   isExpenseActiveInMonth,
   isIncomeActiveInMonth,
 } from "./legacy/recurrence";
-import type { LegacyExpense } from "./legacy/types";
+import type { LegacyExpense, LegacyIncome } from "./legacy/types";
+import { legacySchedule } from "./legacy-schedule";
 
 const ALL_MONTHS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -34,7 +36,8 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("schedules quarterly expenses in January, April, July and October only", () => {
-    // LEGACY: quarter months are fixed regardless of the start date – changed by #4.
+    // LEGACY: quarter months are fixed regardless of the start date – fixed in #4: any anchor month
+    // (src/recurrence.test.ts); legacy items map to a January/April/July/October anchor (see below).
     // Arrange
     const quarterly = byId(expenses, "exp-software");
 
@@ -57,7 +60,8 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("schedules yearly expenses without startMonth in January", () => {
-    // LEGACY: implicit January anchor – changed by #4.
+    // LEGACY: implicit January anchor – fixed in #4: every recurring schedule has an explicit anchor
+    // (src/recurrence.test.ts).
     // Arrange
     const yearlyWithoutStart = byId(expenses, "exp-domain");
 
@@ -69,7 +73,8 @@ describe("isExpenseActiveInMonth", () => {
   });
 
   it("treats recurring expenses as active long before they were created", () => {
-    // LEGACY: no start/end date for recurring items – changed by #4.
+    // LEGACY: no start/end date for recurring items – fixed in #4: schedules start at their anchor and may end
+    // (src/recurrence.test.ts; see "legacy fixtures → ported schedules" below).
     // Arrange
     const rent = byId(expenses, "exp-rent");
 
@@ -99,7 +104,8 @@ describe("isExpenseActiveInMonth", () => {
 
 describe("isIncomeActiveInMonth", () => {
   it("treats recurring incomes as monthly and one-time incomes as active in targetMonth only", () => {
-    // LEGACY: incomes support only monthly recurrence – changed by #4.
+    // LEGACY: incomes support only monthly recurrence – fixed in #4: incomes use the same schedule as expenses,
+    // with any interval (src/recurrence.test.ts).
     // Arrange
     const salary = byId(incomes, "inc-salary");
     const bonus = byId(incomes, "inc-bonus"); // targetMonth 2026-12
@@ -145,5 +151,57 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
 
     // Assert
     expect(total).toBe(0.30000000000000004);
+  });
+});
+
+describe("legacy fixtures → ported schedules (#4)", () => {
+  // Not a quarter month and after March, so quarterly and yearly anchors are searched forward from START.
+  const START = toYearMonth("2026-05");
+  const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-05 … 2028-04
+
+  function portedActiveMonths(item: LegacyExpense | LegacyIncome): string[] {
+    const schedule = legacySchedule(item, START);
+    return schedule === null ? [] : MONTHS.filter((month) => isActiveInMonth(schedule, month));
+  }
+
+  /** Months in which a legacy predicate (0-11 month index) reports the item as active. */
+  function legacyActiveMonths<T>(
+    item: T,
+    isActive: (item: T, month: number, year: number) => boolean,
+  ) {
+    return MONTHS.filter((month) =>
+      isActive(item, Number(month.slice(5, 7)) - 1, Number(month.slice(0, 4))),
+    );
+  }
+
+  it("matches the legacy months of every fixture item from the start month on", () => {
+    // Arrange
+    const legacy = [
+      ...expenses.map((expense) => legacyActiveMonths(expense, isExpenseActiveInMonth)),
+      ...incomes.map((income) => legacyActiveMonths(income, isIncomeActiveInMonth)),
+    ];
+
+    // Act
+    const ported = [...expenses, ...incomes].map(portedActiveMonths);
+
+    // Assert
+    expect(ported).toEqual(legacy);
+  });
+
+  it("is not active before the start month, unlike legacy", () => {
+    // Arrange
+    const rent = legacySchedule(byId(expenses, "exp-rent"), START);
+
+    // Act
+    const active =
+      rent === null
+        ? null
+        : {
+            in1900: isActiveInMonth(rent, toYearMonth("1900-01")),
+            inStartMonth: isActiveInMonth(rent, START),
+          };
+
+    // Assert
+    expect(active).toEqual({ in1900: false, inStartMonth: true });
   });
 });

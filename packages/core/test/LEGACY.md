@@ -33,10 +33,10 @@ done and which issues remain.
 | Money | Balance input drops the decimal comma: `"1 234,56 zł"` → `123456` | #2 | **Fixed in #2:** `parseMoney` takes a decimal comma or dot, `"1 234,56"` → 123456 grosze (`src/money-parse.test.ts`) |
 | Money | Savings conversion uses `parseFloat`: `"1,5"` → `1` | #2, #8 | **#2 part done:** `parseMoney` parses `"1,5"` → 150 grosze and `multiplyByRate` converts exactly; the savings conversion is ported in #8 |
 | Money | Warning messages use `toLocaleString()` without a locale | #2, #6 | **#2 part done:** `formatMoney` takes the app language (`lang`) as a parameter; the warnings are ported in #6 |
-| Recurrence | Quarterly items are always active in Jan/Apr/Jul/Oct | #4 | Open |
-| Recurrence | Yearly items without `startMonth` default to January | #4 | Open |
-| Recurrence | Recurring items have no start/end date (active also before creation) | #4 | Open |
-| Recurrence | Incomes support only monthly recurrence | #4 | Open |
+| Recurrence | Quarterly items are always active in Jan/Apr/Jul/Oct | #4 | **Fixed in #4:** any anchor month, `isActiveInMonth` (`src/recurrence.test.ts`) |
+| Recurrence | Yearly items without `startMonth` default to January | #4 | **Fixed in #4:** every recurring schedule has an explicit `anchor` (`src/recurrence.test.ts`) |
+| Recurrence | Recurring items have no start/end date (active also before creation) | #4 | **Fixed in #4:** schedules start at `anchor` and may have an `endMonth` (`src/recurrence.test.ts`) |
+| Recurrence | Incomes support only monthly recurrence | #4 | **Fixed in #4:** incomes and expenses share `Schedule`, with any interval (`src/recurrence.test.ts`) |
 | Overrides | Overrides are one-time items named `"<name> (nadpisanie)"`, matched by name | #5 | Open |
 | Overrides | Monthly totals (`calculateMonthly*`) count both the item and its override | #5 | Open |
 | Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 | Open |
