@@ -83,7 +83,7 @@ it("opens the next month with the closing balance of the closed month", () => {
 });
 ```
 
-(Illustrative only – `closeMonth` is planned in #7.)
+(Illustrative only – `closeMonth` is planned in #84.)
 
 ## Property-based tests
 
@@ -110,15 +110,20 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 ## Existing tests and follow-ups
 
-What `packages/core` tests cover today:
-- Money (#2): `src/money.test.ts` (operations), `src/money-parse.test.ts` (parsing) and `src/money-format.test.ts`
-  (CLDR-based formatting with exact characters, e.g. `\u00a0`). The original `money.test.ts` tests are one-line
-  act-and-assert checks, so explicit AAA sections are not needed there; the newer money tests use explicit AAA
-  sections.
-- `src/money.property.test.ts`: property-based tests of money arithmetic (see above).
-- Characterization tests in `packages/core/test/` (#3): forecast, recurrence, exchange rates, month closing and
+What is tested and where in `packages/core` (no test counts: they conflict between PRs; each PR adds its own
+line):
+- `src/money.test.ts`: `MinorUnits` operations. It follows the business-behaviour and naming rules; the original
+  tests are one-line act-and-assert checks, so explicit AAA sections are not needed there, and the newer ones
+  (#2) use explicit AAA sections.
+- `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and CLDR-based formatting, with explicit
+  AAA sections. Expected strings use the exact characters (e.g. `\u00a0`), not normalized spaces.
+- `src/money.property.test.ts`: property-based money arithmetic (see above).
+- `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
+  AAA sections.
+- `test/*.characterization.test.ts` (#3): legacy forecast, recurrence, exchange rates, month closing and
   formatting (including the check that `formatMoney` matches the legacy `formatCurrency`). They use explicit AAA
   sections and the frozen-clock exception from rule 5.
 
 Follow-ups:
-- Property-based tests for money parse/format and `multiplyByRate` – #122 (see above).
+- Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,
+  recurrence): #122.

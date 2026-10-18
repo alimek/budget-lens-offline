@@ -33,4 +33,4 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
   last rate with `stale: true` and its `effectiveDate` (weekends/holidays have no new table).
 - Convert an amount in a currency to PLN `MinorUnits` using the rate as returned (per 1 unit) with
   `multiplyByRate` (#2), which rounds half away from zero.
-- Currencies come from `Settings.trackedCurrencies` (#7).
+- Currencies come from `Settings.trackedCurrencies` ([settings.md](settings.md)).

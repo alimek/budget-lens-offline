@@ -141,7 +141,7 @@ describe("legacyForecast – payment statuses", () => {
 
 describe("legacyForecast – warnings", () => {
   it("warns about a low balance only strictly between 0 and 5000", () => {
-    // LEGACY: balance 0 gives no warning, threshold 5000 is hard-coded – changed by #6 and #7.
+    // LEGACY: balance 0 gives no warning, threshold 5000 is hard-coded – changed by #6 and #76.
     // Arrange
     const balances = [0, 0.01, 4999.99, 5000];
 
@@ -170,7 +170,7 @@ describe("legacyForecast – warnings", () => {
   });
 
   it("flags a large expense only when netChange is below -10000", () => {
-    // LEGACY: threshold -10000 is hard-coded – changed by #7.
+    // LEGACY: threshold -10000 is hard-coded – changed by #6 and #76.
     // Arrange
     const atThreshold = [oneTimeExpense(10000, "2026-10")];
     const belowThreshold = [oneTimeExpense(10000.01, "2026-10")];

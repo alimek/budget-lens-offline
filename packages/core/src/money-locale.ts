@@ -10,9 +10,7 @@
  * Only the symbols listed in #38 are included; every other currency is shown by its ISO 4217 code.
  */
 import type { CurrencyCode } from "./currency";
-
-/** App language that selects the formatting conventions (#38). */
-export type FormatLang = "pl" | "en";
+import type { Language } from "./settings";
 
 const NBSP = "\u00a0";
 
@@ -35,7 +33,7 @@ export interface LocaleData {
   readonly compactSpacing: string;
 }
 
-export const LOCALE_DATA: Readonly<Record<FormatLang, LocaleData>> = {
+export const LOCALE_DATA: Readonly<Record<Language, LocaleData>> = {
   pl: {
     decimalSeparator: ",",
     groupSeparator: NBSP,

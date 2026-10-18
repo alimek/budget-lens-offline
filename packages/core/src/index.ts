@@ -11,6 +11,14 @@ export {
 } from "./money";
 export type { FormatMoneyCompactOptions, FormatMoneyOptions } from "./money-format";
 export { formatMoney, formatMoneyCompact } from "./money-format";
-export type { FormatLang } from "./money-locale";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
+export type {
+  Language,
+  LanguagePreference,
+  Settings,
+  SettingsError,
+  SettingsErrorCode,
+  UpdateSettingsResult,
+} from "./settings";
+export { DEFAULT_SETTINGS, MAX_FORECAST_HORIZON_MONTHS, updateSettings } from "./settings";

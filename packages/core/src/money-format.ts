@@ -1,13 +1,14 @@
 import { type CurrencyCode, currencyExponent } from "./currency";
 import { type MinorUnits, toMinorUnits } from "./money";
-import { type FormatLang, LOCALE_DATA, type LocaleData } from "./money-locale";
+import { LOCALE_DATA, type LocaleData } from "./money-locale";
+import type { Language } from "./settings";
 
 /** CLDR compact patterns group only numbers with at least 2 digits in the leading group. */
 const COMPACT_MINIMUM_GROUPING_DIGITS = 2;
 
 export interface FormatMoneyOptions {
-  /** App language, `"pl"` or `"en"` (#38). */
-  readonly lang: FormatLang;
+  /** App language, `"pl"` or `"en"` (#38): the `Language` of `Settings`, with `"system"` resolved by the app. */
+  readonly lang: Language;
   /** ISO 4217 code. Its exponent (2 for PLN, 0 for JPY) says how many minor units make one unit. */
   readonly currency: CurrencyCode;
   /**
@@ -40,8 +41,8 @@ export function formatMoney(amount: MinorUnits, options: FormatMoneyOptions): st
 }
 
 export interface FormatMoneyCompactOptions {
-  /** App language, `"pl"` or `"en"` (#38). */
-  readonly lang: FormatLang;
+  /** App language, `"pl"` or `"en"` (#38): the `Language` of `Settings`, with `"system"` resolved by the app. */
+  readonly lang: Language;
   /** ISO 4217 code; only its exponent is used, the output has no currency symbol. */
   readonly currency: CurrencyCode;
 }
