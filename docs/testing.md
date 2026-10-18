@@ -93,10 +93,11 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 ## Existing tests and follow-ups
 
-`packages/core` has 60 tests:
+`packages/core` has 61 tests:
 - `src/money.test.ts` (19 tests) follows the business-behaviour and naming rules and is left as-is. Its tests are
   one-line act-and-assert checks, so explicit AAA sections are not needed there.
-- `src/settings.test.ts` (4 tests): `Settings` defaults and validation, with explicit AAA sections.
+- `src/settings.test.ts` (5 tests): `Settings` updates and validation, including malformed stored data, with explicit
+  AAA sections.
 - 37 characterization tests in `packages/core/test/` (#3): forecast 11, recurrence 9, exchange rates 8, month
   closing 5, formatting 4. They use explicit AAA sections and the frozen-clock exception from rule 5.
 

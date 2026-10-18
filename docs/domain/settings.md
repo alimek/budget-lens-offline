@@ -14,9 +14,22 @@ horizon. No warning threshold or default currency is a constant anywhere else in
 | `trackedCurrencies` | ISO 4217 codes | `["USD", "EUR", "GBP"]` | Currencies whose exchange rates are tracked ([exchange-rates.md](exchange-rates.md)) |
 | `lowBalanceThreshold` | `MinorUnits` | `500_000` (5000 PLN) | Low-balance warning: forecast balance below this amount ([forecast.md](forecast.md)) |
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
-| `forecastHorizonMonths` | integer | `13` | Months the forecast projects, including the start month |
+| `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
 
-Thresholds are in minor units of `defaultCurrency`. Changing the currency does not convert them.
+Thresholds are in minor units of `defaultCurrency`. Changing the currency does not convert them. A threshold of 0
+does not turn a warning off: `lowBalanceThreshold: 0` warns only for a balance below 0, and
+`largeExpenseThreshold: 0` warns for every month with a negative net change. Whether a warning can be disabled is
+decided with the forecast warnings in #6.
+
+The maximum horizon is `MAX_FORECAST_HORIZON_MONTHS` (120 months, 10 years), so a corrupted stored value cannot make
+the forecast build an unbounded number of months.
+
+Exchange-rate conversion (#8, [exchange-rates.md](exchange-rates.md)) assumes the budget currency is **PLN**: NBP rates
+are PLN per unit of a currency, and savings are converted to PLN `MinorUnits`.
+
+**Open question (owner, #24):** a non-PLN `defaultCurrency` (a single base currency other than PLN, cross-rates or a
+per-item currency) and whether thresholds should be converted when the currency changes. Until it is decided, the
+budget currency is PLN and thresholds are not converted.
 
 `DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
@@ -31,13 +44,20 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | Code | Field(s) | When |
 | --- | --- | --- |
 | `invalid-language` | `language` | Not `system`, `pl` or `en` |
-| `invalid-currency` | `defaultCurrency`, `trackedCurrencies` | Not three uppercase letters |
+| `invalid-currency` | `defaultCurrency`, `trackedCurrencies` | Not a string of three uppercase letters; for `trackedCurrencies`, not an array of such strings |
 | `duplicate-currency` | `trackedCurrencies` | The same code twice |
+| `default-currency-tracked` | `trackedCurrencies` | Contains `defaultCurrency` (NBP has no rate of PLN against itself) |
+| `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
-| `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer of at least 1 |
+| `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
+
+Errors name the field, not the element: one `trackedCurrencies` error covers the whole list, which fits a currency
+picker that shows one message per field.
 
 Stored settings are loaded the same way: `updateSettings(DEFAULT_SETTINGS, stored)`, so missing fields get the
-defaults.
+defaults. `stored` is treated as untrusted: every field is checked at runtime, a value of the wrong type is an error
+(never a thrown `TypeError`), and keys that are not `Settings` fields (e.g. legacy `low_balance_threshold`) are
+dropped.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
 
