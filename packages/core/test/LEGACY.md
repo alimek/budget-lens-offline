@@ -41,9 +41,9 @@ done and which issues remain.
 | Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 | Open |
 | Forecast | The start month comes from `new Date()` in the device time zone | #6 | Open |
 | Forecast | Balance exactly 0 produces no warning | #6 | Open |
-| Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #7 | Open |
-| Month closing | `closeMonth` does not store totals of the closed month | #7 | Open |
-| Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #7 | Open |
+| Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #76 | Open |
+| Month closing | `closeMonth` does not store totals of the closed month | #84 | Open |
+| Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #84 | Open |
 | NBP | Network errors propagate unchanged (no offline fallback) | #8 | Open |
 | NBP | Currency list is hard-coded (USD, EUR, GBP, CHF, JPY) | #8 | Open |
 | NBP | `refreshAllExchangeRates` fails as a whole when one currency fails | #8 | Open |
