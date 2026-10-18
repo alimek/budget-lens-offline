@@ -14,7 +14,9 @@ describe("parseMoney", () => {
     const inputs = ["0,1", "0.2"];
 
     // Act
-    const parsed = inputs.map(parseMoney).flatMap((result) => (result.ok ? [result.value] : []));
+    const parsed = inputs
+      .map((input) => parseMoney(input))
+      .flatMap((result) => (result.ok ? [result.value] : []));
     const total = sumMinorUnits(parsed);
 
     // Assert
@@ -78,5 +80,18 @@ describe("parseMoney", () => {
       "invalid-format",
       "invalid-format",
     ]);
+  });
+
+  it("uses the currency's minor-unit exponent: whole yen for JPY", () => {
+    // Arrange
+    const options = { currency: "JPY" } as const;
+
+    // Act
+    const wholeYen = parseMoney("1 234", options);
+    const fraction = parseMoney("12,5", options);
+
+    // Assert
+    expect(wholeYen).toEqual({ ok: true, value: 1234 });
+    expect(fraction).toEqual({ ok: false, error: "too-many-fraction-digits" });
   });
 });

@@ -28,10 +28,11 @@ done and which issues remain.
 | --- | --- | --- | --- |
 | Money | Amounts are PLN floats: `0.1 + 0.2 = 0.30000000000000004` in monthly totals | #2 | **Fixed in #2:** integer minor units, `sumMinorUnits` (`src/money-parse.test.ts`: 0,1 zł + 0.2 zł = 30 grosze) |
 | Money | `formatCurrency` never shows grosze (rounds to whole złoty) | #2 | **Fixed in #2:** `formatMoney` shows 2 fraction digits by default; `fractionDigits: 0` keeps the legacy output (`src/money-format.test.ts`) |
+| Money | `formatCurrency` shows `-0 zł` for amounts from −0,01 to −0,49 zł | #2 | **Fixed in #2:** `formatMoney` shows no minus sign on an amount that rounds to 0 (`0 zł`, `src/money-format.test.ts`) |
 | Money | `formatCurrencyCompact` does not compact negative amounts (`-5000` → `"-5000"`) | #2 | **Fixed in #2:** `formatMoneyCompact` compacts negative amounts too (`src/money-format.test.ts`) |
 | Money | Balance input drops the decimal comma: `"1 234,56 zł"` → `123456` | #2 | **Fixed in #2:** `parseMoney` takes a decimal comma or dot, `"1 234,56"` → 123456 grosze (`src/money-parse.test.ts`) |
 | Money | Savings conversion uses `parseFloat`: `"1,5"` → `1` | #2, #8 | **#2 part done:** `parseMoney` parses `"1,5"` → 150 grosze and `multiplyByRate` converts exactly; the savings conversion is ported in #8 |
-| Money | Warning messages use `toLocaleString()` without a locale | #2, #6 | **#2 part done:** `formatMoney` takes the locale as a parameter; the warnings are ported in #6 |
+| Money | Warning messages use `toLocaleString()` without a locale | #2, #6 | **#2 part done:** `formatMoney` takes the app language (`lang`) as a parameter; the warnings are ported in #6 |
 | Recurrence | Quarterly items are always active in Jan/Apr/Jul/Oct | #4 | Open |
 | Recurrence | Yearly items without `startMonth` default to January | #4 | Open |
 | Recurrence | Recurring items have no start/end date (active also before creation) | #4 | Open |

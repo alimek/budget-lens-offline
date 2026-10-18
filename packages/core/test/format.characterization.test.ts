@@ -25,10 +25,22 @@ describe("formatCurrency", () => {
     // Assert
     expect(formatted).toEqual([`1234${NBSP}zł`, `1235${NBSP}zł`, `-1235${NBSP}zł`]);
   });
+
+  it("shows a minus sign on amounts that round to 0 zł", () => {
+    // LEGACY: -0.4 → "-0 zł" – fixed in #2: formatMoney shows "0 zł" (src/money-format.test.ts).
+    // Arrange
+    const amount = -0.4;
+
+    // Act
+    const formatted = formatCurrency(amount);
+
+    // Assert
+    expect(formatted).toBe(`-0${NBSP}zł`);
+  });
 });
 
 describe("formatMoney with the legacy options", () => {
-  it("matches legacy formatCurrency for pl-PL, PLN and 0 fraction digits", () => {
+  it("matches legacy formatCurrency for pl, PLN and 0 fraction digits", () => {
     // Arrange
     const cases = [
       { minor: 123449, legacy: 1234.49 },
@@ -37,7 +49,7 @@ describe("formatMoney with the legacy options", () => {
       { minor: 0, legacy: 0 },
       { minor: 1234567800, legacy: 12345678 },
     ];
-    const legacyOptions = { locale: "pl-PL", currency: "PLN", fractionDigits: 0 } as const;
+    const legacyOptions = { lang: "pl", currency: "PLN", fractionDigits: 0 } as const;
 
     // Act
     const formatted = cases.map(({ minor }) => formatMoney(toMinorUnits(minor), legacyOptions));

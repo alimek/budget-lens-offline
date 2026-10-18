@@ -1,3 +1,4 @@
+import { type CurrencyCode, currencyExponent } from "./currency";
 import { type MinorUnits, toMinorUnits } from "./money";
 
 /** Why {@link parseMoney} rejected an input. Codes only; the UI translates them. */
@@ -14,19 +15,31 @@ export type ParseMoneyResult =
 const MINUS_SIGNS = ["-", "\u2212"];
 /** Grouping spaces: space, no-break space and narrow no-break space. Tabs and line breaks are not grouping. */
 const SPACES = /[ \u00a0\u202f]/g;
-const MAX_FRACTION_DIGITS = 2;
+/** Fraction digits accepted when no currency is given (the exponent of PLN, EUR, USD and most others). */
+const DEFAULT_FRACTION_DIGITS = 2;
+
+export interface ParseMoneyOptions {
+  /**
+   * Currency of the amount. Its ISO 4217 exponent is the maximum number of fraction digits and the scale of the
+   * result: `"12,5"` is 1250 for PLN and `too-many-fraction-digits` for JPY. Without it, 2 fraction digits.
+   */
+  readonly currency?: CurrencyCode;
+}
 
 /**
  * Parses a user-entered amount (major units, e.g. złoty) into minor units without floating-point arithmetic.
  *
- * Accepted: an optional leading minus, digits, at most 2 fraction digits after a decimal comma or dot, and
+ * Accepted: an optional leading minus, digits, at most as many fraction digits as the currency's exponent (2 by
+ * default, see {@link ParseMoneyOptions}) after a decimal comma or dot, and
  * thousands grouping with spaces (including no-break spaces) or with the separator that is not the decimal one:
  * `"1 234,56"`, `"1234.5"`, `"-12"`, `"1.234,56"`, `"1,234.56"`, `"1.234.567"`.
  * A single `,` or `.` is always the decimal separator, so `"1,234"` is rejected (3 fraction digits) instead of
  * being guessed. Currency symbols, letters, a leading `+`, a missing integer part (`",5"`), tabs or line breaks
  * inside the number and malformed grouping are rejected.
  */
-export function parseMoney(input: string): ParseMoneyResult {
+export function parseMoney(input: string, options: ParseMoneyOptions = {}): ParseMoneyResult {
+  const maxFractionDigits =
+    options.currency === undefined ? DEFAULT_FRACTION_DIGITS : currencyExponent(options.currency);
   let text = input.trim();
   if (text === "") {
     return { ok: false, error: "empty" };
@@ -51,7 +64,7 @@ export function parseMoney(input: string): ParseMoneyResult {
   if (decimalIndex !== -1 && !/^\d+$/.test(fractionPart)) {
     return { ok: false, error: "invalid-format" };
   }
-  if (fractionPart.length > MAX_FRACTION_DIGITS) {
+  if (fractionPart.length > maxFractionDigits) {
     return { ok: false, error: "too-many-fraction-digits" };
   }
   const integerDigits = ungroup(integerPart);
@@ -59,7 +72,7 @@ export function parseMoney(input: string): ParseMoneyResult {
     return { ok: false, error: "invalid-format" };
   }
 
-  const minor = BigInt(integerDigits + fractionPart.padEnd(MAX_FRACTION_DIGITS, "0"));
+  const minor = BigInt(integerDigits + fractionPart.padEnd(maxFractionDigits, "0"));
   if (minor > BigInt(Number.MAX_SAFE_INTEGER)) {
     return { ok: false, error: "out-of-range" };
   }
