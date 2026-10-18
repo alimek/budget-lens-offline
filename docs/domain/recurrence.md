@@ -35,7 +35,7 @@ Functions (pure, the month range is always passed in):
 
 | Code | When |
 | --- | --- |
-| `invalid-kind` | `kind` is not `"one-time"` or `"recurring"` |
+| `invalid-kind` | the schedule is not an object (for example `null`), or `kind` is not `"one-time"` or `"recurring"` |
 | `invalid-month` | a one-time `month` is not a `YYYY-MM` string |
 | `invalid-anchor` | `anchor` is not a `YYYY-MM` string |
 | `invalid-end-month` | `endMonth` is set but is not a `YYYY-MM` string |

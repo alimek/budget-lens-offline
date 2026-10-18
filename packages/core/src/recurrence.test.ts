@@ -148,7 +148,8 @@ describe("validateSchedule", () => {
       { "kind": "recurring", "intervalMonths": 1, "anchor": "2026-13", "endMonth": null, "dayOfMonth": "15" },
       { "kind": "recurring", "intervalMonths": 100000, "anchor": "2026-01", "endMonth": "abc" },
       { "kind": "one-time", "month": "2026-13", "dayOfMonth": null },
-      { "kind": "weekly", "intervalMonths": 1, "anchor": "2026-01" }
+      { "kind": "weekly", "intervalMonths": 1, "anchor": "2026-01" },
+      null
     ]`);
 
     // Act
@@ -159,6 +160,7 @@ describe("validateSchedule", () => {
       ["invalid-anchor", "invalid-day-of-month"],
       ["invalid-interval", "invalid-end-month"],
       ["invalid-month"],
+      ["invalid-kind"],
       ["invalid-kind"],
     ]);
   });
