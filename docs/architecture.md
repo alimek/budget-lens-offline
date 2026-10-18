@@ -9,6 +9,9 @@ apps/mobile  (planned, Stage 1)   Expo app: UI, navigation, state, platform inte
    └── packages/core (exists)     pure TypeScript domain logic
 ```
 
+Scope: No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. A multi-user shared wallet is out of scope; encrypted backup/restore is a
+planned epic with details still open.
+
 Dependencies point inwards: `apps/mobile` may use `packages/db` and `packages/core`; `packages/core` depends on
 nothing app- or platform-specific.
 
@@ -40,7 +43,7 @@ research with its correction comment):
 | App state | Zustand with the provider pattern (store created inside a React provider) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) |
 | i18n | Polish and English; no hardcoded UI strings |
-| Sync / backup | The user's own iCloud / Google Drive; no Budget Lens backend |
+| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (details open) |
 | Testing | TesterArmy `e2e` on simulators/emulators as the main testing (#15); minimal Vitest unit tests in core |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
@@ -51,7 +54,8 @@ without SQLCipher, so the app must verify `PRAGMA cipher_version` before using t
 
 Not decided yet; do not treat these as part of the stack:
 
-- From the SDK 58 research (#10): DB key and recovery model, MVP sync scope (snapshot backup/restore vs record sync),
+- From the SDK 58 research (#10): DB key and recovery model, details of the encrypted
+  backup/restore epic (e.g. full snapshot vs incremental backup to the user's own cloud storage),
   chart library (Expo UI has no Android charts), lint (Biome only vs Biome + minimal ESLint), minimum OS versions.
 
 ## Tooling

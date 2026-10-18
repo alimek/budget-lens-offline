@@ -10,4 +10,5 @@ expo-sqlite with `useLiveQuery` also comes from #1 "Decyzje". Offline scope: [#1
 - The app must verify `PRAGMA cipher_version` after opening the database: without SQLCipher in the build,
   `PRAGMA key` silently does nothing and data would be written in plaintext.
 - `useLiveQuery` is used for simple single-table queries; it ignores joins and re-runs on every row change.
-- Open decisions (#10): key and recovery model, MVP sync scope.
+- Scope: No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive.
+- Open decisions (#10): key and recovery model, details of the encrypted backup/restore epic (planned).

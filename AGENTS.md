@@ -7,9 +7,10 @@ changes domain behaviour, architecture or conventions, update this file or the l
 
 Budget Lens is a **fully offline personal budget app** built with Expo (iOS and Android).
 
-- All data stays on the user's device (encrypted SQLite). There is no Budget Lens server.
-- A shared wallet is postponed.
-- Sync/backup only goes through the user's own **iCloud** or **Google Drive**.
+- No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive.
+- Data on the device is stored in encrypted SQLite.
+- A multi-user shared wallet is out of scope.
+- Encrypted backup/restore is a planned epic; its details are still open (research in #10).
 - Monetization: a **one-time license**. The core logic is open source under the **MIT** license (`LICENSE`).
 - The app ports the business logic of the legacy web app [`alimek/budget-lens`](https://github.com/alimek/budget-lens)
   (Next.js + Supabase) into a platform-agnostic TypeScript package.

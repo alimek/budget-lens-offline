@@ -14,5 +14,5 @@ Status: Accepted, not implemented yet. Sources: #1 "Decyzje" (state, data reads,
 **Open (not decided).** Chart library, minimum OS versions and the other questions from #10 – see
 [../architecture.md](../architecture.md#open-questions).
 
-**Consequences.** Expo Go is not enough (SQLCipher, cloud integrations). Known issues to verify on the first dev build
+**Consequences.** Expo Go is not enough (SQLCipher, iCloud / Google Drive backup integration). Known issues to verify on the first dev build
 are listed in #10 (e.g. Uniwind asset loading on RN 0.88, `useLiveQuery` limitations).
