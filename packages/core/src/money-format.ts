@@ -11,7 +11,11 @@ export interface FormatMoneyOptions {
    * treated as 1/100 of the unit, so `JPY` 1234 is shown as `¥12.34`. The currency model is researched in #39.
    */
   readonly currency: string;
-  /** Fraction digits to show: 2 (default) or 0 (legacy `formatCurrency` behaviour, rounded half away from zero). */
+  /**
+   * Fraction digits to show: 2 (default) or 0 (legacy `formatCurrency` behaviour, rounded half away from zero).
+   * With 0, amounts from −1 to −49 minor units round to `"-0 zł"`, the same as legacy `formatCurrency`; hiding the
+   * sign (`signDisplay: "negative"`) waits for the Hermes check in #38.
+   */
   readonly fractionDigits?: 0 | 2;
 }
 

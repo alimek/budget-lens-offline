@@ -47,6 +47,8 @@ The locale is always a parameter; nothing is hardcoded, and all text comes from 
 - `formatMoney(amount, { locale, currency, fractionDigits? })` – localized currency string with 2 fraction digits
   by default, e.g. `1234,56 zł` (`pl-PL`) or `PLN 1,234.56` (`en`). `fractionDigits: 0` reproduces the legacy
   `formatCurrency` (`pl-PL`, `PLN`, rounded half away from zero); a characterization test checks that they match.
+  With `fractionDigits: 0`, amounts from −1 to −49 minor units round to `-0 zł` (same as legacy `formatCurrency`);
+  hiding the sign (`signDisplay: "negative"`) waits for the Hermes check in #38.
   `currency` is used for display only; the amount is always 1/100 of the unit (see "Not covered yet").
 - `formatMoneyCompact(amount, { locale })` – the locale's compact notation without a currency symbol, negative
   amounts included: `5 tys.`, `-5 tys.`, `1,5 mln` (`pl-PL`); `5K`, `-5K`, `1.5M` (`en`).
