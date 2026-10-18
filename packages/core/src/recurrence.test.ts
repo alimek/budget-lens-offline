@@ -48,22 +48,39 @@ describe("occurrencesInRange", () => {
     expect(months).toEqual(["2026-02", "2026-05", "2026-08", "2026-11"]);
   });
 
-  it("stops after the end month, which is still included", () => {
+  it("stops after the end month, which is still included, clamping day 31 in shorter months", () => {
     // Arrange
     const schedule: Schedule = {
       kind: "recurring",
       intervalMonths: 1,
-      anchor: ym("2026-01"),
-      endMonth: ym("2026-03"),
+      anchor: ym("2027-01"),
+      dayOfMonth: 31,
+      endMonth: ym("2027-04"),
     };
 
     // Act
-    const months = monthsOf(schedule, "2025-12", "2026-06");
-    const activeAfterEnd = isActiveInMonth(schedule, ym("2026-04"));
+    const occurrences = occurrencesInRange(schedule, ym("2026-12"), ym("2027-06"));
+    const activeAfterEnd = isActiveInMonth(schedule, ym("2027-05"));
 
     // Assert
-    expect(months).toEqual(["2026-01", "2026-02", "2026-03"]);
+    expect(occurrences).toEqual([
+      { month: "2027-01", day: 31 },
+      { month: "2027-02", day: 28 },
+      { month: "2027-03", day: 31 },
+      { month: "2027-04", day: 30 },
+    ]);
     expect(activeAfterEnd).toBe(false);
+  });
+
+  it("stops at the last occurrence in range, up to the last supported month 9999-12", () => {
+    // Arrange
+    const yearly: Schedule = { kind: "recurring", intervalMonths: 12, anchor: ym("9998-06") };
+
+    // Act
+    const months = monthsOf(yearly, "9998-01", "9999-12");
+
+    // Assert
+    expect(months).toEqual(["9998-06", "9999-06"]);
   });
 
   it.each([
@@ -123,5 +140,26 @@ describe("validateSchedule", () => {
     // Assert
     expect(errors).toEqual(["invalid-interval", "end-before-anchor", "invalid-day-of-month"]);
     expect(() => occurrencesInRange(invalid, ym("2026-01"), ym("2026-12"))).toThrow(RangeError);
+  });
+
+  it("reports malformed stored schedules as error codes instead of throwing or ignoring them", () => {
+    // Arrange
+    const stored: Schedule[] = JSON.parse(`[
+      { "kind": "recurring", "intervalMonths": 1, "anchor": "2026-13", "endMonth": null, "dayOfMonth": "15" },
+      { "kind": "recurring", "intervalMonths": 100000, "anchor": "2026-01", "endMonth": "abc" },
+      { "kind": "one-time", "month": "2026-13", "dayOfMonth": null },
+      { "kind": "weekly", "intervalMonths": 1, "anchor": "2026-01" }
+    ]`);
+
+    // Act
+    const errors = stored.map(validateSchedule);
+
+    // Assert
+    expect(errors).toEqual([
+      ["invalid-anchor", "invalid-day-of-month"],
+      ["invalid-interval", "invalid-end-month"],
+      ["invalid-month"],
+      ["invalid-kind"],
+    ]);
   });
 });

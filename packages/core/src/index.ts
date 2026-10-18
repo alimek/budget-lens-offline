@@ -10,6 +10,7 @@ export type {
 } from "./recurrence";
 export {
   isActiveInMonth,
+  MAX_INTERVAL_MONTHS,
   occurrencesInRange,
   scheduleFromLegacy,
   validateSchedule,
