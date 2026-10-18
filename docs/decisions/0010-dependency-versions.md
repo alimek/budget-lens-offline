@@ -1,6 +1,6 @@
 # 0010 – Latest stable dependencies, pinned exactly
 
-Status: Accepted (#10 correction comment: "always the latest stable … no RC/beta"; #20; owner decision of 2026-10-18)
+Status: Accepted (#10 correction comment: "always the latest stable … no RC/beta"; #20; [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427))
 
 **Decision.** Every dependency uses its latest stable release (the `latest` dist-tag), pinned to an exact version
 (no `^` / `~`). No RC/beta releases; a pre-release is used only when a package has no stable release at all. The same

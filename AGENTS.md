@@ -5,9 +5,10 @@ changes domain behaviour, architecture or conventions, update this file or the l
 
 ## Product
 
-Budget Lens is an **offline-first personal budget app** built with Expo (iOS and Android).
+Budget Lens is a **fully offline personal budget app** built with Expo (iOS and Android).
 
 - All data stays on the user's device (encrypted SQLite). There is no Budget Lens server.
+- A shared wallet is postponed.
 - Sync/backup only goes through the user's own **iCloud** or **Google Drive**.
 - Monetization: a **one-time license**. The core logic is open source under the **MIT** license (`LICENSE`).
 - The app ports the business logic of the legacy web app [`alimek/budget-lens`](https://github.com/alimek/budget-lens)
@@ -33,7 +34,7 @@ Planned packages: `apps/mobile` (Expo app), `packages/db` (Drizzle schema and mi
 
 Decided app stack (not implemented yet): Expo SDK 58 with development builds, Expo Router, Expo UI + Uniwind,
 Zustand (provider pattern), Drizzle on expo-sqlite with SQLCipher, TanStack Query only for network requests.
-See [docs/architecture.md](docs/architecture.md).
+See [docs/architecture.md](docs/architecture.md). Stack and process decisions: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427).
 
 ## Commands
 
@@ -55,8 +56,8 @@ planned in #18.
 
 ## Conventions (must follow)
 
-- **English only**: code, identifiers, comments, docs, test names, commit messages, PR titles and descriptions.
-  (Issue discussions may be in Polish.) Legacy user-facing data quoted verbatim in characterization tests is the
+- **English only**: code, identifiers, comments, docs, test names, commit messages, PR titles and descriptions,
+  issues. Legacy user-facing data quoted verbatim in characterization tests is the
   only exception.
 - **No hardcoded UI strings.** The app ships in **Polish and English** via i18n (separate issue). Domain code
   returns data and codes (e.g. warning codes with parameters), never translated messages.
@@ -79,7 +80,7 @@ planned in #18.
 - `main` is protected: changes only via pull request; never push to `main`.
 - PR to `main` with an English description ending in `Closes #<n>`. Stacked PRs are allowed (base on the parent
   branch and say so in the description).
-- All CI checks must be green. The **Reviewer squash-merges** the PR (with an English commit message).
+- The **Reviewer squash-merges** the PR after approval and fully green CI (with an English commit message).
 - **UI PRs** must include e2e evidence with **screenshots or a video**, from a TesterArmy `e2e` test run or
   `e2e explore` on a development build.
 - Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.

@@ -19,9 +19,9 @@ Rates are used exactly as the NBP API returns them: `mid` is the PLN value of **
 202/A/NBP/2026 of 2026-10-16: JPY `mid` = 0.024574). No multiplier is applied. This will be covered by a test against
 a recorded NBP response fixture (planned with #8).
 
-**Correction.** Earlier analysis (#8, before its 2026-10-18 edit) assumed that NBP quotes JPY/HUF per 100 units. That
-was wrong: the API returns per-unit rates for every currency. The JPY fixture (`mid: 2.4467`) and the "~100×
-overvaluation" tests proposed in #19 assume the per-100 quotation and must be corrected before #19 is merged.
+**Correction.** An earlier assumption that NBP quotes some currencies (e.g. JPY, HUF) in a different unit was wrong;
+rates are per 1 unit ([#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)). The JPY fixture (`mid: 2.4467`) and related tests proposed in #19 must be corrected
+before #19 merges.
 
 ## Target (#8)
 

@@ -1,7 +1,7 @@
 # 0007 – Local database: expo-sqlite + SQLCipher + Drizzle
 
 Status: Accepted per the #10 research (closed) and its correction comment; not implemented yet. Drizzle on
-expo-sqlite with `useLiveQuery` also comes from #1 "Decyzje".
+expo-sqlite with `useLiveQuery` also comes from #1 "Decyzje". Offline scope: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427).
 
 **Decision.** expo-sqlite with SQLCipher enabled (`useSQLCipher: true` config plugin), Drizzle ORM + drizzle-kit
 (latest stable line) for schema and migrations, database key stored in expo-secure-store. op-sqlite is a fallback only.

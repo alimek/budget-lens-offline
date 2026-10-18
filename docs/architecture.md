@@ -27,8 +27,8 @@ Legacy behaviour is pinned by characterization tests first (#3).
 
 ## Planned app stack (Stage 1)
 
-Decided, not implemented yet (see [decisions/](decisions/); sources: #1 "Decyzje" and the #10 research with its
-correction comment):
+Decided, not implemented yet (see [decisions/](decisions/); sources: #1 "Decyzje", the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427) and the #10
+research with its correction comment):
 
 | Concern | Choice |
 | --- | --- |

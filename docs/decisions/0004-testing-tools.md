@@ -1,6 +1,6 @@
 # 0004 – Testing strategy and tools
 
-Status: Accepted (#1, #15; owner decision of 2026-10-18 on the testing strategy)
+Status: Accepted (#1, #15; testing strategy and UI verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427))
 
 **Decision.**
 - **E2E tests with TesterArmy e2e** (`e2e` + `@e2e-dev/mobile`) on iOS simulators and Android emulators are the main

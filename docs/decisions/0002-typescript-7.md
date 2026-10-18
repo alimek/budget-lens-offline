@@ -1,6 +1,7 @@
 # 0002 – TypeScript 7 (`tsc`)
 
 Status: Accepted. Supersedes the initial choice of `tsgo` from `@typescript/native-preview` (#1).
+Source: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427) (stable `typescript@7`).
 
 **Context.** #1 chose tsgo (native TypeScript preview). TypeScript 7.0 was released as stable with the native
 compiler and `@typescript/native-preview` stopped receiving releases (#10).

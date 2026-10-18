@@ -1,6 +1,6 @@
 # 0008 – Money as integer minor units
 
-Status: Accepted (#1, #2)
+Status: Accepted (#1, #2). Decision summary of 2026-10-18: [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427).
 
 **Context.** Legacy stores amounts as floats and parses them with `parseFloat`, which causes rounding errors.
 
