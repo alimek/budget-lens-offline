@@ -94,6 +94,13 @@ rules apply: few properties, business-behaviour names, AAA inside the property. 
 (for example amounts whose sums stay safe integers) and do not fix a seed; on failure fast-check prints the seed and
 the shrunk counterexample to reproduce it.
 
+**Deferred from #18 (not tracked by an issue yet; a follow-up issue will be opened and linked here).** Only the
+money arithmetic properties exist today (`src/money.property.test.ts`). Still to add:
+- money parse/format round-trip (`parseMoney(formatMoney(x))`) and `multiplyByRate` rounding (half away from zero),
+  once the parsing and formatting code from #2 (PR #117) is on `main`;
+- recurrence properties (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping),
+  together with #4.
+
 ## Characterization tests
 
 Legacy behaviour is pinned with characterization (golden-master) tests before it is changed (#3). Every known
