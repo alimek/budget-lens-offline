@@ -110,14 +110,15 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 ## Existing tests and follow-ups
 
-`packages/core` has 71 tests:
-- Money (#2): `src/money.test.ts` (22), `src/money-parse.test.ts` (5), `src/money-format.test.ts` (4). The 19
-  original `money.test.ts` tests are one-line act-and-assert checks, so explicit AAA sections are not needed there;
-  the newer money tests use explicit AAA sections.
-- `src/money.property.test.ts` (2 property-based tests, see above).
-- 38 characterization tests in `packages/core/test/` (#3): forecast 11, recurrence 9, exchange rates 8, month
-  closing 5, formatting 5 (including the check that `formatMoney` matches the legacy `formatCurrency`). They use
-  explicit AAA sections and the frozen-clock exception from rule 5.
+What `packages/core` tests cover today:
+- Money (#2): `src/money.test.ts` (operations), `src/money-parse.test.ts` (parsing) and `src/money-format.test.ts`
+  (CLDR-based formatting with exact characters, e.g. `\u00a0`). The original `money.test.ts` tests are one-line
+  act-and-assert checks, so explicit AAA sections are not needed there; the newer money tests use explicit AAA
+  sections.
+- `src/money.property.test.ts`: property-based tests of money arithmetic (see above).
+- Characterization tests in `packages/core/test/` (#3): forecast, recurrence, exchange rates, month closing and
+  formatting (including the check that `formatMoney` matches the legacy `formatCurrency`). They use explicit AAA
+  sections and the frozen-clock exception from rule 5.
 
 Follow-ups:
 - Property-based tests for money parse/format and `multiplyByRate` – #122 (see above).

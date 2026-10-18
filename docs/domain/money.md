@@ -2,14 +2,16 @@
 
 ## Implemented (#2)
 
-Amounts are integers in **minor units** of a currency with 2 fraction digits (1 PLN = 100 grosze). There are no
-floats in the public API.
+Amounts are integers in **minor units** of their currency. The scale is the currency's ISO 4217 exponent
+(`packages/core/src/currency.ts`): 2 for PLN (1 zł = 100 groszy), EUR, USD and most others, 0 for JPY, ISK, KRW
+and CLP. The table holds PLN and the currencies of NBP table A except XDR (#39). There are no floats in the public
+API.
 
 ### Type and operations (`packages/core/src/money.ts`)
 
 - `MinorUnits` – branded `number` (`number & { readonly __brand: "MinorUnits" }`), always a **safe integer**.
   `number` was chosen over `bigint`: the safe range (±90 trillion PLN) is far beyond any budget, and plain numbers
-  work with SQLite, JSON and `Intl` without conversions.
+  work with SQLite and JSON without conversions.
 - `toMinorUnits(value)` – the only way to create a `MinorUnits` from a plain number; throws `RangeError` for
   non-integers, `NaN`, `±Infinity` and values outside the safe integer range; normalizes `-0` to `0`.
 - `isMinorUnits(value)` – type guard (`Number.isSafeInteger`).
@@ -26,11 +28,13 @@ floats in the public API.
 
 ### Parsing (`packages/core/src/money-parse.ts`)
 
-`parseMoney(input)` turns user input in major units (e.g. złoty) into minor units without floats and returns
+`parseMoney(input, { currency? })` turns user input in major units (e.g. złoty) into minor units without floats and
+returns
 `{ ok: true, value }` or `{ ok: false, error }`. Error codes (`ParseMoneyError`, translated by the UI):
 `"empty"`, `"invalid-format"`, `"too-many-fraction-digits"`, `"out-of-range"`.
 
-- Optional leading minus (`-` or `−`), digits, at most **2 fraction digits** after a decimal **comma or dot**.
+- Optional leading minus (`-` or `−`), digits, at most as many fraction digits as the currency's exponent
+  (**2** without `currency`; `"12,5"` is `too-many-fraction-digits` for JPY) after a decimal **comma or dot**.
 - Thousands grouping: spaces (U+0020, the no-break spaces U+00A0 and U+202F) or the separator that is not the
   decimal one; groups after the first must have 3 digits. Examples: `"1 234,56"`, `"1234.5"`, `"-12"`,
   `"1.234,56"`, `"1,234.56"`, `"1.234.567"`.
@@ -42,24 +46,47 @@ floats in the public API.
 
 ### Formatting (`packages/core/src/money-format.ts`)
 
-The locale is always a parameter; nothing is hardcoded, and all text comes from `Intl.NumberFormat`.
+Formatting does **not** use `Intl.NumberFormat`. Hermes on iOS ignores `notation: "compact"` and `signDisplay`,
+and its iOS (`NSNumberFormatter`) and Android (ICU4J) output can differ (#38). `packages/core` formats with its own
+integer-only code and a small table of CLDR data for the two app languages (`money-locale.ts`), so the output is
+the same in Vitest, on iOS and on Android. Digits are built from the integer amount with `bigint`, never from
+`amount / 100`, so every safe amount is exact: `Number.MAX_SAFE_INTEGER` PLN minor units give
+`90 071 992 547 409,91 zł`.
 
-- `formatMoney(amount, { locale, currency, fractionDigits? })` – localized currency string with 2 fraction digits
-  by default, e.g. `1234,56 zł` (`pl-PL`) or `PLN 1,234.56` (`en`). `fractionDigits: 0` reproduces the legacy
-  `formatCurrency` (`pl-PL`, `PLN`, rounded half away from zero); a characterization test checks that they match.
-  With `fractionDigits: 0`, amounts from −1 to −49 minor units round to `-0 zł` (same as legacy `formatCurrency`);
-  hiding the sign (`signDisplay: "negative"`) waits for the Hermes check in #38.
-  `currency` is used for display only; the amount is always 1/100 of the unit (see "Not covered yet").
-- `formatMoneyCompact(amount, { locale })` – the locale's compact notation without a currency symbol, negative
-  amounts included: `5 tys.`, `-5 tys.`, `1,5 mln` (`pl-PL`); `5K`, `-5K`, `1.5M` (`en`).
+The language is always a parameter: `lang: "pl" | "en"` (the app language, #38). `currency` is a `CurrencyCode`.
 
-Both functions pass the amount to `Intl.NumberFormat` as an exact decimal string built with `bigint` (e.g.
-`"90071992547409.91"`), not as `amount / 100`, so every safe amount is formatted exactly: `Number.MAX_SAFE_INTEGER`
-gives `90 071 992 547 409,91 zł`; a float division would show `…,90 zł`. A runtime without string support in
-`Intl.NumberFormat` (ES2023) converts the string to a number, which is the same as dividing.
+| | `pl` (CLDR `pl`) | `en` (CLDR `en-GB` currency conventions, `en` compact suffixes) |
+| --- | --- | --- |
+| Decimal / grouping | `,` / U+00A0 no-break space | `.` / `,` |
+| Minimum grouping digits | 2: `1234,50 zł`, `12 345,67 zł` | 1: `£1,234.50` |
+| Currency | after the number, U+00A0 before it: `1234,50 zł` | before the number, no space for a symbol (`£1,234.50`), U+00A0 after a code (`PLN 1,234.50`) |
+| Symbols | PLN `zł`, EUR `€` | GBP `£`, EUR `€`, USD `US$`, JPY `JP¥` |
+| Minus | ASCII `-` first: `-1234,50 zł` | ASCII `-` first: `-£1,234.50`, `-PLN 1,234.50` |
+| Compact | U+00A0 before the suffix: `5 tys.`, `1,5 mln`, `1 mld`, `1 bln` | no space: `5K`, `1.5M`, `1B`, `1T` |
 
-Exact output (spaces are no-break spaces, compact suffixes) comes from the runtime's `Intl` data. Tests run on
-Node.js and compare with no-break spaces normalized; `Intl` support on Hermes (SDK 58) is researched in #38.
+Spaces: every space in the output is a **no-break space U+00A0**, the character CLDR uses in these patterns
+(grouping in `pl`, number–symbol in `pl`, code–number in `en`, number–suffix in `pl` compact). The narrow no-break
+space U+202F is not used. Only the symbols listed in #38 are in the table; every other currency is shown by its
+ISO 4217 code (`5,00 USD`, `CHF 5.00`), which differs from CLDR for a few `en` symbols (e.g. CLDR has `CA$`).
+
+- `formatMoney(amount, { lang, currency, fractionDigits? })` – currency string with the currency's fraction digits
+  (`fractionDigits: "currency"`, the default; 0 for JPY: `JP¥123,450`). `fractionDigits: 0` shows whole units,
+  rounded half away from zero, which reproduces the legacy `formatCurrency` (`pl`, `PLN`); a characterization test
+  checks that they match.
+- **No `-0`:** an amount that rounds to 0 has no minus sign, so −1 to −49 groszy with `fractionDigits: 0` give
+  `0 zł`. This is a deliberate change from legacy `formatCurrency` (`-0 zł`, see `LEGACY.md`).
+- `formatMoneyCompact(amount, { lang, currency })` – CLDR short compact notation without a currency symbol,
+  negative amounts included: `5 tys.`, `-5 tys.`, `1,5 mln` (`pl`); `5K`, `-5K`, `1.5M` (`en`). `currency` gives
+  only the exponent. Rounding follows the CLDR/ECMA-402 compact defaults: 2 significant digits below 10
+  (`1,5 mln`), whole numbers from 10 (`12 tys.`), half away from zero; a value that rounds up to 1000 moves to the
+  next suffix (999 999,99 zł → `1 mln`). Amounts below 1000 units are not compacted (`12`, `0,05`).
+
+The data was checked against Node.js ICU (CLDR 48; #38 checked CLDR 46): about 109 000 random and boundary cases for
+`pl-PL`/`en-GB` currency and `pl-PL`/`en` compact output matched exactly, except for the intended `-0` change.
+Known differences from `Intl`: `HUF` is shown with its ISO exponent (2 digits), where ICU shows 0. CLDR data:
+Copyright © Unicode, Inc., [Unicode License v3](https://www.unicode.org/license.txt).
+
+Tests compare exact strings, with `\u00a0` written out.
 
 Rules: amounts never use floats; never pass plain numbers where `MinorUnits` is expected (the compiler rejects it).
 
@@ -68,6 +95,7 @@ Rules: amounts never use floats; never pass plain numbers where `MinorUnits` is 
 - Amounts are JavaScript floats in TypeScript and `DECIMAL(12,2)` in the database; dialogs parse input with
   `Number.parseFloat`.
 - `formatCurrency` (pl-PL, PLN, 0 fraction digits) is duplicated in `lib/mock-data.ts` and `lib/hooks/use-budget.ts`.
+  It shows `-0 zł` for amounts from −0,01 to −0,49 zł.
 - `formatCurrencyCompact` does not compact negative values (`-5000` → `"-5000"`, not `"-5k"`) and hardcodes the
   `k` / `M` suffixes.
 - `update-balance-sheet.tsx` parses with `parseFloat(balance.replace(/[^0-9.-]/g, ""))`, so the Polish decimal comma
@@ -78,6 +106,7 @@ These behaviours are pinned in `packages/core/test/format.characterization.test.
 
 ## Not covered yet
 
-- Currencies with other than 2 fraction digits (e.g. JPY has 0): `MinorUnits` assumes 1/100. The currency model is
-  researched in #39.
+- From #38/#39, not part of #2: `display: "code"`, privacy masking (#79), compact amounts with a currency
+  (`1,2 mln zł`), month and date labels, `allowNegative` and the other parser changes proposed in #38, and the
+  `convertMinor` cross-rate conversion (#8/#92).
 - Warning messages that use `toLocaleString()` without a locale (#6).

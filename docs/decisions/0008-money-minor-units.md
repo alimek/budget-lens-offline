@@ -5,7 +5,8 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 
 **Context.** Legacy stores amounts as floats and parses them with `parseFloat`, which causes rounding errors.
 
-**Decision.** All amounts are integers in minor units (grosze for PLN), typed as the branded `MinorUnits` (a
+**Decision.** All amounts are integers in minor units (grosze for PLN; the scale is the currency's ISO 4217 exponent,
+#39), typed as the branded `MinorUnits` (a
 safe-integer `number`, not `bigint` – #2)
 (`packages/core/src/money.ts`).
 
