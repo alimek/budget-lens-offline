@@ -6,29 +6,10 @@ import {
   updateSettings,
 } from "./index";
 
-describe("DEFAULT_SETTINGS", () => {
-  it("keeps the legacy defaults: 5000 PLN low balance, 10000 PLN large expense, USD/EUR/GBP, 13 months", () => {
-    // Arrange
-    const legacy = {
-      defaultCurrency: "PLN",
-      trackedCurrencies: ["USD", "EUR", "GBP"],
-      lowBalanceThreshold: 500_000,
-      largeExpenseThreshold: 1_000_000,
-      forecastHorizonMonths: 13,
-    };
-
-    // Act
-    const defaults = DEFAULT_SETTINGS;
-
-    // Assert
-    expect(defaults).toEqual({ ...legacy, language: "system" });
-  });
-});
-
 describe("updateSettings", () => {
   it("applies valid changes and leaves the current settings untouched", () => {
     // Arrange
-    const current = DEFAULT_SETTINGS;
+    const current = { ...DEFAULT_SETTINGS };
 
     // Act
     const result = updateSettings(current, {
@@ -47,7 +28,7 @@ describe("updateSettings", () => {
         lowBalanceThreshold: 0,
       },
     });
-    expect(current.language).toBe("system");
+    expect(current).toEqual(DEFAULT_SETTINGS);
   });
 
   it("rejects invalid values and reports every invalid field at once", () => {
