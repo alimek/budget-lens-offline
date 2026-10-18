@@ -13,7 +13,7 @@ Monetary amounts in `packages/core` are stored as integers in minor currency uni
 
 ## Requirements
 
-- Node.js ≥ 22 (recommended version in `.nvmrc`)
+- Node.js ≥ 22 (CI and recommended version pinned in `.nvmrc`, currently 24 LTS)
 - pnpm (version pinned in the `packageManager` field – the easiest way is `corepack enable`)
 
 ## Usage
@@ -33,6 +33,7 @@ Tests for a single package:
 ```sh
 pnpm --filter @budget-lens/core test
 pnpm --filter @budget-lens/core exec vitest   # watch mode
+pnpm --filter @budget-lens/core test:coverage # with coverage report (packages/core/coverage)
 ```
 
 ### Turborepo telemetry
@@ -56,3 +57,26 @@ pnpm exec turbo telemetry disable   # or set TURBO_TELEMETRY_DISABLED=1
 
 `biome.json` forbids imports from `react-native`, `expo*`, `next` and `@supabase/*` in `packages/core`
 (`noRestrictedImports` rule).
+
+## CI
+
+GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request and on every push to `main`.
+Each check is a separate job, and every task runs through Turborepo:
+
+| Job (status check) | Command |
+| --- | --- |
+| `lint` | `pnpm turbo run lint` (Biome check) |
+| `typecheck` | `pnpm turbo run typecheck` (TypeScript 7 `tsc`) |
+| `test` | `pnpm turbo run test:coverage` (Vitest + coverage summary in the job summary and a `coverage` artifact) |
+| `fallow` | `pnpm turbo run fallow` |
+
+Third-party actions are pinned to commit SHAs (version in a trailing comment).
+Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmrc`,
+`pnpm install --frozen-lockfile`) lives in `.github/actions/setup/action.yml`.
+
+### Making the checks required (repository owner)
+
+1. Open **Settings → Rules → Rulesets** (or **Settings → Branches → Branch protection rules**) for `main`.
+2. Enable **Require status checks to pass** (and optionally **Require branches to be up to date before merging**).
+3. Add the status checks `lint`, `typecheck`, `test` and `fallow` (they appear in the search after the workflow has run at least once).
+4. Save the rule.

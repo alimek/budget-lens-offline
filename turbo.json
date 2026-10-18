@@ -1,6 +1,12 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "tasks": {
+    "//#lint": {
+      "cache": false
+    },
+    "//#fallow": {
+      "cache": false
+    },
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
@@ -9,6 +15,11 @@
       "dependsOn": ["^typecheck"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "outputs": []
+    },
+    "test:coverage": {
+      "dependsOn": ["^typecheck"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
+      "outputs": ["coverage/**"]
     }
   }
 }
