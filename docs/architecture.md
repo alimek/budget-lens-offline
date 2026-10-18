@@ -48,8 +48,8 @@ nothing app- or platform-specific.
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
-Planned content, one issue each: money operations and formatting (#2),
-forecast (#6), month closing (#84), NBP exchange-rate client with an injected offline cache (#8).
+Planned content, one issue each: money operations and formatting (#2), forecast (#6), month closing (#84), NBP
+exchange-rate client with an injected offline cache (#8).
 Legacy behaviour is pinned by characterization tests first (#3).
 
 ## Planned app stack (Stage 1)

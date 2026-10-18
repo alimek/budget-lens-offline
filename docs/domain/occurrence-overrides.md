@@ -5,7 +5,7 @@ Stage 1 (`packages/db` does not exist yet).
 
 ## Model
 
-An `OccurrenceOverride` changes **one occurrence of one item in one month**:
+An `OccurrenceOverride` changes **one occurrence of one recurring item in one month**:
 
 ```ts
 { id, itemType: "expense" | "income", itemId, month: YearMonth, amount?: MinorUnits, skipped?: boolean, note? }
@@ -13,42 +13,62 @@ An `OccurrenceOverride` changes **one occurrence of one item in one month**:
 
 - Either `amount` (the occurrence uses this amount instead of the item's) or `skipped: true` (the occurrence is left
   out). Unique per `(itemType, itemId, month)`.
+- `amount` is `MinorUnits` and **≥ 0**: expenses and incomes are separate item types, so a refund is an income, not a
+  negative expense. `amount: 0` keeps the occurrence (with 0, it can still be marked paid); `skipped` removes it, so
+  there is nothing to pay. An override with the item's own amount is valid but a no-op; the UI can delete it instead.
+- Only occurrences of **recurring** items are overridden. A one-time item is edited directly (`one-time-item`).
 - Items are matched by `(itemType, itemId)` only – **never by name**. Renaming an item or having two items with the
   same name does not affect overrides.
 - "From this month on" is **not** an override: it is a change of the item's rule (rule versioning, #80), so past
   months keep their amounts. An override only ever changes its own month.
 - Payment status stays per item and month (`payment_status`, legacy `004_create_payment_status.sql`): a resolved
   occurrence carries `item` and `month`, which is the key of its payment status. A skipped occurrence has nothing to
-  pay.
+  pay; an existing payment-status row of that month is kept but not shown, and applies again if the skip is removed.
 
 ## Functions
 
 - `resolveOccurrences(items, overrides, month)` – the effective occurrences of `ScheduledItem`s
-  (`{ id, itemType, amount, schedule }`) in `month`, in item order: `{ item, month, day?, amount, override? }`,
-  overridden amounts applied, skipped occurrences removed.
-  - **Decision (#5):** an override for a month in which the item has no occurrence, or for an unknown item, is
-    **ignored** – it can be left over after a schedule change (e.g. a new end month). The UI prevents creating one with
-    `validateOverride`.
-  - Two overrides with the same `(itemType, itemId, month)` throw a `RangeError` (the unique key is broken).
-- `validateOverride(override, item)` – error codes for the UI: `empty-override` (no amount and not skipped),
-  `skipped-with-amount`, `inactive-month` (the item has no occurrence in that month).
+  (`{ id, itemType, amount, schedule }`) in `month`, in item order, as
+  `{ occurrences, rejectedOverrides, invalidItems }`. Each occurrence is `{ item, month, day?, amount, override? }`,
+  with overridden amounts applied and skipped occurrences removed.
+  - Bad stored data never breaks the month. An override that fails `validateStoredOverride`, or shares
+    `(itemType, itemId, month)` with another override (every copy, none is applied), is left out and reported in
+    `rejectedOverrides` with its error codes. An item with an invalid schedule (`validateSchedule`) is left out and
+    reported in `invalidItems`. The unique index makes duplicates impossible in SQLite; a restored backup is the risk.
+  - `rejectedOverrides` is the same for every month of the same input, so the caller reports it once per load.
+- `findOrphanedOverrides(items, overrides)` – valid overrides that resolving ignores: `unknown-item` (e.g. the item
+  was deleted) or `no-occurrence` (the item has no occurrence in that month, e.g. after a new end month, anchor or
+  interval).
+- `validateStoredOverride(value)` – runtime check of an override from storage or a backup; never throws. `null`
+  optional fields count as absent.
+- `validateOverride(override, item)` – the same checks plus the item checks, for user input; never throws, also for
+  an item with an invalid schedule.
 
-## Legacy import (`overridesFromLegacy(items, itemType, createId)`)
+**Decision (#5): orphaned overrides.** Resolving **ignores** an override without an occurrence, but it is never
+dropped silently: `findOrphanedOverrides` finds them, so an edit flow can warn before a rule change ("this change
+removes N month adjustments") and delete them in the same transaction as the rule change (left in the database, they
+would silently come back if the rule changed back). Loading and backup restore count them locally (no telemetry).
 
-Converts legacy name-based overrides – one-time items named `"<name> (nadpisanie)"` with a `targetMonth` – into
-override records; amounts must already be `MinorUnits`. It keeps the legacy month totals
-(`test/occurrence-overrides.characterization.test.ts` compares them with the legacy forecast):
+### Error codes
 
-- Every recurring item named `<name>` that legacy shows in that month is a target. The first target (input order)
-  gets an override with the sum of the override items' amounts; any other same-name target is `skipped` (legacy hid
-  all of them).
-- An override item with no target (e.g. the recurring item was renamed) stays a regular one-time item, because legacy
-  counts it like one.
-- The returned `items` exclude the override items that became records; ids come from the injected `createId`.
+| Code | Meaning |
+| --- | --- |
+| `invalid-override` | The stored value is not an object (e.g. a `null` row). |
+| `invalid-id`, `invalid-item-id` | `id` / `itemId` is not a non-empty string. |
+| `invalid-item-type` | `itemType` is not `"expense"` or `"income"`. |
+| `invalid-month` | `month` is not a valid `YYYY-MM` (e.g. `"2026-13"`, `"2026-1"`). |
+| `invalid-amount` | `amount` is present but not `MinorUnits` ≥ 0 (e.g. `1.5`, `-5000`, `"320000"`). |
+| `invalid-skipped` | `skipped` is present but not a boolean (e.g. `1`, `"true"`; the database layer maps booleans). |
+| `invalid-note` | `note` is present but not a string. |
+| `empty-override` | Neither an amount nor `skipped: true`. |
+| `skipped-with-amount` | Both an amount and `skipped: true`. |
+| `duplicate-override` | Another override has the same `(itemType, itemId, month)` (`resolveOccurrences` only). |
+| `item-mismatch` | `itemType` / `itemId` is not the item's (`validateOverride` only). |
+| `one-time-item` | The item is a one-time item (`validateOverride` only). |
+| `invalid-schedule` | The item's schedule is invalid (`validateOverride` only). |
+| `inactive-month` | The item has no occurrence in that month (`validateOverride` only). |
 
-This import is the only place that matches by name.
-
-## Table sketch (Drizzle, `expo-sqlite`) – Stage 1
+## Table sketch (Drizzle, `expo-sqlite`) – Stage 1 (#74)
 
 ```ts
 export const occurrenceOverrides = sqliteTable(
@@ -65,12 +85,20 @@ export const occurrenceOverrides = sqliteTable(
   (table) => [
     uniqueIndex("occurrence_overrides_item_month").on(table.itemType, table.itemId, table.month),
     check("occurrence_overrides_amount_or_skip", sql`(${table.amount} IS NULL) = (${table.skipped} = 1)`),
+    check("occurrence_overrides_amount_non_negative", sql`${table.amount} >= 0`),
+    check("occurrence_overrides_month_format", sql`${table.month} GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]'`),
   ],
 );
 ```
 
 `itemId` points to an expense or an income depending on `itemType`, so there is no foreign key; deleting an item
 deletes its overrides in the same transaction.
+
+## Legacy data
+
+Legacy data is **not imported** (owner decision): there is no migration of the legacy name-based overrides.
+`test/occurrence-overrides.characterization.test.ts` checks that id-based override records equivalent to the fixture
+overrides give the legacy forecast totals in every forecast month.
 
 ## Legacy behaviour
 
