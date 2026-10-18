@@ -124,8 +124,8 @@ line):
   validation (`it.each` tables).
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
   stored data) and orphaned overrides.
-- `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data, with explicit
-  AAA sections.
+- `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data and the
+  `CurrencyCode` fields and `baseCurrency` rename (#126), with explicit AAA sections.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
   schedules with legacy, #4), occurrence overrides (legacy monthly totals compared with id-based overrides, #5),
   exchange rates, month closing and formatting (including the check that `formatMoney` matches the legacy
