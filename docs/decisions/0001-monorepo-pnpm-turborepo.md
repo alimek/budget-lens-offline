@@ -8,4 +8,4 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 **Decision.** pnpm workspaces (`pnpm-workspace.yaml`: `apps/*`, `packages/*`) with Turborepo tasks (`turbo.json`).
 No Yarn. pnpm version pinned in `packageManager`.
 
-**Consequences.** Every check (`lint`, `typecheck`, `test`, `fallow`) runs through Turborepo, locally and in CI.
+**Consequences.** The `lint`, `typecheck`, `test` and `fallow` checks run through Turborepo, locally and in CI.

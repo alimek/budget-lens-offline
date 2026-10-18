@@ -44,7 +44,8 @@ pnpm fallow      # dead code, unused exports/dependencies
 pnpm check       # all of the above
 ```
 
-CI runs `lint`, `typecheck`, `test` and `fallow` as required jobs. More in [README.md](README.md).
+CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` (Conventional
+Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
 
 ## Workflow
 
@@ -65,5 +66,6 @@ CI runs `lint`, `typecheck`, `test` and `fallow` as required jobs. More in [READ
 - [docs/architecture.md](docs/architecture.md) – current state, layout, packages, planned app stack
 - [docs/domain/](docs/domain/) – one file per domain area
 - [docs/testing.md](docs/testing.md) – testing strategy and rules
+- [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
   [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)
