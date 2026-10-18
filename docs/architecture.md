@@ -15,7 +15,7 @@ packages/core/           # pure TypeScript domain logic, tested with Vitest
   src/index.ts           # public API – everything exported from here
   test/                  # legacy characterization tests (#3): fixtures, legacy reference, snapshots, LEGACY.md
 docs/                    # architecture, conventions, glossary, domain, decisions (ADRs), testing
-.github/workflows/ci.yml # CI: lint, typecheck, test, fallow
+.github/workflows/ci.yml # CI: lint, typecheck, test, fallow, audit, licenses
 ```
 
 ## Overview

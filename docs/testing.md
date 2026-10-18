@@ -15,6 +15,7 @@
 
 - **Unit tests:** Vitest in `packages/core` (`vitest.config.ts` includes both locations). Run with `pnpm test`.
   - `src/**/*.test.ts`, next to the code (e.g. `src/money.test.ts`).
+  - Property-based tests use fast-check, in `src/**/*.property.test.ts` (see below).
   - `packages/core/test/` – legacy characterization tests (#3):
     - `*.characterization.test.ts` – the tests;
     - `fixtures/` – test data (legacy expenses and incomes, recorded NBP responses);
@@ -84,6 +85,22 @@ it("opens the next month with the closing balance of the closed month", () => {
 
 (Illustrative only – `closeMonth` is planned in #7.)
 
+## Property-based tests
+
+Use [fast-check](https://fast-check.dev/) (`fc.assert(fc.property(...))` inside a Vitest `it`) for business
+invariants that must hold for every input, not just a few examples: money arithmetic and parse/format round-trips
+(#2), recurrence (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping, #4). The same
+rules apply: few properties, business-behaviour names, AAA inside the property. Keep the generated ranges realistic
+(for example amounts whose sums stay safe integers) and do not fix a seed; on failure fast-check prints the seed and
+the shrunk counterexample to reproduce it.
+
+**Deferred from #18, tracked in [#122](https://github.com/alimek/budget-lens-offline/issues/122).** Only the money
+arithmetic properties exist today (`src/money.property.test.ts`). Still to add:
+- money parse/format round-trip (`parseMoney(formatMoney(x))`) and `multiplyByRate` rounding (half away from zero),
+  once the parsing and formatting code from #2 (PR #117) is on `main`;
+- recurrence properties (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping),
+  together with #4.
+
 ## Characterization tests
 
 Legacy behaviour is pinned with characterization (golden-master) tests before it is changed (#3). Every known
@@ -93,14 +110,18 @@ port deliberately changes behaviour, the characterization test diff must show it
 
 ## Existing tests and follow-ups
 
-`packages/core` has 70 tests:
-- `src/money.test.ts` (19 tests) follows the business-behaviour and naming rules and is left as-is. Its tests are
-  one-line act-and-assert checks, so explicit AAA sections are not needed there.
-- `src/recurrence.test.ts` (12 test cases from 6 tests, `it.each` tables): intervals, anchors, end month,
-  day-of-month clamping, validation.
-- 39 characterization tests in `packages/core/test/` (#3): forecast 11, recurrence 11 (2 compare the ported
-  schedules with legacy, #4), exchange rates 8, month closing 5, formatting 4. They use explicit AAA sections and the frozen-clock exception from rule 5.
+What is tested and where in `packages/core` (no test counts: they conflict between PRs; each PR adds its own
+line):
+- `src/money.test.ts`: `MinorUnits` operations. It follows the business-behaviour and naming rules and is left
+  as-is; its tests are one-line act-and-assert checks, so explicit AAA sections are not needed there.
+- `src/money.property.test.ts`: property-based money arithmetic (see above).
+- `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
+  validation (`it.each` tables).
+- `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
+  schedules with legacy, #4), exchange rates, month closing and formatting. They use explicit AAA sections and the
+  frozen-clock exception from rule 5.
 
 Follow-ups:
 - When `money.test.ts` grows multi-step cases (e.g. parsing and formatting in #2), split them into explicit AAA
   sections.
+- Property-based tests deferred from #18 (money round-trip and rounding, recurrence): #122.
