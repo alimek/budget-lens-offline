@@ -1,0 +1,24 @@
+[
+  {
+    "id": "inc-salary",
+    "name": "Salary",
+    "amount": 9000,
+    "type": "recurring",
+    "frequency": "monthly"
+  },
+  { "id": "inc-rental", "name": "Garage rental", "amount": 250, "type": "recurring" },
+  {
+    "id": "inc-bonus",
+    "name": "Bonus",
+    "amount": 5000,
+    "type": "one-time",
+    "targetMonth": "2026-12"
+  },
+  {
+    "id": "inc-salary-override",
+    "name": "Salary (nadpisanie)",
+    "amount": 9500,
+    "type": "one-time",
+    "targetMonth": "2027-01"
+  }
+]

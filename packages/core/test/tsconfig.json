@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    // Tests run on Node.js: they use process.env.TZ and the global fetch/Response types.
+    // packages/core itself stays free of Node.js and DOM types (see ../tsconfig.json).
+    "types": ["node"]
+  },
+  "include": [".", "../vitest.config.ts"]
+}
