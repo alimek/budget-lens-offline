@@ -15,8 +15,7 @@ prints `undefined`. pnpm 12 still applies a default check against very recent re
 - a version range resolves to the newest version older than about one day (for example `^3.34.0` resolved to
   `fallow` 3.34.0 while 3.34.1 was less than a day old);
 - an explicitly requested exact version (`pnpm add -E fallow@3.34.1`) installs, and pnpm records
-  `minimumReleaseAgeExclude` entries for it in `pnpm-workspace.yaml`;
-- installing a lockfile with such a version but without the exclude entries is rejected by the supply-chain check.
+  `minimumReleaseAgeExclude` entries for it in `pnpm-workspace.yaml`.
 
 The repo currently pins `fallow` 3.34.0 and has no exclude entries. Whether to adopt an explicit
 `minimumReleaseAge` or allow exclude entries is not decided.
