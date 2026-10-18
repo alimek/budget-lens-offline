@@ -1,7 +1,6 @@
 export type { MinorUnits } from "./money";
 export { isMinorUnits, sumMinorUnits, toMinorUnits } from "./money";
 export type {
-  LegacyScheduleFields,
   Occurrence,
   OneTimeSchedule,
   RecurringSchedule,
@@ -12,7 +11,6 @@ export {
   isActiveInMonth,
   MAX_INTERVAL_MONTHS,
   occurrencesInRange,
-  scheduleFromLegacy,
   validateSchedule,
 } from "./recurrence";
 export type {

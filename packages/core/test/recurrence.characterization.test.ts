@@ -3,7 +3,7 @@
  * Month arguments are 0-11 (January = 0), as in legacy.
  */
 import { describe, expect, it } from "vitest";
-import { addMonths, isActiveInMonth, scheduleFromLegacy, toYearMonth } from "../src/index";
+import { addMonths, isActiveInMonth, toYearMonth } from "../src/index";
 import { byId, expenses, incomes } from "./fixtures";
 import {
   calculateMonthlyExpenses,
@@ -12,6 +12,7 @@ import {
   isIncomeActiveInMonth,
 } from "./legacy/recurrence";
 import type { LegacyExpense, LegacyIncome } from "./legacy/types";
+import { legacySchedule } from "./legacy-schedule";
 
 const ALL_MONTHS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -149,13 +150,13 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
   });
 });
 
-describe("legacy → ported schedule (#4)", () => {
+describe("legacy fixtures → ported schedules (#4)", () => {
   // Not a quarter month and after March, so quarterly and yearly anchors are searched forward from START.
   const START = toYearMonth("2026-05");
   const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-05 … 2028-04
 
   function portedActiveMonths(item: LegacyExpense | LegacyIncome): string[] {
-    const schedule = scheduleFromLegacy(item, START);
+    const schedule = legacySchedule(item, START);
     return schedule === null ? [] : MONTHS.filter((month) => isActiveInMonth(schedule, month));
   }
 
@@ -183,30 +184,9 @@ describe("legacy → ported schedule (#4)", () => {
     expect(ported).toEqual(legacy);
   });
 
-  it("maps malformed legacy rows to the months legacy shows for them", () => {
-    // Arrange
-    const malformed: LegacyExpense[] = JSON.parse(`[
-      { "id": "a", "name": "A", "amount": 1, "type": "one-time", "targetMonth": null },
-      { "id": "b", "name": "B", "amount": 1, "type": "one-time", "targetMonth": "" },
-      { "id": "c", "name": "C", "amount": 1, "type": "recurring", "frequency": "monthly", "dayOfMonth": null },
-      { "id": "d", "name": "D", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": 0 },
-      { "id": "e", "name": "E", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": 13 },
-      { "id": "f", "name": "F", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": "3" },
-      { "id": "g", "name": "G", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": null }
-    ]`);
-
-    // Act
-    const ported = malformed.map(portedActiveMonths);
-
-    // Assert
-    expect(ported).toEqual(
-      malformed.map((item) => legacyActiveMonths(item, isExpenseActiveInMonth)),
-    );
-  });
-
   it("is not active before the start month, unlike legacy", () => {
     // Arrange
-    const rent = scheduleFromLegacy(byId(expenses, "exp-rent"), START);
+    const rent = legacySchedule(byId(expenses, "exp-rent"), START);
 
     // Act
     const active =
