@@ -1,3 +1,4 @@
+import { isCurrencyCode } from "./currency";
 import { isMinorUnits, type MinorUnits, toMinorUnits } from "./money";
 
 /** UI languages the app ships in. */
@@ -42,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
 export type SettingsErrorCode =
   | "invalid-language"
   | "invalid-currency"
+  | "unsupported-currency"
   | "duplicate-currency"
   | "default-currency-tracked"
   | "invalid-threshold"
@@ -64,8 +66,16 @@ const CURRENCY_CODE = /^[A-Z]{3}$/;
 /** Field values as they may come from storage: the static `Settings` types are not trusted at runtime. */
 type UntrustedSettings = { readonly [Field in keyof Settings]: unknown };
 
-const isCurrencyCode = (value: unknown): value is string =>
+const isIsoCode = (value: unknown): value is string =>
   typeof value === "string" && CURRENCY_CODE.test(value);
+
+/** `invalid-currency` for a malformed code, `unsupported-currency` for a well-formed code outside the table. */
+function currencyError(value: unknown): SettingsErrorCode | undefined {
+  if (!isIsoCode(value)) {
+    return "invalid-currency";
+  }
+  return isCurrencyCode(value) ? undefined : "unsupported-currency";
+}
 
 const isLanguagePreference = (value: unknown): boolean =>
   typeof value === "string" && LANGUAGE_PREFERENCES.includes(value);
@@ -80,13 +90,16 @@ function trackedCurrenciesError(
   tracked: unknown,
   defaultCurrency: unknown,
 ): SettingsErrorCode | undefined {
-  if (!Array.isArray(tracked) || !Array.from(tracked).every(isCurrencyCode)) {
+  if (!Array.isArray(tracked) || !Array.from(tracked).every(isIsoCode)) {
     return "invalid-currency";
+  }
+  if (!tracked.every(isCurrencyCode)) {
+    return "unsupported-currency";
   }
   if (new Set(tracked).size !== tracked.length) {
     return "duplicate-currency";
   }
-  return typeof defaultCurrency === "string" && tracked.includes(defaultCurrency)
+  return isCurrencyCode(defaultCurrency) && tracked.includes(defaultCurrency)
     ? "default-currency-tracked"
     : undefined;
 }
@@ -103,8 +116,7 @@ type Check = (settings: UntrustedSettings) => SettingsErrorCode | undefined;
 /** One check per field, in the order errors are reported. */
 const FIELD_CHECKS = {
   language: ({ language }) => (isLanguagePreference(language) ? undefined : "invalid-language"),
-  defaultCurrency: ({ defaultCurrency }) =>
-    isCurrencyCode(defaultCurrency) ? undefined : "invalid-currency",
+  defaultCurrency: ({ defaultCurrency }) => currencyError(defaultCurrency),
   trackedCurrencies: ({ trackedCurrencies, defaultCurrency }) =>
     trackedCurrenciesError(trackedCurrencies, defaultCurrency),
   lowBalanceThreshold: ({ lowBalanceThreshold }) => thresholdError(lowBalanceThreshold),

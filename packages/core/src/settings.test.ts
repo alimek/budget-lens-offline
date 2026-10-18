@@ -70,6 +70,23 @@ describe("updateSettings", () => {
     });
   });
 
+  it("rejects well-formed codes outside the supported currencies, which cannot be formatted", () => {
+    // Arrange
+    const changes = { defaultCurrency: "BGN", trackedCurrencies: ["USD", "XAU"] };
+
+    // Act
+    const result = updateSettings(DEFAULT_SETTINGS, changes);
+
+    // Assert
+    expect(result).toEqual({
+      ok: false,
+      errors: [
+        { field: "defaultCurrency", code: "unsupported-currency" },
+        { field: "trackedCurrencies", code: "unsupported-currency" },
+      ],
+    });
+  });
+
   it("reports malformed stored settings as errors instead of throwing", () => {
     // Arrange
     const stored = JSON.parse(
@@ -105,7 +122,9 @@ describe("updateSettings", () => {
 describe("loadSettings", () => {
   it("keeps valid stored fields, defaults invalid fields and drops unknown keys", () => {
     // Arrange
-    const stored = JSON.parse('{ "language": "en", "forecastHorizonMonths": 0, "unknown": true }');
+    const stored = JSON.parse(
+      '{ "language": "en", "defaultCurrency": "BGN", "forecastHorizonMonths": 0, "unknown": true }',
+    );
 
     // Act
     const settings = loadSettings(stored);
