@@ -9,8 +9,8 @@ export function useFrozenClock(isoInstant: string, timeZone: string): void {
   let previousTimeZone: string | undefined;
 
   beforeEach(() => {
-    previousTimeZone = process.env.TZ;
-    process.env.TZ = timeZone;
+    previousTimeZone = process.env["TZ"];
+    process.env["TZ"] = timeZone;
     vi.useFakeTimers();
     vi.setSystemTime(new Date(isoInstant));
   });
@@ -18,15 +18,15 @@ export function useFrozenClock(isoInstant: string, timeZone: string): void {
   afterEach(() => {
     vi.useRealTimers();
     if (previousTimeZone === undefined) {
-      delete process.env.TZ;
+      delete process.env["TZ"];
     } else {
-      process.env.TZ = previousTimeZone;
+      process.env["TZ"] = previousTimeZone;
     }
   });
 }
 
 /** Sets the process time zone and the system clock inside a single test. */
 export function freezeClockAt(isoInstant: string, timeZone: string): void {
-  process.env.TZ = timeZone;
+  process.env["TZ"] = timeZone;
   vi.setSystemTime(new Date(isoInstant));
 }

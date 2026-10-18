@@ -6,3 +6,9 @@ allowBuilds:
 permissions:
   fallow:
     skills: false
+# `pnpm audit` (CI job `audit`) fails on high and critical advisories.
+# To tolerate one advisory temporarily, add its GHSA id to `audit.ignore` with a comment giving the reason,
+# the issue that tracks the fix and a review date (see docs/ci.md#audit).
+audit:
+  level: high
+  ignore: []
