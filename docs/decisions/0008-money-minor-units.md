@@ -9,4 +9,4 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 #39), typed as the branded `MinorUnits` (a safe-integer `number`, not `bigint` – #2) (`packages/core/src/money.ts`).
 
 **Consequences.** No floats for money in public APIs; conversions (e.g. exchange rates) round explicitly. See
-[../domain/money.md](../domain/money.md). Formatting: [0011](0011-money-formatting-without-intl.md).
+[../domain/money.md](../domain/money.md). Formatting: [0012](0012-native-intl-money-formatting.md).

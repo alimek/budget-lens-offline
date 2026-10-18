@@ -5,9 +5,9 @@
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
 What exists today in `packages/core`:
-- money in integer minor units: the `MinorUnits` type, exact operations, parsing and CLDR-based formatting for `pl`
-  and `en` without `Intl` (#2, see [domain/money.md](domain/money.md) and
-  [ADR 0011](decisions/0011-money-formatting-without-intl.md));
+- money in integer minor units: the `MinorUnits` type, exact operations, parsing and native `Intl.NumberFormat`
+  currency formatting for `pl` and `en`, always showing full amounts (#2/#131, see [domain/money.md](domain/money.md) and
+  [ADR 0012](decisions/0012-native-intl-money-formatting.md));
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
 - occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
 - the `Settings` model (#76);
@@ -46,6 +46,7 @@ nothing app- or platform-specific.
 - Pure, deterministic TypeScript: no React Native, Expo, Next.js or Supabase imports (Biome `noRestrictedImports`
   override in `biome.json`), no I/O, no `Date.now()` / `new Date()` inside domain functions. Anything
   environment-dependent (current month, `fetch`, rate storage) is passed in as an argument or an injected interface.
+- Currency display uses the runtime's native Intl data; platform differences are accepted (#131).
 - Money is `MinorUnits` (integer minor units); see [domain/money.md](domain/money.md).
 - `Settings` (`src/settings.ts`, #76): the single local settings model with defaults and validation; see
   [domain/settings.md](domain/settings.md).

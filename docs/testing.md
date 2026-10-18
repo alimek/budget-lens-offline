@@ -28,8 +28,6 @@
   - `packages/core/test/tsconfig.json` adds `types: ["node"]` and also checks `vitest.config.ts`.
   - The core `typecheck` script runs both: `tsc --noEmit && tsc --noEmit -p test`.
   - `@types/node` (24.x, matching `.nvmrc`) is a core devDependency used only by the tests.
-- **CLDR parity (dev-only, not in CI):** `pnpm check:cldr-parity` compares the Intl-free money formatters with
-  Node.js ICU; see [domain/money.md](domain/money.md#formatting-packagescoresrcmoney-formatts).
 - **Coverage:** `pnpm --filter @budget-lens/core test:coverage`; CI shows a coverage summary and uploads the report.
   It is informational only: no percentage threshold is configured or enforced.
 - **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and
@@ -117,8 +115,9 @@ line):
 - `src/money.test.ts`: `MinorUnits` operations. It follows the business-behaviour and naming rules; the original
   tests are one-line act-and-assert checks, so explicit AAA sections are not needed there, and the newer ones
   (#2) use explicit AAA sections.
-- `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and CLDR-based formatting, with explicit
-  AAA sections. Expected strings use the exact characters (e.g. `\u00a0`), not normalized spaces.
+- `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and native full-amount currency formatting,
+  with explicit AAA sections. Formatting expectations use the current runtime's Intl output, accepting platform
+  differences in symbols, spacing and grouping (#131); whole-unit rounding is checked separately.
 - `src/money.property.test.ts`: property-based money arithmetic (see above).
 - `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
   validation (`it.each` tables).
@@ -129,7 +128,8 @@ line):
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
   schedules with legacy, #4), occurrence overrides (legacy monthly totals compared with id-based overrides, #5),
   exchange rates, month closing and formatting (including the check that `formatMoney` matches the legacy
-  `formatCurrency`). They use explicit AAA sections and the frozen-clock exception from rule 5.
+  `formatCurrency` away from rounding halves). They use explicit AAA sections and the frozen-clock exception
+  from rule 5.
 
 Follow-ups:
 - Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,

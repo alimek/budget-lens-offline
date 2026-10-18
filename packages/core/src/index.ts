@@ -10,8 +10,8 @@ export {
   sumMinorUnits,
   toMinorUnits,
 } from "./money";
-export type { FormatMoneyCompactOptions, FormatMoneyOptions } from "./money-format";
-export { formatMoney, formatMoneyCompact } from "./money-format";
+export type { FormatMoneyOptions } from "./money-format";
+export { formatMoney } from "./money-format";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
 export type {
