@@ -24,12 +24,13 @@ decided with the forecast warnings in #6.
 The maximum horizon is `MAX_FORECAST_HORIZON_MONTHS` (120 months, 10 years), so a corrupted stored value cannot make
 the forecast build an unbounded number of months.
 
-Exchange-rate conversion (#8, [exchange-rates.md](exchange-rates.md)) assumes the budget currency is **PLN**: NBP rates
-are PLN per unit of a currency, and savings are converted to PLN `MinorUnits`.
+`defaultCurrency` is the budget's base currency and may be any currency, not only PLN
+([owner decision](https://github.com/alimek/budget-lens-offline/pull/121#issuecomment-6254392885)).
 
-**Open question (owner, #24):** a non-PLN `defaultCurrency` (a single base currency other than PLN, cross-rates or a
-per-item currency) and whether thresholds should be converted when the currency changes. Until it is decided, the
-budget currency is PLN and thresholds are not converted.
+**Open question (cross-rates, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
+([exchange-rates.md](exchange-rates.md)), so converting tracked currencies into a non-PLN base needs cross-rates.
+How to compute them, and what happens to the thresholds when the base currency changes (converted or kept as typed),
+go with that decision. Until then, Settings stores the thresholds as typed and does not convert them.
 
 `DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
@@ -46,7 +47,7 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | `invalid-language` | `language` | Not `system`, `pl` or `en` |
 | `invalid-currency` | `defaultCurrency`, `trackedCurrencies` | Not a string of three uppercase letters; for `trackedCurrencies`, not an array of such strings |
 | `duplicate-currency` | `trackedCurrencies` | The same code twice |
-| `default-currency-tracked` | `trackedCurrencies` | Contains `defaultCurrency` (NBP has no rate of PLN against itself) |
+| `default-currency-tracked` | `trackedCurrencies` | Contains `defaultCurrency`: the base currency has no exchange rate against itself (NBP table A has no PLN rate) |
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
 | `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
