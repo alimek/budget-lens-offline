@@ -54,7 +54,7 @@ returns
 
 ### Formatting (`packages/core/src/money-format.ts`)
 
-Formatting does **not** use `Intl.NumberFormat`. Hermes on iOS ignores `notation: "compact"` and `signDisplay`,
+Formatting does **not** use `Intl.NumberFormat` ([ADR 0011](../decisions/0011-money-formatting-without-intl.md)). Hermes on iOS ignores `notation: "compact"` and `signDisplay`,
 and its iOS (`NSNumberFormatter`) and Android (ICU4J) output can differ (#38). `packages/core` formats with its own
 integer-only code and a small table of CLDR data for the two app languages (`money-locale.ts`), so the output is
 the same in Vitest, on iOS and on Android. Digits are built from the integer amount with `bigint`, never from
