@@ -23,14 +23,28 @@ function toIndex(month: YearMonth): number {
   return Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1;
 }
 
+/** Index of `9999-12`, the last supported month (the supported domain is `0000-01` to `9999-12`). */
+const LAST_INDEX = 9999 * 12 + 11;
+
 function fromIndex(index: number): YearMonth {
+  if (index < 0 || index > LAST_INDEX) {
+    throw new RangeError(
+      `Month is outside the supported range 0000-01 to 9999-12 (month index ${index})`,
+    );
+  }
   const year = Math.floor(index / 12);
   const month = (index % 12) + 1;
   return toYearMonth(`${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}`);
 }
 
-/** The month `count` months after `month` (before it for a negative `count`). */
+/**
+ * The month `count` months after `month` (before it for a negative `count`). Throws a `RangeError` when `count` is
+ * not a safe integer or the result is outside `0000-01` to `9999-12`.
+ */
 export function addMonths(month: YearMonth, count: number): YearMonth {
+  if (!Number.isSafeInteger(count)) {
+    throw new RangeError(`Month count must be a safe integer, received: ${count}`);
+  }
   return fromIndex(toIndex(month) + count);
 }
 

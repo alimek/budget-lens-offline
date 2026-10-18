@@ -3,7 +3,7 @@
  * Month arguments are 0-11 (January = 0), as in legacy.
  */
 import { describe, expect, it } from "vitest";
-import { addMonths, isActiveInMonth, scheduleFromLegacy, toYearMonth } from "../src/index";
+import { addMonths, isActiveInMonth, toYearMonth } from "../src/index";
 import { byId, expenses, incomes } from "./fixtures";
 import {
   calculateMonthlyExpenses,
@@ -12,6 +12,7 @@ import {
   isIncomeActiveInMonth,
 } from "./legacy/recurrence";
 import type { LegacyExpense, LegacyIncome } from "./legacy/types";
+import { legacySchedule } from "./legacy-schedule";
 
 const ALL_MONTHS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
@@ -149,12 +150,13 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
   });
 });
 
-describe("legacy → ported schedule (#4)", () => {
-  const START = toYearMonth("2026-01");
-  const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-01 … 2027-12
+describe("legacy fixtures → ported schedules (#4)", () => {
+  // Not a quarter month and after March, so quarterly and yearly anchors are searched forward from START.
+  const START = toYearMonth("2026-05");
+  const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-05 … 2028-04
 
   function portedActiveMonths(item: LegacyExpense | LegacyIncome): string[] {
-    const schedule = scheduleFromLegacy(item, START);
+    const schedule = legacySchedule(item, START);
     return schedule === null ? [] : MONTHS.filter((month) => isActiveInMonth(schedule, month));
   }
 
@@ -184,14 +186,18 @@ describe("legacy → ported schedule (#4)", () => {
 
   it("is not active before the start month, unlike legacy", () => {
     // Arrange
-    const rent = scheduleFromLegacy(byId(expenses, "exp-rent"), START);
+    const rent = legacySchedule(byId(expenses, "exp-rent"), START);
 
     // Act
-    const activeIn1900 = rent !== null && isActiveInMonth(rent, toYearMonth("1900-01"));
-    const activeInStartMonth = rent !== null && isActiveInMonth(rent, START);
+    const active =
+      rent === null
+        ? null
+        : {
+            in1900: isActiveInMonth(rent, toYearMonth("1900-01")),
+            inStartMonth: isActiveInMonth(rent, START),
+          };
 
     // Assert
-    expect(activeIn1900).toBe(false);
-    expect(activeInStartMonth).toBe(true);
+    expect(active).toEqual({ in1900: false, inStartMonth: true });
   });
 });

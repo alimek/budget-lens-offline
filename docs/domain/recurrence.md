@@ -8,6 +8,8 @@ Status: **implemented** in `packages/core` (#4): `src/year-month.ts` and `src/re
   `toYearMonth` (throws `RangeError` for anything else) or narrow them with `isYearMonth`.
 - `addMonths(month, count)`, `monthsBetween(from, to)` (positive when `to` is later) and `daysInMonth(month)`
   (Gregorian leap years). No `Date` objects and no system clock.
+- Supported months are `0000-01` to `9999-12`. `addMonths` throws a `RangeError` for a `count` that is not a safe
+  integer or a result outside that range.
 
 ## Schedules
 
@@ -23,27 +25,34 @@ A `Schedule` decides in which months an item (expense **or** income – both use
 
 Functions (pure, the month range is always passed in):
 
-- `occurrencesInRange(schedule, from, to)` – occurrences in month order, `from` and `to` inclusive.
+- `occurrencesInRange(schedule, from, to)` – occurrences in month order, `from` and `to` inclusive. The first and
+  last occurrence in the range are computed arithmetically, so only the returned months are built, also for a range
+  that ends at `9999-12`.
 - `isActiveInMonth(schedule, month)`.
-- `validateSchedule(schedule)` – error codes for the UI: `invalid-interval` (not an integer ≥ 1),
-  `invalid-day-of-month` (not an integer 1–31), `end-before-anchor`. The two functions above throw a `RangeError`
-  for an invalid schedule.
+- `validateSchedule(schedule)` – error codes for the UI. It also checks schedules loaded from storage at runtime: a
+  value of the wrong type is a code, never a thrown `TypeError`, and nothing invalid is silently ignored. `null`
+  optional fields (`dayOfMonth`, `endMonth`, as a nullable SQLite column returns them) count as absent.
 
-## Mapping legacy items (`scheduleFromLegacy(item, startMonth)`)
-
-Legacy recurring items have no start date, so the caller passes a `startMonth` (for example the month the item was
-created). The anchor is the first month at or after it that keeps the legacy calendar:
-
-| Legacy | Schedule |
+| Code | When |
 | --- | --- |
-| `monthly` or recurring without `frequency` | every 1 month, anchor = `startMonth` |
-| `quarterly` | every 3 months, anchor = first January/April/July/October ≥ `startMonth` |
-| `yearly` | every 12 months, anchor = first `startMonth` field month (or January) ≥ `startMonth` |
-| one-time with `targetMonth` | one-time in `targetMonth` |
-| one-time without `targetMonth` | `null` (legacy never shows it) |
+| `invalid-kind` | `kind` is not `"one-time"` or `"recurring"` |
+| `invalid-month` | a one-time `month` is not a `YYYY-MM` string |
+| `invalid-anchor` | `anchor` is not a `YYYY-MM` string |
+| `invalid-end-month` | `endMonth` is set but is not a `YYYY-MM` string |
+| `invalid-interval` | `intervalMonths` is not an integer from 1 to `MAX_INTERVAL_MONTHS` (120, 10 years) |
+| `invalid-day-of-month` | `dayOfMonth` is set but is not an integer 1–31 |
+| `end-before-anchor` | `endMonth` is before `anchor` |
 
-`day_of_month` maps to `dayOfMonth`. From `startMonth` on, the mapped schedules give the same months as legacy
-(characterization tests in `packages/core/test/recurrence.characterization.test.ts`); before it they are inactive.
+`occurrencesInRange` and `isActiveInMonth` throw a `RangeError` for an invalid schedule.
+
+## Legacy data
+
+Legacy data is **not imported** and the legacy migrations are not ported (owner decision). The legacy rules are
+only compared with the ported ones in the characterization tests
+(`packages/core/test/recurrence.characterization.test.ts`): a test-only helper (`test/legacy-schedule.ts`) maps each
+legacy fixture to a schedule anchored at the first month on or after a start month that keeps the legacy calendar
+(quarterly January/April/July/October, yearly the item's `startMonth` or January). From that month on the ported
+schedules give the same months as legacy; before it they are inactive.
 
 ## Legacy behaviour (`lib/utils/expense-filter.ts`)
 

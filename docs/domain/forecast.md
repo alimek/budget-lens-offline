@@ -20,5 +20,7 @@ Status: **not implemented yet** in `packages/core` – tracked in #6.
   settings })`.
 - Horizon is a parameter (legacy default 13); the start month is an argument – no system clock.
 - Warnings are data (code + parameters), translated in the UI; thresholds come only from `Settings`
-  (see [month-closing.md](month-closing.md)).
-- All amounts in `MinorUnits`, occurrences from `occurrencesInRange` ([recurrence.md](recurrence.md)), overrides applied with `resolveOccurrences` ([occurrence-overrides.md](occurrence-overrides.md)).
+  (`lowBalanceThreshold`, `largeExpenseThreshold`) and the default horizon from `Settings.forecastHorizonMonths`
+  (see [settings.md](settings.md)).
+- All amounts in `MinorUnits`, occurrences from `occurrencesInRange` ([recurrence.md](recurrence.md)), overrides
+  applied with `resolveOccurrences` ([occurrence-overrides.md](occurrence-overrides.md)).

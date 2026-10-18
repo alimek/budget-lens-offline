@@ -1,4 +1,4 @@
-import { addMonths, daysInMonth, monthsBetween, toYearMonth, type YearMonth } from "./year-month";
+import { addMonths, daysInMonth, isYearMonth, monthsBetween, type YearMonth } from "./year-month";
 
 /** An item that happens once, in `month`. */
 export interface OneTimeSchedule {
@@ -29,21 +29,69 @@ export interface Occurrence {
   readonly day?: number;
 }
 
-export type ScheduleErrorCode = "invalid-interval" | "invalid-day-of-month" | "end-before-anchor";
+/** Upper bound of `intervalMonths` (10 years), the same limit as the forecast horizon. */
+export const MAX_INTERVAL_MONTHS = 120;
 
-/** Validation for user input; returns error codes for the UI to translate (empty when the schedule is valid). */
-export function validateSchedule(schedule: Schedule): ScheduleErrorCode[] {
+export type ScheduleErrorCode =
+  | "invalid-kind"
+  | "invalid-month"
+  | "invalid-anchor"
+  | "invalid-end-month"
+  | "invalid-interval"
+  | "invalid-day-of-month"
+  | "end-before-anchor";
+
+/** Schedule fields as they may come from storage: the static types are not trusted at runtime. */
+type UntrustedSchedule = {
+  readonly [Field in keyof RecurringSchedule | keyof OneTimeSchedule]?: unknown;
+};
+
+/** `null` (a nullable SQLite column) counts as an absent optional field. */
+function isAbsent(value: unknown): value is null | undefined {
+  return value === undefined || value === null;
+}
+
+const isMonth = (value: unknown): value is YearMonth =>
+  typeof value === "string" && isYearMonth(value);
+
+function isInteger(value: unknown, min: number, max: number): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= min && value <= max;
+}
+
+function recurringErrors(schedule: UntrustedSchedule): ScheduleErrorCode[] {
+  const { intervalMonths, anchor, endMonth } = schedule;
   const errors: ScheduleErrorCode[] = [];
-  if (schedule.kind === "recurring") {
-    if (!Number.isSafeInteger(schedule.intervalMonths) || schedule.intervalMonths < 1) {
-      errors.push("invalid-interval");
-    }
-    if (schedule.endMonth !== undefined && monthsBetween(schedule.anchor, schedule.endMonth) < 0) {
-      errors.push("end-before-anchor");
-    }
+  if (!isInteger(intervalMonths, 1, MAX_INTERVAL_MONTHS)) {
+    errors.push("invalid-interval");
   }
-  const day = schedule.dayOfMonth;
-  if (day !== undefined && (!Number.isInteger(day) || day < 1 || day > 31)) {
+  if (!isMonth(anchor)) {
+    errors.push("invalid-anchor");
+  }
+  if (!isAbsent(endMonth) && !isMonth(endMonth)) {
+    errors.push("invalid-end-month");
+  } else if (isMonth(anchor) && isMonth(endMonth) && monthsBetween(anchor, endMonth) < 0) {
+    errors.push("end-before-anchor");
+  }
+  return errors;
+}
+
+/**
+ * Validates a schedule, including one loaded from storage: every field is checked at runtime and a wrong type is
+ * an error code, never a thrown `TypeError`. `null` optional fields count as absent. Returns error codes for the
+ * UI to translate (empty when the schedule is valid).
+ */
+export function validateSchedule(schedule: Schedule): ScheduleErrorCode[] {
+  const untrusted: UntrustedSchedule = schedule;
+  if (untrusted.kind !== "recurring" && untrusted.kind !== "one-time") {
+    return ["invalid-kind"];
+  }
+  const errors =
+    untrusted.kind === "recurring"
+      ? recurringErrors(untrusted)
+      : isMonth(untrusted.month)
+        ? []
+        : (["invalid-month"] as ScheduleErrorCode[]);
+  if (!isAbsent(untrusted.dayOfMonth) && !isInteger(untrusted.dayOfMonth, 1, 31)) {
     errors.push("invalid-day-of-month");
   }
   return errors;
@@ -57,10 +105,8 @@ function assertValid(schedule: Schedule): void {
 }
 
 function occurrence(schedule: Schedule, month: YearMonth): Occurrence {
-  if (schedule.dayOfMonth === undefined) {
-    return { month };
-  }
-  return { month, day: Math.min(schedule.dayOfMonth, daysInMonth(month)) };
+  const day = schedule.dayOfMonth;
+  return isAbsent(day) ? { month } : { month, day: Math.min(day, daysInMonth(month)) };
 }
 
 /** Whether the item has an occurrence in `month`. Throws a `RangeError` for an invalid schedule. */
@@ -70,13 +116,14 @@ export function isActiveInMonth(schedule: Schedule, month: YearMonth): boolean {
 
 /**
  * Occurrences from `from` to `to` (both inclusive), in month order. Nothing happens before the anchor or after
- * the end month. Throws a `RangeError` for an invalid schedule.
+ * the end month. The first and last occurrence in the range are computed arithmetically, so only the returned
+ * months are built. Throws a `RangeError` for an invalid schedule.
  */
 export function occurrencesInRange(
   schedule: Schedule,
   from: YearMonth,
   to: YearMonth,
-): Occurrence[] {
+): readonly Occurrence[] {
   assertValid(schedule);
   if (schedule.kind === "one-time") {
     const inRange =
@@ -85,74 +132,14 @@ export function occurrencesInRange(
   }
 
   const { anchor, intervalMonths, endMonth } = schedule;
-  const last = endMonth !== undefined && monthsBetween(endMonth, to) > 0 ? endMonth : to;
-  // First occurrence index at or after `from` (index 0 is the anchor).
+  const last = !isAbsent(endMonth) && monthsBetween(endMonth, to) > 0 ? endMonth : to;
+  // Occurrence indexes (index 0 is the anchor) of the first occurrence at or after `from` and the last one at or
+  // before `last`.
   const firstIndex = Math.max(0, Math.ceil(monthsBetween(anchor, from) / intervalMonths));
+  const lastIndex = Math.floor(monthsBetween(anchor, last) / intervalMonths);
   const occurrences: Occurrence[] = [];
-  for (
-    let month = addMonths(anchor, firstIndex * intervalMonths);
-    monthsBetween(month, last) >= 0;
-  ) {
-    occurrences.push(occurrence(schedule, month));
-    month = addMonths(month, intervalMonths);
+  for (let index = firstIndex; index <= lastIndex; index++) {
+    occurrences.push(occurrence(schedule, addMonths(anchor, index * intervalMonths)));
   }
   return occurrences;
-}
-
-/** The fields of a legacy expense or income (`alimek/budget-lens`) that decide when it is active. */
-export interface LegacyScheduleFields {
-  readonly type: "recurring" | "one-time";
-  readonly frequency?: "monthly" | "quarterly" | "yearly";
-  /** Month of a yearly expense, 1–12. */
-  readonly startMonth?: number;
-  /** `YYYY-MM` of a one-time item. */
-  readonly targetMonth?: string;
-  readonly dayOfMonth?: number;
-}
-
-/** First month at or after `from` whose month number (1–12) is in `monthNumbers`. */
-function firstMatchingMonth(from: YearMonth, monthNumbers: readonly number[]): YearMonth {
-  let month = from;
-  while (!monthNumbers.includes(Number(month.slice(5, 7)))) {
-    month = addMonths(month, 1);
-  }
-  return month;
-}
-
-/**
- * Maps a legacy item to a {@link Schedule}. Legacy recurring items have no start date, so `startMonth` (for
- * example the month the item was created) becomes the start: the anchor is the first month at or after it that
- * keeps the legacy calendar – any month for monthly items, January/April/July/October for quarterly items, the
- * item's `startMonth` (or January) for yearly items. Returns `null` for a one-time item without `targetMonth`,
- * which legacy never shows.
- */
-export function scheduleFromLegacy(
-  item: LegacyScheduleFields,
-  startMonth: YearMonth,
-): Schedule | null {
-  const day = item.dayOfMonth === undefined ? {} : { dayOfMonth: item.dayOfMonth };
-  if (item.type === "one-time") {
-    return item.targetMonth === undefined
-      ? null
-      : { kind: "one-time", month: toYearMonth(item.targetMonth), ...day };
-  }
-  switch (item.frequency) {
-    case "quarterly":
-      return {
-        kind: "recurring",
-        intervalMonths: 3,
-        anchor: firstMatchingMonth(startMonth, [1, 4, 7, 10]),
-        ...day,
-      };
-    case "yearly":
-      return {
-        kind: "recurring",
-        intervalMonths: 12,
-        anchor: firstMatchingMonth(startMonth, [item.startMonth ?? 1]),
-        ...day,
-      };
-    default:
-      // "monthly" and recurring items without a frequency (legacy treats both as monthly).
-      return { kind: "recurring", intervalMonths: 1, anchor: startMonth, ...day };
-  }
 }

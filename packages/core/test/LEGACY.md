@@ -31,9 +31,9 @@ implementation's tests and remove the `LEGACY:` marker.
 | Money | Warning messages use `toLocaleString()` without a locale | #2, #6 |
 | Forecast | The start month comes from `new Date()` in the device time zone | #6 |
 | Forecast | Balance exactly 0 produces no warning | #6 |
-| Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #7 |
-| Month closing | `closeMonth` does not store totals of the closed month | #7 |
-| Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #7 |
+| Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #6, #76 |
+| Month closing | `closeMonth` does not store totals of the closed month | #84 |
+| Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #84 |
 | NBP | Network errors propagate unchanged (no offline fallback) | #8 |
 | NBP | Currency list is hard-coded (USD, EUR, GBP, CHF, JPY) | #8 |
 | NBP | `refreshAllExchangeRates` fails as a whole when one currency fails | #8 |
