@@ -20,6 +20,17 @@ describe("formatMoney", () => {
     ]);
   });
 
+  it("formats the largest safe amount exactly, without losing the last grosz", () => {
+    // Arrange
+    const largest = toMinorUnits(Number.MAX_SAFE_INTEGER);
+
+    // Act
+    const formatted = formatMoney(largest, { locale: "pl-PL", currency: "PLN" });
+
+    // Assert
+    expect(formatted).toBe(`90${NBSP}071${NBSP}992${NBSP}547${NBSP}409,91${NBSP}zł`);
+  });
+
   it("formats in the given locale and with 0 fraction digits when asked", () => {
     // Arrange
     const amount = toMinorUnits(123450);

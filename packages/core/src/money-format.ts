@@ -1,6 +1,7 @@
 import { type MinorUnits, toMinorUnits } from "./money";
 
-const MINOR_UNITS_PER_UNIT = 100;
+const MINOR_UNITS_PER_UNIT = 100n;
+const MINOR_UNIT_DIGITS = 2;
 
 export interface FormatMoneyOptions {
   /** BCP 47 locale, e.g. `"pl-PL"` or `"en"`. */
@@ -14,6 +15,7 @@ export interface FormatMoneyOptions {
 /**
  * Formats an amount of minor units (1/100 of the currency unit) as a localized currency string, e.g.
  * `formatMoney(toMinorUnits(123456), { locale: "pl-PL", currency: "PLN" })` → `"1234,56 zł"`.
+ * The amount is passed to `Intl` as an exact decimal string, so every safe integer is formatted exactly.
  */
 export function formatMoney(amount: MinorUnits, options: FormatMoneyOptions): string {
   const fractionDigits = options.fractionDigits ?? 2;
@@ -22,7 +24,7 @@ export function formatMoney(amount: MinorUnits, options: FormatMoneyOptions): st
     currency: options.currency,
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
-  }).format(toMinorUnits(amount) / MINOR_UNITS_PER_UNIT);
+  }).format(toDecimalString(amount));
 }
 
 export interface FormatMoneyCompactOptions {
@@ -36,6 +38,19 @@ export interface FormatMoneyCompactOptions {
  */
 export function formatMoneyCompact(amount: MinorUnits, options: FormatMoneyCompactOptions): string {
   return new Intl.NumberFormat(options.locale, { notation: "compact" }).format(
-    toMinorUnits(amount) / MINOR_UNITS_PER_UNIT,
+    toDecimalString(amount),
   );
+}
+
+/**
+ * Exact decimal string of an amount in major units, e.g. `-123456` → `"-1234.56"`. `Intl.NumberFormat` formats
+ * such a string as an exact decimal (ES2023), whereas `amount / 100` loses the last digit above about 2^46.
+ */
+function toDecimalString(amount: MinorUnits): Intl.StringNumericLiteral {
+  const value = BigInt(toMinorUnits(amount));
+  const absolute = value < 0n ? -value : value;
+  const units = absolute / MINOR_UNITS_PER_UNIT;
+  const fraction = String(absolute % MINOR_UNITS_PER_UNIT).padStart(MINOR_UNIT_DIGITS, "0");
+  // The template has the `${number}` shape that `Intl.StringNumericLiteral` describes; TS cannot infer it.
+  return `${value < 0n ? "-" : ""}${units}.${fraction}` as Intl.StringNumericLiteral;
 }

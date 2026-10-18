@@ -1,6 +1,8 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    // Same lib as ../tsconfig.json: the tests type-check src/money-format.ts too.
+    "lib": ["ES2022", "ES2023.Intl"],
     // Tests run on Node.js: they use process.env.TZ and the global fetch/Response types.
     // packages/core itself stays free of Node.js and DOM types (see ../tsconfig.json).
     "types": ["node"]
