@@ -61,7 +61,7 @@ research with its correction comment):
 | Network data | TanStack Query only when network requests are added (NBP rates, license) |
 | i18n | Polish and English; no hardcoded UI strings |
 | Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (details open) |
-| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework (models we choose; provider open in #15), on simulators/emulators, as the main testing (#15); minimal Vitest unit tests in core |
+| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build

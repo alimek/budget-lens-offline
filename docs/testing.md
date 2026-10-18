@@ -3,8 +3,8 @@
 ## Strategy
 
 - **E2E tests are the main way the app is tested** (#15). They cover user flows on the app and use the open-source
-  [e2e](https://github.com/tester-army/e2e) framework made by TesterArmy, configured with models we choose; the model provider
-  is an open decision in #15. We run the framework ourselves; the hosted TesterArmy service is not used (owner decision of 2026-10-18, relayed by the Orchestrator).
+  [e2e](https://github.com/tester-army/e2e) framework made by TesterArmy, configured with **our own models**; the hosted
+  TesterArmy service is not used ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)). Which model provider to use is still an open decision in #15.
 - **Unit tests are minimal:** only business logic in `packages/core`, written as Arrange-Act-Assert. The fewer, the
   better – add a unit test only when it protects a business rule that is not obvious from the code.
 - **There are no percentage coverage thresholds**, anywhere (Vitest config or CI). Coverage is only reported.
@@ -22,11 +22,11 @@
   (`agent.act()`, `agent.assert()`) need no model; agent steps and `e2e explore` use the configured model.
   Per #15 the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention,
   model configuration and CI plan are defined in #15.
-  - **Telemetry must be disabled.** The `e2e` CLI sends anonymous usage telemetry by default. Set
-    `E2E_TELEMETRY_DISABLED=1` in the local env and as a CI job env, like `TURBO_TELEMETRY_DISABLED` in
-    `.github/workflows/ci.yml` (`DO_NOT_TRACK=1` also works). Source: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry).
-  - Model API keys stay in a local env or a secret store only; they never go into the repo, PR or issue text, or CI
-    logs, and CI never echoes them (see [conventions.md](conventions.md#secrets)).
+  - **Telemetry must be disabled.** The `e2e` CLI sends anonymous usage telemetry by default
+    ([e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). Set `E2E_TELEMETRY_DISABLED=1` in every
+    environment, local and CI, like `TURBO_TELEMETRY_DISABLED` in `.github/workflows/ci.yml` ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
+  - The model provider API key comes from the local environment on the Mac Studio (later GitHub Actions secrets if
+    CI needs it) and never appears on GitHub ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see [conventions.md](conventions.md#secrets)).
   - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
     development build.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.

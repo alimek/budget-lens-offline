@@ -22,8 +22,9 @@ platform-agnostic TypeScript package.
 - **Dependencies: latest stable, pinned exactly** (no `^`/`~`, no RC/beta) – [ADR 0010](docs/decisions/0010-dependency-versions.md).
 - **`packages/core` stays pure TypeScript**: no React Native, Expo, Next.js or Supabase imports; no network, storage
   or system clock – pass them in as arguments or injected interfaces.
-- **No secrets on GitHub.** Secrets and API keys (e.g. for models) never go into the repo, PR or issue text, or CI
-  logs. Keep them only in a local env or a secret store; CI must never echo them.
+- **No secrets on GitHub.** Secrets and API keys (e.g. for models) never go into the repo, PR or issue text,
+  comments, screenshots or CI logs. Keep them only in the local env or GitHub Actions secrets; CI must never echo
+  them; `.env*` is gitignored ([#15 e2e decisions](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
 
 Details and the rest of the conventions: [docs/conventions.md](docs/conventions.md).
 

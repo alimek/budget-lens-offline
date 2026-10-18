@@ -34,17 +34,21 @@ the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/
 
 ## Secrets
 
-- Secrets and API keys (for example model API keys for e2e tests) **never go to GitHub**: not into the repo, not
-  into PR or issue text or comments, and not into CI logs.
-- Keep them only in a local environment (not committed) or a secret store (e.g. GitHub Actions secrets for CI).
-- CI steps must never echo or print secrets.
+Source: [#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252).
+
+- Secrets and API keys (for example the model provider API key for e2e tests) **never appear on GitHub**: not
+  committed, not in PR or issue descriptions, comments or screenshots, and not in CI logs.
+- Keep them only in the local environment (on the Mac Studio for e2e) or in GitHub Actions secrets if CI needs them.
+- `.env*` files are gitignored. CI steps never echo or print secrets; secrets are masked in CI logs.
+- Setup that needs a secret is documented in `docs/` by variable name only, never with a value.
 
 ## Telemetry
 
 Tool telemetry is disabled through environment variables, locally and in CI:
 - Turborepo: `TURBO_TELEMETRY_DISABLED=1` (set in `.github/workflows/ci.yml`).
-- `e2e` CLI (sends anonymous usage telemetry by default): `E2E_TELEMETRY_DISABLED=1`; `DO_NOT_TRACK=1` also works.
-  Set it in every CI job that runs `e2e`. Source: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry).
+- `e2e` CLI (sends anonymous usage telemetry by default): `E2E_TELEMETRY_DISABLED=1` in every environment, local
+  and CI ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); behaviour: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). The CLI also honours
+  `DO_NOT_TRACK=1`, but the repo standard is `E2E_TELEMETRY_DISABLED=1`.
 
 ## Workflow
 
