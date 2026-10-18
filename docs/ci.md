@@ -28,7 +28,7 @@ status check. Making checks required in the `main` ruleset is the repository own
 | `fallow` | Any unused file, export, type or dependency (dev dependencies too), unlisted dependency, cycle or stale suppression |
 | `audit` | `pnpm audit` finds a high or critical advisory |
 | `licenses` | A dependency has a license outside the allowlist, or an unknown or missing license |
-| `pr-title` | The PR title is not in Conventional Commits format (`feat(core): …`, `fix: …`, `ci: …`) |
+| `pr-title` | The PR title is not in Conventional Commits format (`feat(core): …`, `fix: …`, `ci: …`); GitHub's `Revert "…"` title is also accepted |
 | `pr-body` | The PR description has no `Closes #N`, `Fixes #N` or `Resolves #N` |
 | every job | `pnpm install --frozen-lockfile` fails because `pnpm-lock.yaml` is out of date with a `package.json` |
 

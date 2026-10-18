@@ -26,7 +26,9 @@ jobs:
         shell: bash
         run: |
           pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9][a-z0-9/-]*\))?!?: [^ ].*$'
-          if [[ ! "$PR_TITLE" =~ $pattern ]]; then
+          # Also accept the title of GitHub's "Revert" button: Revert "feat: ...".
+          revert_pattern='^Revert ".+"$'
+          if [[ ! "$PR_TITLE" =~ $pattern && ! "$PR_TITLE" =~ $revert_pattern ]]; then
             echo "::error title=pr-title::PR title must follow Conventional Commits, e.g. 'feat(core): add money parsing' or 'ci: add audit job'."
             exit 1
           fi
