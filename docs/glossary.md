@@ -6,8 +6,10 @@ Domain terms used across the code and docs. Details are in [domain/](domain/).
 | --- | --- | --- |
 | Minor units / `MinorUnits` | Integer amount in the currency's smallest unit (1 PLN = 100 grosze). | [money](domain/money.md) |
 | Item | A budget entry: an expense or an income, one-time or recurring. | [recurrence](domain/recurrence.md) |
-| Recurrence | Rule deciding in which months a recurring item is active (target: "every N months from an anchor month", optional end). | [recurrence](domain/recurrence.md) |
-| Occurrence | A single month's instance of an item. | [recurrence](domain/recurrence.md) |
+| Recurrence | Rule deciding in which months a recurring item is active ("every N months from an anchor month", optional end month). | [recurrence](domain/recurrence.md) |
+| Occurrence | A single month's instance of an item (`{ month, day? }`). | [recurrence](domain/recurrence.md) |
+| `YearMonth` | A calendar month written as `YYYY-MM`; the only month format in the domain. | [recurrence](domain/recurrence.md) |
+| Schedule | One-time (`month`) or recurring (`intervalMonths`, `anchor`, optional `endMonth` and `dayOfMonth`) rule of an item. | [recurrence](domain/recurrence.md) |
 | Occurrence override | Change of the amount of, or skipping, one occurrence in one month (`occurrence_overrides`). Replaces the legacy name-based "(nadpisanie)" items. | [occurrence-overrides](domain/occurrence-overrides.md) |
 | Payment status | Whether an expense was paid / an income received in a given month. | [forecast](domain/forecast.md) |
 | Forecast | Month-by-month projection of the balance (rolling balance, total funds, warnings). | [forecast](domain/forecast.md) |
