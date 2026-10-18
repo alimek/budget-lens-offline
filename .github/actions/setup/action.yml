@@ -13,6 +13,8 @@ runs:
       uses: actions/setup-node@v7
       with:
         node-version-file: .nvmrc
+        # The pnpm store is already cached by pnpm/action-setup; disable setup-node's automatic cache.
+        package-manager-cache: false
 
     - name: Install dependencies
       shell: bash

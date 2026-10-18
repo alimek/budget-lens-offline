@@ -13,7 +13,7 @@ Monetary amounts in `packages/core` are stored as integers in minor currency uni
 
 ## Requirements
 
-- Node.js ≥ 22 (recommended version in `.nvmrc`)
+- Node.js ≥ 22 (CI and recommended version pinned in `.nvmrc`, currently 24 LTS)
 - pnpm (version pinned in the `packageManager` field – the easiest way is `corepack enable`)
 
 ## Usage
