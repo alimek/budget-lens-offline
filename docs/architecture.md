@@ -38,7 +38,8 @@ nothing app- or platform-specific.
   override in `biome.json`), no I/O, no `Date.now()` / `new Date()` inside domain functions. Anything
   environment-dependent (current month, `fetch`, rate storage) is passed in as an argument or an injected interface.
 - Money is `MinorUnits` (integer minor units); see [domain/money.md](domain/money.md).
-- Minimal unit tests (business logic only) with Vitest next to the code (`src/**/*.test.ts`).
+- Minimal unit tests (business logic only) with Vitest next to the code (`src/**/*.test.ts`); [#19](https://github.com/alimek/budget-lens-offline/pull/19) adds
+  `test/**/*.test.ts` for legacy characterization tests.
 
 Planned content, one issue each: money operations and formatting (#2), recurrence (#4), occurrence overrides (#5),
 forecast (#6), month closing and `Settings` (#7), NBP exchange-rate client with an injected offline cache (#8).
@@ -60,7 +61,7 @@ research with its correction comment):
 | Network data | TanStack Query only when network requests are added (NBP rates, license) |
 | i18n | Polish and English; no hardcoded UI strings |
 | Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (details open) |
-| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models, on simulators/emulators, as the main testing (#15); minimal Vitest unit tests in core |
+| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework (models we choose; provider open in #15), on simulators/emulators, as the main testing (#15); minimal Vitest unit tests in core |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build

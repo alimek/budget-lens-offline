@@ -47,7 +47,11 @@ CI runs `lint`, `typecheck`, `test` and `fallow` as required jobs. More in [READ
 - One issue → one branch `dev/<issue-number>-<short-slug>` from the latest `origin/main`. Never push to `main`.
 - PR to `main` with an English description ending in `Closes #<n>`.
 - The **Reviewer** reviews and squash-merges after approval and fully green CI.
-- UI PRs include e2e evidence (screenshots or video) – see [docs/testing.md](docs/testing.md).
+- Testing: e2e first; unit tests only for business logic, Arrange-Act-Assert; no coverage thresholds – [docs/testing.md](docs/testing.md).
+- UI PRs include e2e evidence (screenshots or video) from a development build.
+- Run the app only on the dedicated `BudgetLens-*` simulators/emulators, never on personal or shared devices.
+- Metro runs on the repo's fixed port; the number will be defined in #15.
+- Docs rule: every PR that changes domain behaviour or architecture updates `docs/`; the Reviewer checks this.
 
 ## Docs
 

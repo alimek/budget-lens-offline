@@ -21,6 +21,8 @@ the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/
 - **TypeScript 7** (`typescript` package, CLI `tsc`), `strict` plus `noUncheckedIndexedAccess` and
   `exactOptionalPropertyTypes` (`tsconfig.base.json`).
 - **Biome** for lint and format, **Fallow** must stay clean, **Lefthook** pre-commit runs Biome and typecheck.
+- **Test files:** `src/**/*.test.ts` next to the code, or `packages/core/test/**/*.test.ts` for the legacy
+  characterization tests added by [#19](https://github.com/alimek/budget-lens-offline/pull/19); both locations are allowed.
 - **Tests** follow [testing.md](testing.md): e2e tests are the main testing; unit tests are minimal (business logic
   only, Arrange-Act-Assert); no percentage coverage thresholds.
 
@@ -36,6 +38,13 @@ the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/
   into PR or issue text or comments, and not into CI logs.
 - Keep them only in a local environment (not committed) or a secret store (e.g. GitHub Actions secrets for CI).
 - CI steps must never echo or print secrets.
+
+## Telemetry
+
+Tool telemetry is disabled through environment variables, locally and in CI:
+- Turborepo: `TURBO_TELEMETRY_DISABLED=1` (set in `.github/workflows/ci.yml`).
+- `e2e` CLI (sends anonymous usage telemetry by default): `E2E_TELEMETRY_DISABLED=1`; `DO_NOT_TRACK=1` also works.
+  Set it in every CI job that runs `e2e`. Source: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry).
 
 ## Workflow
 

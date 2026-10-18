@@ -20,8 +20,8 @@ Rates are used exactly as the NBP API returns them: `mid` is the PLN value of **
 a recorded NBP response fixture (planned with #8).
 
 **Correction.** An earlier assumption that NBP quotes some currencies (e.g. JPY, HUF) in a different unit was wrong;
-rates are per 1 unit ([#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)). The JPY fixture (`mid: 2.4467`) and related tests proposed in #19 must be corrected
-before #19 merges.
+rates are per 1 unit ([#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)). The characterization tests in [#19](https://github.com/alimek/budget-lens-offline/pull/19) use the per-unit rate
+(JPY fixture `mid: 0.024574`).
 
 ## Target (#8)
 
