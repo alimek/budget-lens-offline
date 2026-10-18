@@ -9,6 +9,8 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 - **Lefthook** pre-commit runs Biome on staged files and typecheck for changed packages (`lefthook.yml`).
 - **GitHub Actions** (`.github/workflows/ci.yml`) runs `lint`, `typecheck`, `test` and `fallow` as separate jobs
   through Turborepo; every job is a required merge condition. Coverage is reported without thresholds.
+- Stricter gates (#18): Biome with `--error-on-warnings`, stricter TypeScript options, Fallow with every rule at
+  `error`, `audit`, `licenses`, `pr-title` and `pr-body` jobs. See [../ci.md](../ci.md).
 
 **Consequences.** Changes reach `main` only through PRs. The Reviewer squash-merges after approval and fully
 green CI.

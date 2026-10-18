@@ -18,8 +18,9 @@ the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/
 - **`packages/core` is pure TypeScript**: no imports from React Native, Expo, Next.js or Supabase (enforced by
   Biome `noRestrictedImports`), no network or storage side effects, no reading the system clock – pass the current
   month/time in as arguments. See [architecture.md](architecture.md).
-- **TypeScript 7** (`typescript` package, CLI `tsc`), `strict` plus `noUncheckedIndexedAccess` and
-  `exactOptionalPropertyTypes` (`tsconfig.base.json`).
+- **TypeScript 7** (`typescript` package, CLI `tsc`), `strict` plus `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`, `noPropertyAccessFromIndexSignature` and more (`tsconfig.base.json`,
+  [ci.md](ci.md#typescript)).
 - **Biome** for lint and format, **Fallow** must stay clean, **Lefthook** pre-commit runs Biome and typecheck.
 - **Test files:** `src/**/*.test.ts` next to the code, or `packages/core/test/**/*.test.ts` for the legacy
   characterization tests (#3); both locations are allowed.
@@ -68,5 +69,6 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   (and [AGENTS.md](../AGENTS.md) if needed). The Reviewer checks this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board
   mirrors them.
-- CI runs the same tasks as four required jobs: `lint`, `typecheck`, `test`, `fallow`. Additional quality gates
-  are planned in #18. Commands and CI details: [README.md](../README.md).
+- PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).
+- CI gates: `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title`, `pr-body`; all must pass.
+  Details: [ci.md](ci.md). Commands: [README.md](../README.md).

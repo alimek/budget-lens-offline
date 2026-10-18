@@ -10,10 +10,11 @@
     "prepare": "lefthook install",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "lint": "biome check .",
+    "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
     "fallow": "fallow",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm fallow"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm fallow",
+    "check:licenses": "node scripts/check-licenses.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

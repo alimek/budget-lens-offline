@@ -33,6 +33,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+      - name: Turborepo cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ github.job }}-
       - name: Typecheck (TypeScript 7)
         run: pnpm turbo run typecheck
 
@@ -43,6 +50,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+      - name: Turborepo cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ github.job }}-
       - name: Test (Vitest) with coverage
         run: pnpm turbo run test:coverage
       - name: Coverage summary
@@ -80,3 +94,24 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Fallow (dead code, unused exports and dependencies)
         run: pnpm turbo run fallow
+
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Dependency audit (high and critical advisories)
+        # Level and ignored advisories: `audit` in pnpm-workspace.yaml.
+        run: pnpm audit --audit-level high
+
+  licenses:
+    name: licenses
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: License check (MIT-compatible only)
+        run: pnpm check:licenses
