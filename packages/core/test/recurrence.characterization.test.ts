@@ -150,8 +150,9 @@ describe("calculateMonthlyExpenses / calculateMonthlyIncomes", () => {
 });
 
 describe("legacy → ported schedule (#4)", () => {
-  const START = toYearMonth("2026-01");
-  const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-01 … 2027-12
+  // Not a quarter month and after March, so quarterly and yearly anchors are searched forward from START.
+  const START = toYearMonth("2026-05");
+  const MONTHS = Array.from({ length: 24 }, (_, offset) => addMonths(START, offset)); // 2026-05 … 2028-04
 
   function portedActiveMonths(item: LegacyExpense | LegacyIncome): string[] {
     const schedule = scheduleFromLegacy(item, START);
@@ -182,16 +183,41 @@ describe("legacy → ported schedule (#4)", () => {
     expect(ported).toEqual(legacy);
   });
 
+  it("maps malformed legacy rows to the months legacy shows for them", () => {
+    // Arrange
+    const malformed: LegacyExpense[] = JSON.parse(`[
+      { "id": "a", "name": "A", "amount": 1, "type": "one-time", "targetMonth": null },
+      { "id": "b", "name": "B", "amount": 1, "type": "one-time", "targetMonth": "" },
+      { "id": "c", "name": "C", "amount": 1, "type": "recurring", "frequency": "monthly", "dayOfMonth": null },
+      { "id": "d", "name": "D", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": 0 },
+      { "id": "e", "name": "E", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": 13 },
+      { "id": "f", "name": "F", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": "3" },
+      { "id": "g", "name": "G", "amount": 1, "type": "recurring", "frequency": "yearly", "startMonth": null }
+    ]`);
+
+    // Act
+    const ported = malformed.map(portedActiveMonths);
+
+    // Assert
+    expect(ported).toEqual(
+      malformed.map((item) => legacyActiveMonths(item, isExpenseActiveInMonth)),
+    );
+  });
+
   it("is not active before the start month, unlike legacy", () => {
     // Arrange
     const rent = scheduleFromLegacy(byId(expenses, "exp-rent"), START);
 
     // Act
-    const activeIn1900 = rent !== null && isActiveInMonth(rent, toYearMonth("1900-01"));
-    const activeInStartMonth = rent !== null && isActiveInMonth(rent, START);
+    const active =
+      rent === null
+        ? null
+        : {
+            in1900: isActiveInMonth(rent, toYearMonth("1900-01")),
+            inStartMonth: isActiveInMonth(rent, START),
+          };
 
     // Assert
-    expect(activeIn1900).toBe(false);
-    expect(activeInStartMonth).toBe(true);
+    expect(active).toEqual({ in1900: false, inStartMonth: true });
   });
 });
