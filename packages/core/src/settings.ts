@@ -146,6 +146,11 @@ export function loadSettings(stored: unknown): Settings {
   }
   const loaded: Record<keyof Settings, unknown> = { ...DEFAULT_SETTINGS, ...stored };
   for (const field of Object.keys(FIELD_CHECKS) as (keyof Settings)[]) {
+    if (field === "trackedCurrencies" && Array.isArray(loaded.trackedCurrencies)) {
+      loaded.trackedCurrencies = Array.from(loaded.trackedCurrencies).filter(
+        (currency) => currency !== loaded.baseCurrency,
+      );
+    }
     if (FIELD_CHECKS[field](loaded) !== undefined) {
       loaded[field] = DEFAULT_SETTINGS[field];
     }

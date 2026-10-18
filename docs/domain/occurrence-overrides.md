@@ -33,17 +33,17 @@ An `OccurrenceOverride` changes **one occurrence of one recurring item in one mo
   (`{ id, itemType, amount, schedule }`) in `month`, in item order, as
   `{ occurrences, rejectedOverrides, invalidItems }`. Each occurrence is `{ item, month, day?, amount, override? }`,
   with overridden amounts applied and skipped occurrences removed.
-  - Bad stored data never breaks the month. An override that fails `validateStoredOverride`, shares
-    `(itemType, itemId, month)` with another override (every copy, none is applied), or belongs to a one-time item
-    (`one-time-item`) is left out and reported in `rejectedOverrides` with its error codes. An item with an invalid
-    schedule (`validateSchedule`, e.g. `schedule: null`) is left out and reported in `invalidItems`.
+  - Bad stored data never breaks the month. An override that fails `validateStoredOverride` or shares
+    `(itemType, itemId, month)` with another override (every copy, none is applied) is left out and reported in
+    `rejectedOverrides` with its error codes. An item with an invalid schedule (`validateSchedule`, e.g.
+    `schedule: null`) is left out and reported in `invalidItems`.
   - Items themselves (`id`, `itemType`, `amount`) are not validated here: the items storage (epic E3) must validate
     them when they are loaded, before `resolveOccurrences`.
   - `rejectedOverrides` is the same for every month of the same input, so the caller reports it once per load.
 - `findOrphanedOverrides(items, overrides)` – valid overrides that resolving does not apply: `unknown-item` (e.g. the
   item was deleted), `one-time-item` (the item is a one-time item, e.g. after a rule change from recurring to
   one-time) or `no-occurrence` (the item has no occurrence in that month, e.g. after a new end month, anchor or
-  interval).
+  interval). A valid override of a one-time item is reported here only, not in `rejectedOverrides`.
 - `validateStoredOverride(value)` – runtime check of an override from storage or a backup; never throws. `null`
   optional fields count as absent.
 - `validateOverride(override, item)` – the same checks plus the item checks, for user input; never throws, also for
@@ -76,7 +76,7 @@ show a "conflicting adjustments, choose one" state for the rejected duplicates o
 | `skipped-with-amount` | Both an amount and `skipped: true`. |
 | `duplicate-override` | Another override has the same `(itemType, itemId, month)` (`resolveOccurrences` only). |
 | `item-mismatch` | `itemType` / `itemId` is not the item's (`validateOverride` only). |
-| `one-time-item` | The item is a one-time item (`validateOverride`, `resolveOccurrences`, orphan reason). |
+| `one-time-item` | The item is a one-time item (`validateOverride`, orphan reason). |
 | `invalid-schedule` | The item's schedule is invalid (`validateOverride` only). |
 | `inactive-month` | The item has no occurrence in that month (`validateOverride` only). |
 
