@@ -13,4 +13,4 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 - `useLiveQuery` is used for simple single-table queries; it ignores joins and re-runs on every row change.
 - Scope: No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud /
   Google Drive.
-- Open decisions (#10): key and recovery model, details of the encrypted backup/restore epic (planned).
+- Open decisions (#10): key and recovery model, details of the encrypted backup/restore epic (#30).

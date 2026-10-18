@@ -75,7 +75,8 @@ describe("legacyForecast – balance", () => {
 
 describe("legacyForecast – name-based overrides", () => {
   it("replaces a recurring expense by its override in the override month only", () => {
-    // Ported by #5: occurrence overrides keyed by item id (src/occurrence-overrides.ts); no legacy import.
+    // LEGACY: overrides are matched by name + " (nadpisanie)" suffix – fixed in #5: occurrence overrides keyed by
+    // item id (src/occurrence-overrides.test.ts); no legacy import.
     // Arrange: "Rent (nadpisanie)" 3200 replaces Rent 3000 in November 2026.
 
     // Act
@@ -88,7 +89,8 @@ describe("legacyForecast – name-based overrides", () => {
   });
 
   it("replaces every recurring item that shares the overridden name", () => {
-    // Ported by #5: overrides match by item id, so same-name items are independent.
+    // LEGACY: one override hides all same-name items – fixed in #5: overrides match by item id, so same-name items
+    // are independent (src/occurrence-overrides.test.ts).
     // Arrange
     const items: LegacyExpense[] = [
       { id: "a", name: "Rent", amount: 3000, type: "recurring", frequency: "monthly" },
@@ -104,7 +106,8 @@ describe("legacyForecast – name-based overrides", () => {
   });
 
   it("double-counts once the recurring item is renamed", () => {
-    // Ported by #5: overrides match by item id, so renaming keeps them.
+    // LEGACY: renaming the item silently breaks its overrides – fixed in #5: overrides match by item id, so renaming
+    // keeps them (src/occurrence-overrides.test.ts).
     // Arrange
     const items: LegacyExpense[] = [
       { ...byId(expenses, "exp-rent"), name: "Flat rent" },
@@ -150,7 +153,8 @@ describe("legacyForecast – warnings", () => {
 
     // Assert
     expect(firstWarnings.map((w) => w?.type)).toEqual([undefined, "caution", "caution", undefined]);
-    // LEGACY: Polish message with toLocaleString() without a locale – changed by #2 and #6.
+    // LEGACY: Polish message with toLocaleString() without a locale – #2 part done (formatMoney takes the language);
+    // the warnings are ported in #6.
     expect(firstWarnings[2]?.message).toBe(
       `Za 1 mies. niskie saldo: ${(4999.99).toLocaleString()} PLN`,
     );

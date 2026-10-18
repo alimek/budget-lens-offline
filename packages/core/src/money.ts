@@ -37,3 +37,59 @@ export function sumMinorUnits(amounts: readonly MinorUnits[]): MinorUnits {
   }
   return toMinorUnits(total);
 }
+
+/** Adds two amounts. Throws a `RangeError` when the result leaves the safe integer range. */
+export function addMinorUnits(a: MinorUnits, b: MinorUnits): MinorUnits {
+  return sumMinorUnits([a, b]);
+}
+
+/** Subtracts `b` from `a`. Throws a `RangeError` when the result leaves the safe integer range. */
+export function subtractMinorUnits(a: MinorUnits, b: MinorUnits): MinorUnits {
+  return sumMinorUnits([a, negateMinorUnits(b)]);
+}
+
+export function negateMinorUnits(amount: MinorUnits): MinorUnits {
+  return toMinorUnits(-toMinorUnits(amount));
+}
+
+/**
+ * Multiplies an amount by a rate (e.g. an NBP exchange rate per 1 unit of the currency) and rounds the result
+ * to whole minor units **half away from zero** (0.5 → 1, -0.5 → -1). The rate is used as the decimal number it
+ * prints as (`String(rate)`), so `0.024574` is exactly 24574 / 10^6 and the product is computed without
+ * floating-point error.
+ *
+ * Throws a `RangeError` for a negative or non-finite rate and when the result leaves the safe integer range.
+ */
+export function multiplyByRate(amount: MinorUnits, rate: number): MinorUnits {
+  const value = BigInt(toMinorUnits(amount));
+  if (!Number.isFinite(rate) || rate < 0) {
+    throw new RangeError(`Rate must be a finite, non-negative number, received: ${rate}`);
+  }
+  const { coefficient, scale } = toDecimal(rate);
+  const product = value * coefficient;
+  const divisor = 10n ** scale;
+  let result = product / divisor;
+  const remainder = product % divisor;
+  const absRemainder = remainder < 0n ? -remainder : remainder;
+  if (absRemainder * 2n >= divisor) {
+    result += product < 0n ? -1n : 1n;
+  }
+  if (result > BigInt(Number.MAX_SAFE_INTEGER) || result < BigInt(Number.MIN_SAFE_INTEGER)) {
+    throw new RangeError("Result exceeds the safe integer range");
+  }
+  return toMinorUnits(Number(result));
+}
+
+/** Exact decimal value of a finite, non-negative number as `coefficient / 10^scale`. */
+function toDecimal(rate: number): { coefficient: bigint; scale: bigint } {
+  const match = /^(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(rate));
+  if (!match) {
+    throw new RangeError(`Unsupported rate: ${rate}`);
+  }
+  const [, integerDigits = "", fractionDigits = "", exponent = "0"] = match;
+  const coefficient = BigInt(integerDigits + fractionDigits);
+  const power = Number(exponent) - fractionDigits.length;
+  return power >= 0
+    ? { coefficient: coefficient * 10n ** BigInt(power), scale: 0n }
+    : { coefficient, scale: BigInt(-power) };
+}
