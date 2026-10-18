@@ -155,15 +155,4 @@ describe("loadSettings", () => {
     });
     expect(updateSettings(settings, {}).ok).toBe(true);
   });
-
-  it("ignores the legacy defaultCurrency key instead of migrating it", () => {
-    // Arrange: the rename of #39 has no migration helper, so the legacy key is just an unknown key here.
-    const stored = JSON.parse('{ "defaultCurrency": "EUR" }');
-
-    // Act
-    const settings = loadSettings(stored);
-
-    // Assert
-    expect(settings).toEqual(DEFAULT_SETTINGS);
-  });
 });

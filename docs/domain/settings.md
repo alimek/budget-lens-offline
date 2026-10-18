@@ -49,7 +49,7 @@ The legacy setting is called `default_currency`, which suggests an item can pick
 the base currency of the budget
 ([#39 research, open question 1](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6254390483),
 default "yes"). So the field is `baseCurrency`, the validation error code is `base-currency-tracked`, and the schema
-of #35 uses `base_currency`. The rename and the `CurrencyCode` typing landed in one change so Settings was not
+of #35 must use a `base_currency` column (the #35 research comment still says `default_currency`). The rename and the `CurrencyCode` typing landed in one change so Settings was not
 churned twice. There is no migration: the offline app has no released stored settings yet and no `*FromLegacy` helper
 reads the old key.
 
@@ -73,12 +73,13 @@ invalid field. Errors are codes for the UI to translate, never messages:
 Errors name the field, not the element: one `trackedCurrencies` error covers the whole list, which fits a currency
 picker that shows one message per field. `updateSettings` checks every field at runtime, so a value of the wrong
 type is an error, never a thrown `TypeError`. The `CurrencyCode` types do not narrow stored data on their own:
-`currencyError` and `trackedCurrenciesError` do that with `isCurrencyCode` ([money.md](money.md)), and callers pass
-`Partial<Settings>` – cast unchecked values with `as Partial<Settings>`, never assume a plain `string` is a code.
+`currencyError` and `trackedCurrenciesError` do that with `isCurrencyCode` ([money.md](money.md)). Stored data goes
+through `loadSettings` and user input is checked with `isCurrencyCode` before it reaches `updateSettings`; the
+`as Partial<Settings>` cast is only for tests that feed invalid values. Never assume a plain `string` is a code.
 
 `loadSettings(stored)` keeps valid stored fields, uses defaults for missing or invalid fields, drops unknown
 keys and returns frozen settings; non-object values and arrays return `DEFAULT_SETTINGS`. The loaded base
-currency is removed from tracked currencies, including when that list falls back to its default. The legacy
+currency is removed from tracked currencies, including when that list falls back to its default. The pre-rename
 `defaultCurrency` key is an unknown key here: it is dropped and `baseCurrency` keeps its stored value or default.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
