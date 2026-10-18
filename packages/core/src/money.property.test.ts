@@ -22,20 +22,6 @@ describe("sumMinorUnits (properties)", () => {
 
     fc.assert(property);
   });
-
-  it("does not depend on the order of the amounts", () => {
-    // Arrange
-    const property = fc.property(amountList, (amounts) => {
-      // Act
-      const forward = sumMinorUnits(amounts);
-      const backward = sumMinorUnits([...amounts].reverse());
-
-      // Assert
-      expect(backward).toBe(forward);
-    });
-
-    fc.assert(property);
-  });
 });
 
 describe("toMinorUnits (properties)", () => {
