@@ -3,6 +3,7 @@ import nbpResponses from "../test/fixtures/nbp-responses.json";
 import type { NbpFetch, RateStore, StoredRate } from "./index";
 import {
   convertMinor,
+  convertMinorExact,
   createMemoryRateStore,
   DEFAULT_SETTINGS,
   fetchNbpRate,
@@ -174,6 +175,26 @@ describe("NBP quotes", () => {
 });
 
 describe("current rate lookup", () => {
+  it("supplies selected decimal legs to existing exact conversion without rounding through PLN", () => {
+    // Arrange
+    const rates = selectCurrentRates([
+      quote({ currency: "JPY", mid: "0.024574" }),
+      quote({ currency: "EUR", mid: "4.3661" }),
+    ]);
+
+    // Act
+    const euroCents = convertMinorExact(
+      toMinorUnits(10_000),
+      rates.get("JPY")?.mid ?? "0",
+      rates.get("EUR")?.mid ?? "0",
+      "JPY",
+      "EUR",
+    );
+
+    // Assert
+    expect(euroCents).toBe(toMinorUnits(5_628));
+  });
+
   it.each([
     ["2026-10-18", "2026-10-19", "manual"],
     ["2026-10-19", "2026-10-18", "nbp"],

@@ -16,7 +16,7 @@ export type LanguagePreference = Language | "system";
 export interface Settings {
   readonly language: LanguagePreference;
   /**
-   * Code of the currency all budget amounts are kept in; renamed from the legacy `default_currency` (#39).
+   * Code of the currency used for balances, totals and thresholds; renamed from the legacy `default_currency` (#39).
    * Limited to the supported currencies, `CurrencyCode` (#126).
    */
   readonly baseCurrency: CurrencyCode;

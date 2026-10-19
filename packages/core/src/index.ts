@@ -2,11 +2,24 @@ export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
 export type { RateError, RateQuote, RateResult, RateSource, StoredRate } from "./exchange-rates";
 export { isRateStale, requiredRateCurrencies, selectCurrentRates } from "./exchange-rates";
+export type {
+  ForecastError,
+  ForecastInput,
+  ForecastItem,
+  ForecastMonth,
+  ForecastRate,
+  ForecastResult,
+  ForecastWarning,
+} from "./forecast";
+export { forecast } from "./forecast";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,
   convertMinor,
+  convertMinorExact,
+  convertViaPln,
   isMinorUnits,
+  MoneyOverflowError,
   multiplyByRate,
   negateMinorUnits,
   subtractMinorUnits,

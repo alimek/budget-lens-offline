@@ -32,7 +32,7 @@ done and which issues remain.
 | Money | `formatCurrencyCompact` does not compact negative amounts (`-5000` → `"-5000"`) | #2 | **Superseded by #131:** core always formats full currency amounts; compact formatting was removed |
 | Money | Balance input drops the decimal comma: `"1 234,56 zł"` → `123456` | #2 | **Fixed in #2:** `parseMoney` takes a decimal comma or dot, `"1 234,56"` → 123456 grosze (`src/money-parse.test.ts`) |
 | Money | Savings conversion uses `parseFloat`: `"1,5"` → `1` | #2, #8 | **#2 part done:** `parseMoney` parses `"1,5"` → 150 grosze and `multiplyByRate` converts exactly; the savings conversion is ported in #8 |
-| Money | Warning messages use `toLocaleString()` without a locale | #2, #6 | **#2 part done:** `formatMoney` takes the app language (`lang`) as a parameter; the warnings are ported in #6 |
+| Money | Warning messages use `toLocaleString()` without a locale | #2, #6 | **#2 part done:** `formatMoney` takes the app language (`lang`) as a parameter; **#6 done:** warning codes and numeric parameters, no localized strings (`src/forecast.test.ts`) |
 | Recurrence | Quarterly items are always active in Jan/Apr/Jul/Oct | #4 | **Fixed in #4:** any anchor month, `isActiveInMonth` (`src/recurrence.test.ts`) |
 | Recurrence | Yearly items without `startMonth` default to January | #4 | **Fixed in #4:** every recurring schedule has an explicit `anchor` (`src/recurrence.test.ts`) |
 | Recurrence | Recurring items have no start/end date (active also before creation) | #4 | **Fixed in #4:** schedules start at `anchor` and may have an `endMonth` (`src/recurrence.test.ts`) |
@@ -40,9 +40,9 @@ done and which issues remain.
 | Overrides | Overrides are one-time items named `"<name> (nadpisanie)"`, matched by name | #5 | **Fixed in #5:** id-based `OccurrenceOverride`s matched by `(itemType, itemId)`; no legacy import (`src/occurrence-overrides.test.ts`) |
 | Overrides | Monthly totals (`calculateMonthly*`) count both the item and its override | #5 | **Fixed in #5:** `resolveOccurrences` uses the overridden amount instead of the item's (`test/occurrence-overrides.characterization.test.ts`) |
 | Overrides | Items sharing a name are all replaced; renaming an item breaks its overrides | #5 | **Fixed in #5:** overrides match by item id, so same-name items and renames are unaffected (`src/occurrence-overrides.test.ts`) |
-| Forecast | The start month comes from `new Date()` in the device time zone | #6 | Open |
-| Forecast | Balance exactly 0 produces no warning | #6 | Open |
-| Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #6, #76 | Open |
+| Forecast | The start month comes from `new Date()` in the device time zone | #6 | **Fixed in #6:** explicit `fromMonth` (`src/forecast.test.ts`) |
+| Forecast | Balance exactly 0 produces no warning | #6 | **Fixed in #6:** zero-balance warning (`src/forecast.test.ts`) |
+| Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #6, #76 | **Fixed in #6:** thresholds and default horizon from Settings (`src/forecast.test.ts`) |
 | Month closing | `closeMonth` does not store totals of the closed month | #84 | **Fixed in #84:** `closeMonth` stores converted base-currency totals after overrides, frozen original amounts/currencies/rates, and the actual balance change (`src/month-closing.test.ts`); carry-forward and rollover remain compared with legacy (`test/month-closing.characterization.test.ts`) |
 | Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #84 | **Fixed in #84:** `createInitialMonth` takes an explicit `YearMonth` and opening balance, without reading time (`src/month-closing.test.ts`); timestamps belong to persistence (#85) |
 | NBP | Network errors propagate unchanged (no offline fallback) | #8 | **Fixed in #8:** read-only `getRate` retains stale cached quotes after failed refresh (`src/exchange-rates.test.ts`) |
