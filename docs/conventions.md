@@ -52,6 +52,9 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   and CI ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252);
   behaviour: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). The CLI also honours
   `DO_NOT_TRACK=1`, but the repo standard is `E2E_TELEMETRY_DISABLED=1`.
+- Expo CLI (`@expo/cli` sends usage telemetry by default): `EXPO_NO_TELEMETRY=1`, set as a prefix in the
+  `start`, `ios`, `android` and `export` scripts of `apps/mobile/package.json`; set it yourself when calling
+  `expo` directly (for example `EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild`).
 
 ## Workflow
 

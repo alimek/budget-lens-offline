@@ -62,22 +62,23 @@ Legacy behaviour is pinned by characterization tests first (#3).
 
 ## App stack (Stage 1)
 
-Decided, not implemented yet (see [decisions/](decisions/); sources: #1 "Decyzje", the [#1 decisions
+Decided stack (see [decisions/](decisions/); sources: #1 "Decyzje", the [#1 decisions
 comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427) and the #10
-research with its correction comment):
+research with its correction comment). The Status column says what the #73 `apps/mobile` scaffold
+implemented and what is still planned:
 
-| Concern | Choice |
-| --- | --- |
-| Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) |
-| Navigation | Expo Router |
-| UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views |
-| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store |
-| Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) |
-| App state | Zustand with the provider pattern (store created inside a React provider) |
-| Network data | TanStack Query only when network requests are added (NBP rates, license) |
-| i18n | Polish and English; no hardcoded UI strings |
-| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) |
-| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core |
+| Concern | Choice | Status |
+| --- | --- | --- |
+| Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) | Implemented (#73): Expo SDK 58 development client |
+| Navigation | Expo Router | Implemented (#73) |
+| UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73): Expo UI in `src/ui/native`, Uniwind layout; shared tokens/components in #119 |
+| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Planned (#75) |
+| Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) | Planned (#75) |
+| App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
+| Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
+| i18n | Polish and English; no hardcoded UI strings | Implemented (#73): bundled PL/EN locale files, device-language initialization |
+| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) | Planned (#30) |
+| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests on `BudgetLens-*` devices; CI plan in #15/#109 |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build

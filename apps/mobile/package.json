@@ -4,12 +4,12 @@
   "private": true,
   "main": "./index.ts",
   "scripts": {
-    "start": "expo start --dev-client --port 8073",
-    "ios": "expo run:ios --port 8073",
-    "android": "expo run:android --port 8073",
+    "start": "EXPO_NO_TELEMETRY=1 expo start --dev-client --port 8073",
+    "ios": "EXPO_NO_TELEMETRY=1 expo run:ios --port 8073",
+    "android": "EXPO_NO_TELEMETRY=1 expo run:android --port 8073",
     "lint": "biome check --error-on-warnings .",
     "typecheck": "tsc --noEmit",
-    "export": "expo export",
+    "export": "EXPO_NO_TELEMETRY=1 expo export",
     "e2e:ios": "E2E_TELEMETRY_DISABLED=1 e2e run --target ios --output .e2e/ios",
     "e2e:android": "E2E_TELEMETRY_DISABLED=1 e2e run --target android --output .e2e/android"
   },

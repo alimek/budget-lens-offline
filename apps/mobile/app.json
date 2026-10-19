@@ -7,10 +7,21 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.budgetlens.offline",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true
+        }
+      }
     },
     "android": {
-      "package": "com.budgetlens.offline"
+      "package": "com.budgetlens.offline",
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": ["expo-router", "expo-localization"]
   }

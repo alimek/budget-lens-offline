@@ -11,14 +11,14 @@ never let Expo auto-select a personal/shared device. The smoke config names `Bud
 and `BudgetLens-Android` (Android). Those devices must exist before running tests.
 
 ```sh
-pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --port 8073
-pnpm --filter @budget-lens/mobile exec expo run:android --device <BudgetLens-emulator-serial> --port 8073
+EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --port 8073
+EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo run:android --device <BudgetLens-emulator-serial> --port 8073
 pnpm --filter @budget-lens/mobile start
 ```
 
 Metro uses the repository's fixed port **8073**, checked free with `lsof -nP -iTCP -sTCP:LISTEN`
 and [recorded in #15](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6276858226).
-The `start`, `ios`, and `android` scripts pass it explicitly. Do not accept an automatic port change
+The `start`, `ios`, and `android` scripts pass it explicitly and, like `export`, set `EXPO_NO_TELEMETRY=1`. Do not accept an automatic port change
 or attach to another project's server if 8073 is occupied. The iOS smoke target passes the server URL
 as a launch argument; Android uses an explicit development-client VIEW intent to the same port after `adb -s <BudgetLens-emulator-serial> reverse
 tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
@@ -29,7 +29,7 @@ scaffold opens no database or Budget Lens service.
 
 ```sh
 pnpm check
-pnpm --filter @budget-lens/mobile exec expo export --platform ios --platform android
+EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo export --platform ios --platform android
 pnpm --filter @budget-lens/mobile e2e:ios
 pnpm --filter @budget-lens/mobile e2e:android
 ```
@@ -55,6 +55,28 @@ The scaffold has bundled English/Polish strings, device-language initialization,
 navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
 from locale resources. Native controls live in `src/ui/native`; #119 owns shared design tokens and
 components. DB boot, recovery, persistence, language preferences and onboarding are separate work.
+
+## Native permissions and network
+
+The app is offline-first, so `app.json` keeps the native defaults minimal. Verify changes with
+`EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild --clean --no-install` and check the
+generated (ignored) `android/` and `ios/` projects; for Android also check the Gradle merged manifest
+(`./gradlew :app:processReleaseMainManifest`).
+
+- **Android:** `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and
+  `WRITE_EXTERNAL_STORAGE` (Expo adds them by default). The release manifest keeps only:
+  - `INTERNET`: needed for NBP rates (#8) and for the development client to reach Metro;
+  - `VIBRATE`: an Expo default, a normal (no-prompt) permission for haptics;
+  - `<package>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`: an app-private signature permission that AndroidX adds.
+
+  Debug builds only also get `SYSTEM_ALERT_WINDOW` (from the generated `src/debug` manifest, for the React
+  Native dev overlay), `ACCESS_LOCAL_NETWORK`, `ACCESS_NETWORK_STATE` and `CHANGE_WIFI_MULTICAST_STATE` (React
+  Native and the development launcher, to find and connect to Metro), and cleartext traffic to Metro. None of
+  these are in release builds.
+- **iOS:** App Transport Security sets `NSAllowsArbitraryLoads: false` and `NSAllowsLocalNetworking: true`.
+  Local networking stays because the development client loads the bundle from Metro over plain HTTP on the
+  local network; it only allows local addresses (for example `localhost`, `*.local`), not internet hosts,
+  so every remote request must use HTTPS.
 
 ## Dependency compatibility and temporary audit exceptions
 
