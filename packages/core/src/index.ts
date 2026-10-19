@@ -15,6 +15,23 @@ export { formatMoney } from "./money-format";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
 export type {
+  ActiveMonth,
+  BudgetMonth,
+  ClosedMonth,
+  ClosedOccurrence,
+  CloseMonthInput,
+  MonthClosing,
+  MonthClosingErrorCode,
+  PaymentStatus,
+} from "./month-closing";
+export {
+  buildClosedOccurrences,
+  closeMonth,
+  createInitialMonth,
+  updateBalance,
+  validateMonthEditable,
+} from "./month-closing";
+export type {
   ItemType,
   OccurrenceOverride,
   OrphanedOverride,

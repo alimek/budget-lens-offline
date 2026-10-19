@@ -2,6 +2,9 @@
  * Characterization tests for legacy month closing (actions/months.ts).
  */
 import { describe, expect, it } from "vitest";
+import { toMinorUnits } from "../src/money";
+import { type ActiveMonth, closeMonth, updateBalance } from "../src/month-closing";
+import { toYearMonth } from "../src/year-month";
 import { freezeClockAt, useFrozenClock } from "./helpers";
 import {
   type LegacyMonthRow,
@@ -62,7 +65,7 @@ describe("legacyCloseMonth", () => {
   });
 
   it("closes the month without storing its totals", () => {
-    // LEGACY: total_income / total_expenses / net_change of the closed month are not written – changed by #84.
+    // LEGACY: missing closed totals – fixed in #84: closeMonth (src/month-closing.test.ts).
     // Arrange
     const october = activeMonth();
 
@@ -89,7 +92,7 @@ describe("legacyUpdateMonthBalance", () => {
 
 describe("legacyInitialMonth", () => {
   it("starts the first month at 0, taking the month from local time and started_at from UTC", () => {
-    // LEGACY: opening_balance 0 and mixed time bases – changed by #84.
+    // LEGACY: opening_balance 0 and mixed time bases – fixed in #84: createInitialMonth (src/month-closing.test.ts).
     // Arrange: 23:30 UTC on 31 January is already February in Warsaw.
     freezeClockAt("2026-01-31T23:30:00.000Z", "Europe/Warsaw");
 
@@ -100,5 +103,54 @@ describe("legacyInitialMonth", () => {
     expect(first.opening_balance).toBe(0);
     expect([first.month, first.year]).toEqual([2, 2026]);
     expect(first.started_at).toBe("2026-01-31T23:30:00.000Z");
+  });
+});
+
+/** Legacy mapping belongs only in tests; the offline app does not import old data. */
+function coreMonth(row: LegacyMonthRow): ActiveMonth {
+  return {
+    month: toYearMonth(`${row.year}-${String(row.month).padStart(2, "0")}`),
+    status: "active",
+    openingBalance: toMinorUnits(Math.round(row.opening_balance * 100)),
+    closingBalance: toMinorUnits(Math.round(row.closing_balance * 100)),
+    totalIncome: toMinorUnits(Math.round(row.total_income * 100)),
+    totalExpenses: toMinorUnits(Math.round(row.total_expenses * 100)),
+    netChange: toMinorUnits(Math.round(row.net_change * 100)),
+  };
+}
+
+describe("ported month transitions compared with legacy", () => {
+  it.each([10, 12])("keeps balance carry-forward and calendar rollover for month %i", (month) => {
+    const row = activeMonth({ month });
+    const current = coreMonth(row);
+    const legacy = legacyCloseMonth(row).nextMonthInsert;
+
+    const result = closeMonth([current], {
+      currentMonth: current.month,
+      closingBalance: current.closingBalance,
+      items: [],
+      overrides: [],
+      paymentStatuses: [],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.next).toMatchObject({
+      month: toYearMonth(`${legacy.year}-${String(legacy.month).padStart(2, "0")}`),
+      openingBalance: toMinorUnits(Math.round(legacy.opening_balance * 100)),
+      closingBalance: toMinorUnits(Math.round(legacy.closing_balance * 100)),
+      netChange: toMinorUnits(0),
+    });
+  });
+
+  it("keeps actual net change relative to opening balance", () => {
+    const row = activeMonth();
+    const legacy = legacyUpdateMonthBalance(row, 11000);
+
+    const result = updateBalance(coreMonth(row), toMinorUnits(1_100_000));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.netChange).toBe(toMinorUnits(Math.round(legacy.net_change * 100)));
   });
 });
