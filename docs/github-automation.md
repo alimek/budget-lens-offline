@@ -72,10 +72,10 @@ machine.
 - **Consent:** installing, updating, re-enabling or re-installing a scheduled job for this repository needs the
   repo owner's explicit consent. The owner sets the job up, or someone else does it only after the owner's approval
   is recorded on the PR or issue, naming the commit or tag to run. Merging a PR never installs or updates a job.
-- **Pinned, reviewed code (recommended):** run the scripts from a checkout of one reviewed commit or tag, for
-  example a detached `git worktree` of a merged SHA, not from a moving branch. The job must not `git fetch`,
-  `checkout`, `pull` or `reset` itself (the scripts never do); moving to a newer commit is a re-install and needs
-  the owner's consent.
+- **Pinned, reviewed code (required):** a scheduled job runs only from a checkout of one reviewed commit or tag
+  (for example a detached `git worktree` of a merged SHA), never from a branch or a working clone. Nothing may move
+  that checkout: the job must not `git fetch`, `checkout`, `pull` or `reset` (the scripts never do), and nobody
+  pulls into it by hand. Updating to a newer commit is a re-install and needs the owner's consent.
 - **No `--prune`** in a scheduled `sync-labels.sh` run.
 - **Cadence and logs:** labels hourly and queues every 15 minutes are enough. Keep logs bounded (rotate them).
 

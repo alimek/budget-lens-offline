@@ -23,10 +23,10 @@
 # Auth: GH_TOKEN must hold a read-only fine-grained token scoped to this repository only, with Issues: read and
 # Metadata: read. If GH_TOKEN is unset the script fails closed; it never falls back to a gh login.
 #
-# Scheduling: any scheduler (cron, a systemd timer, a CI schedule) can run this. Run it from a pinned,
-# reviewed commit, not a moving branch, and never git fetch or check out from the job itself. Installing,
-# updating or re-enabling a scheduled job for this repo needs the repo owner's explicit consent.
-# See docs/github-automation.md.
+# Scheduling: any scheduler (cron, a systemd timer, a CI schedule) can run this. A scheduled job must run
+# only from a checkout of one reviewed commit or tag, never from a branch or a working clone, and must never
+# git fetch or check out itself. Installing, updating (a re-install) or re-enabling a scheduled job for this
+# repo needs the repo owner's explicit consent. See docs/github-automation.md.
 
 set -euo pipefail
 
