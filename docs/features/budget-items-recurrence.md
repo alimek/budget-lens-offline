@@ -1,6 +1,6 @@
 # PRD: Budget items & recurrence (E3)
 
-Epic: [#25](https://github.com/alimek/budget-lens-offline/issues/25) · Status: approved · MVP
+Epic: [#25](https://github.com/alimek/budget-lens-offline/issues/25) · Status: approved ([#40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), [#41](https://github.com/alimek/budget-lens-offline/issues/41#issuecomment-6263792895), [item currency](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)) · MVP
 
 ## Problem
 
@@ -20,12 +20,13 @@ and never rewrites history.
 - Per-item currency in core ([#138](https://github.com/alimek/budget-lens-offline/issues/138)).
 - Rule versioning ([#80](https://github.com/alimek/budget-lens-offline/issues/80)).
 - Items tables ([#81](https://github.com/alimek/budget-lens-offline/issues/81)).
-- Items list ([#112](https://github.com/alimek/budget-lens-offline/issues/112)).
+- Items list on the **Items** tab ([#112](https://github.com/alimek/budget-lens-offline/issues/112)), grouped by kind (expenses / incomes).
 - Add/edit form with currency picker and recurrence picker ([#82](https://github.com/alimek/budget-lens-offline/issues/82)).
 
 **Out:**
 - Bank imports or transaction sync (they need servers or aggregators).
-- Categories, unless [#41](https://github.com/alimek/budget-lens-offline/issues/41) recommends them.
+- Categories and tags: not in MVP, planned for **v1.1** ([owner decision #41](https://github.com/alimek/budget-lens-offline/issues/41#issuecomment-6263792895)). In MVP, items are grouped by
+  kind (expense/income), and the item form has no category field.
 - Conversion logic, which lives in [E6](forecast-warnings.md) and E7.
 
 ## User stories
@@ -38,7 +39,8 @@ and never rewrites history.
 ## Acceptance criteria (high level)
 
 - Items are never active before their start or after their end. The recurrence preview text matches the engine.
-- Every item has a required currency (PLN + NBP table A). Amounts use that currency's exponent.
+- Every item has a required currency (PLN + NBP table A). Amounts use that currency's exponent. The currency is
+  fixed after creation; a different currency means a new item (owner-confirmed 2026-10-19, [#81](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
 - Rule edits from a month on keep past months unchanged ([owner review #40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), all defaults accepted):
   - A later scheduled change is kept, with a notice and a "replace" option.
   - Overrides that are no longer scheduled are listed and deleted in the same transaction after confirmation. Kept
@@ -50,7 +52,7 @@ and never rewrites history.
 
 ## Success criteria
 
-- A user can enter a typical household budget (15–30 items) in under 10 minutes in usability tests.
+- Proposed target: a user can enter a typical household budget (15–30 items) in under 10 minutes in usability tests.
 
 ## Dependencies
 
@@ -62,6 +64,6 @@ and never rewrites history.
 ## Open questions
 
 - Rule versioning model: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided).
-- Categories in MVP: [#41](https://github.com/alimek/budget-lens-offline/issues/41).
-- Item currency after creation: fixed, like `kind` (archive and recreate to change it), per the accepted
-  [#40](https://github.com/alimek/budget-lens-offline/issues/40) recommendation. See [#81](https://github.com/alimek/budget-lens-offline/issues/81).
+- Categories in MVP: [#41](https://github.com/alimek/budget-lens-offline/issues/41) (decided: no, v1.1).
+- Item currency after creation: fixed, like `kind` (decided: owner-confirmed 2026-10-19, [#81](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)); a different
+  currency means a new item.

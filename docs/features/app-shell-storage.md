@@ -1,6 +1,6 @@
 # PRD: App shell & encrypted local storage (E1)
 
-Epic: [#23](https://github.com/alimek/budget-lens-offline/issues/23) · Status: approved · MVP
+Epic: [#23](https://github.com/alimek/budget-lens-offline/issues/23) · Status: approved ([#34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486), [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#36](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263678079), [#36 Q1](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263044426), [#36 tabs](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530), [#48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263841345)) · MVP
 
 ## Problem
 
@@ -22,16 +22,21 @@ no sign-up, and the first launch guides the user through a short onboarding.
   backup. The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
 - Schema per [#35](https://github.com/alimek/budget-lens-offline/issues/35): one `items` table with `kind`, rule versions as rows, payment status as its own table, no SQL
   default for `items.currency`, an encrypted copy before every pending migration, Drizzle 0.45.x ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
-- App structure per [#36](https://github.com/alimek/budget-lens-offline/issues/36): native tabs, editors as `formSheet` routes, Expo UI for settings/pickers/switches, a
+- App structure per [#36](https://github.com/alimek/budget-lens-offline/issues/36): **Expo Router** ([ADR 0006](../decisions/0006-app-stack.md)) with native tabs
+  (`expo-router/native-tabs`), editors as `formSheet` routes, Expo UI for settings/pickers/switches, a
   non-secret `bl.lang` mirror, explicit Android backup rules without `allowBackup=false`, typed routes after beta
   ([owner review #36](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263678079)).
-- Onboarding (language, **base currency step + lock confirmation**, starting balance, privacy explanation).
-- Main navigation with the **Dashboard as the first, main tab** ([#36](https://github.com/alimek/budget-lens-offline/issues/36), owner decision 2026-10-19). The
-  remaining tabs are refined with the Designer within the Android 5-tab limit.
+- Onboarding (language, **base currency step + lock confirmation**, starting balance, privacy explanation). On
+  Android it has one **"Enable backup to Google Drive"** step (Google Sign-In consent for `appDataFolder`); iOS needs no
+  prompt ([owner review #48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263841345)). It looks up an existing backup in the user's own iCloud / Google Drive
+  ([#116](https://github.com/alimek/budget-lens-offline/issues/116)).
+- Main navigation: five Expo Router `NativeTabs`: **Overview** (the Dashboard, first and default), Month, Forecast,
+  Items, Settings ([#36 Q1](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263044426); [Variant A, chosen by @alimek](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)). **Savings** is not a tab: it is a
+  screen pushed from the Savings card on Overview. "Add item" is a toolbar `+` (iOS) / FAB (Android), never a tab.
 
 **Out:**
 - Accounts and any Budget Lens server.
-- Cloud backup ([E8](cloud-backup.md)).
+- Cloud backup ([E8](cloud-backup.md)), except the onboarding backup lookup and the Android Drive consent step.
 - Changing the base currency after onboarding.
 - App lock (biometric/PIN): post-MVP ([#34](https://github.com/alimek/budget-lens-offline/issues/34), owner decision 2026-10-19).
 
@@ -48,14 +53,17 @@ no sign-up, and the first launch guides the user through a short onboarding.
 ## Acceptance criteria (high level)
 
 - The app refuses to run in a build without SQLCipher (`PRAGMA cipher_version` guard).
-- Onboarding completes fully offline. Confirming it locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
+- Onboarding makes no network requests except the optional lookup of an existing backup in the user's own iCloud /
+  Google Drive ([E8](cloud-backup.md), [#116](https://github.com/alimek/budget-lens-offline/issues/116)) and, on Android, the Google Drive consent step. Confirming it locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
 - The DB file is excluded from Android Auto Backup. A missing key leads to the recovery screen.
+- There is no backup prompt, reminder or nudge besides the Android consent step ([#48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263253821)).
 - Every screen has a `screen-<name>` `testID` and all strings go through i18n (PL+EN).
 
 ## Success criteria
 
 - A cold start to the onboarding screen works on the `BudgetLens-*` simulator/emulator with an encrypted DB.
-- Zero network requests during onboarding.
+- Proposed target: zero network requests during onboarding other than the optional backup lookup in the user's own
+  iCloud / Google Drive (E8, #116) and the Android Google Drive consent step.
 
 ## Dependencies
 
@@ -67,6 +75,7 @@ no sign-up, and the first launch guides the user through a short onboarding.
   - [#111](https://github.com/alimek/budget-lens-offline/issues/111) onboarding
   - [#119](https://github.com/alimek/budget-lens-offline/issues/119) design system layer
   - [#139](https://github.com/alimek/budget-lens-offline/issues/139) base-currency lock
+  - [#116](https://github.com/alimek/budget-lens-offline/issues/116) restore flow (backup lookup in onboarding)
 - UI:
   - [#57](https://github.com/alimek/budget-lens-offline/issues/57) information architecture
   - [#58](https://github.com/alimek/budget-lens-offline/issues/58) design system
@@ -79,4 +88,4 @@ no sign-up, and the first launch guides the user through a short onboarding.
 
 - DB key & recovery model: [#34](https://github.com/alimek/budget-lens-offline/issues/34) (decided, [owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
 - Schema & migrations: [#35](https://github.com/alimek/budget-lens-offline/issues/35) (decided; Q7 changed to "current rate only", [owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
-- App architecture & navigation: [#36](https://github.com/alimek/budget-lens-offline/issues/36) (decided; the remaining tabs are still open with the Designer).
+- App architecture & navigation: [#36](https://github.com/alimek/budget-lens-offline/issues/36) (decided; tab bar Variant A [recorded on #36](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)).

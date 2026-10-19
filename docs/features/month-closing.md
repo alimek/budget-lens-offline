@@ -1,6 +1,6 @@
 # PRD: Balance & month closing (E5)
 
-Epic: [#27](https://github.com/alimek/budget-lens-offline/issues/27) · Status: approved · MVP
+Epic: [#27](https://github.com/alimek/budget-lens-offline/issues/27) · Status: proposed (open: [#43](https://github.com/alimek/budget-lens-offline/issues/43)) · decisions: [#40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950) · MVP
 
 ## Problem
 
@@ -20,6 +20,8 @@ with opening = closing. Closed months never change.
 - Rate snapshot at close ([#141](https://github.com/alimek/budget-lens-offline/issues/141)).
 - Months table + transactional close ([#85](https://github.com/alimek/budget-lens-offline/issues/85)).
 - Update-balance sheet ([#86](https://github.com/alimek/budget-lens-offline/issues/86)), close-month flow ([#115](https://github.com/alimek/budget-lens-offline/issues/115)), history ([#87](https://github.com/alimek/budget-lens-offline/issues/87)).
+- Entry points: update balance and close month from the **Month** tab; history from the Month toolbar menu
+  ([#36 tabs](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)).
 
 **Out:**
 - Automatic balances from banks.

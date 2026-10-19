@@ -1,6 +1,6 @@
 # PRD: Month view, payment status & overrides (E4)
 
-Epic: [#26](https://github.com/alimek/budget-lens-offline/issues/26) · Status: approved · MVP
+Epic: [#26](https://github.com/alimek/budget-lens-offline/issues/26) · Status: proposed (open: [#42](https://github.com/alimek/budget-lens-offline/issues/42)) · decisions: [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950) · MVP
 
 ## Problem
 
@@ -9,7 +9,7 @@ breaking the recurring rule.
 
 ## Goal
 
-One screen for the active month lists every resolved occurrence, with its original currency and the base-currency
+One screen for the active month (the **Month** tab) lists every resolved occurrence, with its original currency and the base-currency
 equivalent. Users mark occurrences paid or received, change the amount for one month, or skip it. Totals are in the
 base currency.
 
@@ -31,7 +31,8 @@ base currency.
 - As a user, I mark my rent as paid.
 - As a user, I change this month's electricity bill without changing the rule.
 - As a user, I skip one month of a subscription.
-- As a user, I see a USD subscription as "$12.99 ≈ 50,43 zł" with the rate date.
+- As a user with the app in Polish, I see a USD subscription as "12,99 USD ≈ 50,43 zł" with the rate date (the exact
+  symbols and spacing come from native `Intl` and can differ by platform, ADR 0012).
 
 ## Acceptance criteria (high level)
 
@@ -44,7 +45,7 @@ base currency.
 
 ## Success criteria
 
-- The month screen renders a 100-occurrence month without visible lag on a mid-range Android device.
+- Proposed target: the month screen renders a 100-occurrence month without visible lag on a mid-range Android device.
 
 ## Dependencies
 
