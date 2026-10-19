@@ -18,13 +18,16 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
 | `rateMaxAgeBusinessDays` | integer, 1 to 20 | `2` | NBP/manual quotes are stale when at least this many business days (Mon–Fri, no Polish holidays) lie strictly between the effective date and today (#8) |
 
-Thresholds are in minor units of `baseCurrency`. The base currency is chosen in onboarding and locked when
-onboarding is confirmed ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
-The settings value model has no onboarding lifecycle state; the app/persistence must reject later base-currency
-changes. Preparing settings during onboarding does not convert thresholds. A threshold of 0
-does not turn a warning off: `lowBalanceThreshold: 0` warns only for a balance below 0, and
-`largeExpenseThreshold: 0` warns for every month with a negative net change. Disabling warnings is
-not supported: #6 keeps zero thresholds active.
+Thresholds are in minor units of `baseCurrency`. `baseCurrency` is chosen in the onboarding wizard and **locked once
+onboarding is confirmed** ([owner decision, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
+Before that confirmation it can still change freely; afterwards there is no base-currency change at all, so
+thresholds are never converted, which closes the threshold-conversion question left open by #24 and #124. Picking a
+different base while preparing settings during onboarding does not convert them either: they stay as typed, in the
+base currency the user settles on. Rejecting a base-currency patch after the confirmation is the lock of #139: the
+`Settings` value model here has no onboarding lifecycle state, so until #139 lands the app and the persistence layer
+must reject the change. A threshold of 0 does not turn a warning off: `lowBalanceThreshold: 0` warns only for a
+balance below 0, and `largeExpenseThreshold: 0` warns for every month with a negative net change. Disabling warnings
+is not supported: #6 keeps zero thresholds active.
 
 The maximum horizon is `MAX_FORECAST_HORIZON_MONTHS` (120 months, 10 years), so a corrupted stored value cannot make
 the forecast build an unbounded number of months.
@@ -38,11 +41,22 @@ codes with manually entered rates are out of scope
 ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752),
 which narrows the earlier "any base currency" decision).
 
-**Currency decisions (#39/#124):** base currency is chosen in onboarding and locked after confirmation (#139).
-Items may have their own supported currency (#138); forecast converts each occurrence with injected current rates
-and one rounding through PLN (#6). Thresholds stay in base-currency minor units; no base-change conversion flow.
-Closing receives selected rates and stores converted totals (#84).
-See [forecast.md](forecast.md), [exchange-rates.md](exchange-rates.md) and [month-closing.md](month-closing.md).
+**Cross-rates go via PLN.** Decided in #124
+([owner review 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)). Items
+may have their own supported currency (#138), so the forecast (#6) converts each occurrence into `baseCurrency`. NBP
+quotes 1 unit of a currency in PLN ([exchange-rates.md](exchange-rates.md)), so a non-PLN base gets no NBP quote of
+its own: every conversion goes through PLN, the implicit hub with `mid_PLN = 1`, as
+`toMinor = roundHalfAwayFromZero(amountMinor × midFrom × 10^(expTo − expFrom) / midTo)`, where `midX` is the PLN
+value of 1 unit of X and `expX` its ISO 4217 exponent ([money.md](money.md)). `convertViaPln` picks both PLN legs
+and `convertMinorExact` computes them in one exact decimal calculation with **one** rounding step, half away from
+zero. Rounding an intermediate PLN amount or a pre-computed cross-rate is not allowed: double rounding can be off by
+a minor unit. Rates are **decimal strings** (`mid`, e.g. `"4.0123"`), never floating-point numbers. The supported
+currencies above are PLN plus NBP table A only, so both legs always come from that one table. The forecast picks the
+quote itself from the current candidates it is given (at most one `nbp` and one `manual` `1 X = y PLN` quote per
+currency, each with a validated `effectiveDate`): the one with the newer `effectiveDate` wins, and **manual wins a
+tie** (#39). Thresholds stay as typed in base-currency minor units; there is no base-change conversion flow. Closing
+(#84) still receives caller-selected rates and stores the converted totals with them; #141 moves it onto the same
+contract ([month-closing.md](month-closing.md)). See also [forecast.md](forecast.md).
 
 NBP and manual rates are PLN per unit of a currency. `selectCurrentRates` (#8) chooses the newer effective date,
 preferring manual on a tie; cross rates go via PLN. Freshness counts business days against `rateMaxAgeBusinessDays`

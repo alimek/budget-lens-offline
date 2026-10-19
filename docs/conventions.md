@@ -69,6 +69,9 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   (and [AGENTS.md](../AGENTS.md) if needed). The Reviewer checks this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board
   mirrors them.
+- **Agent work needs a label.** Designer, Marketing and Research act only on issues carrying their `agent:*` label;
+  label and issue-list sync are plain `gh` shell scripts (`scripts/agents/`), and routines with no output for 7 days
+  are disabled. Rules and scripts: [agents.md](agents.md).
 - PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).
 - CI gates: `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title`, `pr-body`; all must pass.
   Details: [ci.md](ci.md). Commands: [README.md](../README.md).
