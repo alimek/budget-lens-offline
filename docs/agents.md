@@ -65,11 +65,11 @@ A routine is anything that starts an agent on a schedule (a launchd job, a cron 
 
 ### Routine review log
 
-The first review is still owed: the kept and disabled routines are recorded in the PR for #147 and appended here
-afterwards.
+The first review was done on 2026-10-19 ([PR #161 comment](https://github.com/alimek/budget-lens-offline/pull/161#issuecomment-6276904169)). Later reviews run in the orchestrator's Monday `BL weekly report`.
 
 | Date | Routine | Decision | Evidence |
 | --- | --- | --- | --- |
+| 2026-10-19 | All 4 orchestrator routines (`BL weekly report`, `BL team heartbeat`, `BL daily dev-review retro`, `BL new PR handoff`) | Keep all unchanged. Reviewed by the orchestrator, decided by Grzegorz Mandziak. The weekly review now runs in the orchestrator's Monday report. | [PR #161 comment](https://github.com/alimek/budget-lens-offline/pull/161#issuecomment-6276904169) |
 
 ## Known label legacy
 
