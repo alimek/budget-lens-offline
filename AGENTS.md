@@ -46,8 +46,8 @@ pnpm check       # all of the above
 
 CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` (Conventional
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
-A self-hosted macOS runner on the Mac Studio runs `macos-typecheck`, `macos-vitest` and `ios-build` for same-repo PRs
-only (never forks, no secrets); how to stop or disable it is in [docs/ci.md](docs/ci.md#disabling-the-runner).
+The `macOS` workflow runs `macos-typecheck`, `macos-vitest` and `ios-build` on the GitHub-hosted `macos-26` runner
+(not required checks); see [docs/ci.md](docs/ci.md#macos-jobs). There is no self-hosted runner.
 
 ## Workflow
 

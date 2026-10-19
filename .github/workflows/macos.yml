@@ -1,8 +1,7 @@
-name: macOS (self-hosted)
+name: macOS
 
-# Jobs on the self-hosted runner on the Mac Studio (#148, docs/ci.md#self-hosted-macos-runner).
-# The repository is public: every job carries the fork guard below, so code from a fork PR never runs on the
-# runner. Never add `pull_request_target`, secrets or write permissions to this workflow.
+# Typecheck, unit tests and the iOS simulator build on a GitHub-hosted macOS runner (#148, docs/ci.md#macos-jobs).
+# Standard GitHub-hosted runners are free for public repositories; no self-hosted runner is used.
 on:
   pull_request:
   push:
@@ -21,67 +20,39 @@ env:
 jobs:
   macos-typecheck:
     name: macos-typecheck
-    # Fork guard: same-repo PRs and pushes to main only.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, macOS, aliclaw]
+    runs-on: macos-26
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-        with:
-          isolated-store: "true"
       - name: Typecheck (TypeScript 7)
         run: pnpm turbo run typecheck
 
   macos-vitest:
     name: macos-vitest
-    # Fork guard: same-repo PRs and pushes to main only.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, macOS, aliclaw]
+    runs-on: macos-26
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-        with:
-          isolated-store: "true"
       - name: Test (Vitest)
         run: pnpm turbo run test
 
   ios-build:
     name: ios-build
-    # Fork guard: same-repo PRs and pushes to main only.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, macOS, aliclaw]
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Select BudgetLens simulator
-        id: simulator
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Only the dedicated BudgetLens-* simulators may be used; prefer BudgetLens-CI.
-          devices="$(xcrun simctl list devices available | grep -E '^[[:space:]]+BudgetLens-[^ ]* \(' || true)"
-          line="$(printf '%s\n' "$devices" | grep -E 'BudgetLens-CI \(' || true)"
-          if [[ -z "$line" ]]; then
-            line="$(printf '%s\n' "$devices" | head -n 1)"
-          fi
-          udid="$(printf '%s\n' "$line" | sed -nE 's/.*\(([0-9A-F-]{36})\).*/\1/p')"
-          if [[ -z "$udid" ]]; then
-            echo "::error title=ios-build::No BudgetLens-* simulator on the runner. Create one, e.g. 'xcrun simctl create BudgetLens-CI \"iPhone 16\"' (docs/ci.md)."
-            exit 1
-          fi
-          name="$(printf '%s\n' "$line" | sed -nE 's/^[[:space:]]+(BudgetLens-[^ ]*) \(.*/\1/p')"
-          echo "Using simulator $name ($udid)"
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
-          xcodebuild -version
+      - name: Xcode version
+        run: xcodebuild -version
 
       - name: Detect app
         id: app
@@ -96,8 +67,6 @@ jobs:
 
       - if: steps.app.outputs.exists == 'true'
         uses: ./.github/actions/setup
-        with:
-          isolated-store: "true"
 
       - name: Expo prebuild (iOS)
         if: steps.app.outputs.exists == 'true'
@@ -106,11 +75,9 @@ jobs:
           CI: "1"
         run: pnpm exec expo prebuild --platform ios --clean
 
-      - name: Build for the BudgetLens simulator
+      - name: Build for the iOS simulator
         if: steps.app.outputs.exists == 'true'
         working-directory: apps/mobile/ios
-        env:
-          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
         shell: bash
         run: |
           set -euo pipefail
@@ -121,7 +88,7 @@ jobs:
             -scheme "$scheme" \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -destination "generic/platform=iOS Simulator" \
             -derivedDataPath "$RUNNER_TEMP/ios-derived-data" \
             CODE_SIGNING_ALLOWED=NO \
             build

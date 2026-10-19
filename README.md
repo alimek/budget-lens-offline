@@ -81,8 +81,8 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 | `pr-title` | PR title in Conventional Commits format (pull requests only) |
 | `pr-body` | PR description contains `Closes #N`, `Fixes #N` or `Resolves #N` (pull requests only) |
 
-`.github/workflows/macos.yml` runs `macos-typecheck`, `macos-vitest` and `ios-build` on the self-hosted Mac Studio
-runner (same-repo PRs and `main` only, not required checks); see [docs/ci.md](docs/ci.md#self-hosted-macos-runner).
+`.github/workflows/macos.yml` runs `macos-typecheck`, `macos-vitest` and `ios-build` on the GitHub-hosted `macos-26`
+runner (not required checks); see [docs/ci.md](docs/ci.md#macos-jobs).
 
 Planned when `apps/mobile` exists (#109): `expo-doctor`, `expo-export`, `migrations`, `e2e-android`, `bundle-size`.
 
