@@ -60,7 +60,7 @@ contract ([month-closing.md](month-closing.md)). See also [forecast.md](forecast
 
 NBP and manual rates are PLN per unit of a currency. `selectCurrentRates` (#8) chooses the newer effective date,
 preferring manual on a tie; cross rates go via PLN. Freshness counts business days against `rateMaxAgeBusinessDays`
-for both sources ([Orchestrator decision 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751); see [exchange-rates.md](exchange-rates.md)).
+for both sources ([decision on #8, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751); see [exchange-rates.md](exchange-rates.md)).
 Business days are Mon–Fri; Polish public holidays are **not** modelled in the MVP (the default of 2 absorbs one
 holiday; follow-up [#165](https://github.com/alimek/budget-lens-offline/issues/165)). `rateMaxAgeBusinessDays`
 replaces the earlier `rateMaxAgeHours` (24): `loadSettings` drops a stored `rateMaxAgeHours` and an invalid or

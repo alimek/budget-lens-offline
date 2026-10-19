@@ -54,10 +54,10 @@ time for manual rows). There is no rate history. The in-memory store copies rows
 `selectCurrentRates` is the shared, generic selector for lookup and other consumers (including forecast #156):
 the newer effective date wins; manual wins equal dates, independently of candidate order. It accepts already
 validated candidates and preserves their metadata. This follows the
-[orchestrator decision on #8](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6276832887):
+[decision on #8](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6276832887):
 for NBP use the table date; for manual use the date entered by the user.
 
-**Freshness is measured in business days** ([Orchestrator decision 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751), superseding the 24 h
+**Freshness is measured in business days** ([decision on #8, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751), superseding the 24 h
 effective-date rule and the earlier successful-fetch-age rule). `businessDaysBetween(effectiveDate, today)` counts the
 Mon–Fri calendar days strictly between the two dates (both excluded). Both NBP and manual quotes are stale when that
 count is at least `Settings.rateMaxAgeBusinessDays` (default 2), i.e. when the effective date is older than 2 business

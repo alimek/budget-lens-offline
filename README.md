@@ -72,7 +72,7 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 
 | Job (status check) | Command |
 | --- | --- |
-| `lint` | `pnpm turbo run lint` (Biome check, `--error-on-warnings`) |
+| `lint` | `pnpm turbo run lint` (Biome check, `--error-on-warnings`, and the portability check `scripts/check-machine-agnostic.mjs`) |
 | `typecheck` | `pnpm turbo run typecheck` (TypeScript 7 `tsc`, strict options) |
 | `test` | `pnpm turbo run test:coverage` (Vitest + coverage summary in the job summary and a `coverage` artifact) |
 | `fallow` | `pnpm turbo run fallow` |
@@ -82,7 +82,7 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 | `pr-body` | PR description contains `Closes #N`, `Fixes #N` or `Resolves #N` (pull requests only) |
 
 All jobs run on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not part of CI; they run locally on
-the Mac Studio on `BudgetLens-*` simulators, with screenshots from a local `e2e` run on the PR as evidence (#166, see
+a dev machine on dedicated simulators/emulators, with screenshots from a local `e2e` run on the PR as evidence (#166, see
 [docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 Planned when `apps/mobile` exists (#109): fast Ubuntu-only checks such as `expo-doctor`, `migrations`, `bundle-size`.
