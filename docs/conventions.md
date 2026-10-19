@@ -63,8 +63,7 @@ Tool telemetry is disabled through environment variables, locally and in CI:
 - **UI PRs** must include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
   development build (see [testing.md](testing.md)).
 - Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.
-- Metro runs on the repo's **fixed port**. The port number is not chosen yet; it will be defined together with
-  `apps/mobile` in #15.
+- Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 - **Docs rule:** every PR that changes domain behaviour or architecture updates the relevant file in `docs/`
   (and [AGENTS.md](../AGENTS.md) if needed). The Reviewer checks this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board

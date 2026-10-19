@@ -46,8 +46,7 @@
   - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
     development build.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
-  - Metro runs on the repo's **fixed port**; the number is not chosen yet and will be defined with `apps/mobile`
-    in #15.
+  - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 
 ## Rules
 

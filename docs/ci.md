@@ -99,3 +99,9 @@ Vite (Vitest) and Uniwind, never modified or shipped in the app.
 `expo-doctor`, `expo-export` (matrix `ios` / `android`), `migrations` (`drizzle-kit check`), `e2e-android`
 (TesterArmy smoke tests, #15) and `bundle-size` (JS bundle size against a committed budget). They are added
 together with the app scaffold and tracked in [#109](https://github.com/alimek/budget-lens-offline/issues/109).
+
+Current audit exceptions: `node-forge` (GHSA-86w9-cpqp-85rv) in Expo CLI code signing and `braces`
+(GHSA-vfj7-8cjw-p6xm) in Metro's Node.js file watcher. Both expire 2026-11-19 and are tracked in
+[#162](https://github.com/alimek/budget-lens-offline/issues/162). Dependency-path and production
+source-map evidence is recorded in [mobile development](mobile-development.md#dependency-compatibility-and-temporary-audit-exceptions).
+Neither package is part of the mobile runtime; no runtime dependency is exempted.

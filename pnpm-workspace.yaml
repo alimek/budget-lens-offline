@@ -11,7 +11,11 @@ permissions:
 # the issue that tracks the fix and a review date (see docs/ci.md#audit).
 audit:
   level: high
-  ignore: []
+  ignore:
+    # Expo CLI code signing only; absent from mobile runtime. https://github.com/alimek/budget-lens-offline/issues/162; expires 2026-11-19.
+    - GHSA-86w9-cpqp-85rv
+    # Metro Node.js file watcher only; absent from mobile runtime. https://github.com/alimek/budget-lens-offline/issues/162; expires 2026-11-19.
+    - GHSA-vfj7-8cjw-p6xm
 minimumReleaseAgeExclude:
   - "@expo/cli@58.1.13"
   - "@expo/metro-config@58.0.15"

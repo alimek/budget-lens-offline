@@ -11,15 +11,19 @@ never let Expo auto-select a personal/shared device. The smoke config names `Bud
 and `BudgetLens-Android` (Android). Those devices must exist before running tests.
 
 ```sh
-pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --no-bundler
-pnpm --filter @budget-lens/mobile exec expo run:android --device <BudgetLens-emulator-serial> --no-bundler
+pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --port 8073
+pnpm --filter @budget-lens/mobile exec expo run:android --device <BudgetLens-emulator-serial> --port 8073
 pnpm --filter @budget-lens/mobile start
 ```
 
-Metro currently uses Expo's default port 8081. The repository-wide fixed-port decision remains in #15;
-do not attach to another project's server if that port is occupied. Open the development client against
-that Metro server before Android smoke tests. The iOS smoke target passes the server URL as a launch
-argument. All application data stays local; this scaffold opens no database or Budget Lens service.
+Metro uses the repository's fixed port **8073**, checked free with `lsof -nP -iTCP -sTCP:LISTEN`
+and [recorded in #15](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6276858226).
+The `start`, `ios`, and `android` scripts pass it explicitly. Do not accept an automatic port change
+or attach to another project's server if 8073 is occupied. The iOS smoke target passes the server URL
+as a launch argument; Android uses an explicit development-client VIEW intent to the same port after `adb -s <BudgetLens-emulator-serial> reverse
+tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
+prompt required to connect the development client to Metro. All application data stays local; this
+scaffold opens no database or Budget Lens service.
 
 ## Checks and smoke evidence
 
@@ -30,8 +34,10 @@ pnpm --filter @budget-lens/mobile e2e:ios
 pnpm --filter @budget-lens/mobile e2e:android
 ```
 
-The e2e scripts disable telemetry. Tests use no agent steps, model provider or secrets.
-Results, screenshots, traces and video are written under `apps/mobile/.e2e/` (ignored); review the
+The e2e scripts disable telemetry. Tests use no agent steps, model provider or secrets. The Savings
+action targets the native button
+inside `screen-home`: Expo UI on Android exposes `overview-open-savings` on a wrapper.
+Results, screenshots, traces and video are written under `apps/mobile/.e2e/<platform>/` (ignored); review the
 report before attaching evidence to a PR. A passing bundle export does not prove that a native
 build starts. The broader e2e setup/CI plan remains in #15; mobile CI gates remain in #109.
 
@@ -50,14 +56,37 @@ navigation, Uniwind layout, and a provider-scoped Zustand selected month. All vi
 from locale resources. Native controls live in `src/ui/native`; #119 owns shared design tokens and
 components. DB boot, recovery, persistence, language preferences and onboarding are separate work.
 
-## Current verification blockers
+## Dependency compatibility and temporary audit exceptions
 
-`pnpm audit --audit-level high` reports unpatched advisories in Expo's toolchain:
-`node-forge@1.4.0` (GHSA-86w9-cpqp-85rv) and `braces@3.0.3` (GHSA-vfj7-8cjw-p6xm).
-No audit exceptions were added. Resolving or accepting these advisories is required before CI is green.
+React and React DOM use **19.3.0**, exactly as pinned by SDK 58's `expo/bundledNativeModules.json`,
+per the [#73 decision](https://github.com/alimek/budget-lens-offline/issues/73#issuecomment-6276834077).
+Verify from `apps/mobile` with `npx expo install --check`. TypeScript remains 7.0.2 per ADR 0002;
+only TypeScript is excluded from Expo's older compiler recommendation via `expo.install.exclude`.
+All runtime package compatibility checks, including React, remain enabled.
 
-`expo install --check` recommends React 19.3.0 and TypeScript ~6.0.3, while the repository's
-latest-stable rule selects React 19.3.1 and its established TypeScript version is 7.0.2. The scaffold
-keeps those exact latest/repository versions pending a compatibility decision; native smoke verification
-is not complete. pnpm added exact `minimumReleaseAgeExclude` entries for newly published stable
-Expo/Uniwind/i18n packages during installation; no global release-age policy was changed.
+The two temporary `audit.ignore` entries expire **2026-11-19** and are tracked by
+[#162](https://github.com/alimek/budget-lens-offline/issues/162). Evidence from
+`pnpm --filter @budget-lens/mobile why node-forge braces --depth 3`:
+
+- `node-forge@1.4.0` (GHSA-86w9-cpqp-85rv): direct consumers are `@expo/cli` and
+  `@expo/code-signing-certificates` (itself used only by that CLI). The import is in Expo's
+  Node.js iOS code-signing helper, `build/src/run/ios/codeSigning/Security.js`.
+- `braces@3.0.3` (GHSA-vfj7-8cjw-p6xm): `micromatch` → `metro-file-map` → `metro` / `@expo/metro`.
+  Metro's `src/watchers/common.js` uses micromatch for Node.js file watching.
+
+These toolchain packages are installed transitively under Expo/React Native, so manifest
+`dependencies` vs `devDependencies` alone is not sufficient proof of runtime reachability.
+`expo export --platform ios --platform android --source-maps` was checked on both platforms:
+no `node-forge`, `braces`, `micromatch`, `metro-file-map`, code-signing certificates or Expo CLI
+`build/src` modules occur in the production source maps. Expo's `build/metro-require/require.js`
+bootstrap does occur; it does not import those vulnerable modules. No runtime dependency has
+an exception. Recheck after upgrades and remove both ignores once upstream patches are available.
+
+pnpm added exact `minimumReleaseAgeExclude` entries for newly published stable Expo/Uniwind/i18n
+packages during installation; no global release-age policy was changed.
+
+Uniwind regenerates `src/uniwind-types.d.ts`; Biome excludes that exact generated file so exporting
+or starting Metro cannot make the format check fail.
+
+Android 17 video retrieval currently fails in agent-device, so its target records screenshots and
+traces instead; iOS retains video. The six assertions run on both platforms.

@@ -20,3 +20,10 @@ prints `undefined`. pnpm 12 still applies a default check against very recent re
 
 The repo pins `fallow` 3.34.1 (installed once it was older than a day) and has no exclude entries. Whether to
 adopt an explicit `minimumReleaseAge` or allow exclude entries is not decided.
+
+**Expo React compatibility exception (#73, 2026-10-19).** React and React DOM follow the exact
+versions in the installed SDK's `expo/bundledNativeModules.json`, rather than an independent latest
+release. This keeps them aligned with React Native's renderer. Verify from `apps/mobile` with
+`npx expo install --check`. Source: [#73 decision](https://github.com/alimek/budget-lens-offline/issues/73#issuecomment-6276834077).
+TypeScript remains on the repository's TypeScript 7 decision (ADR 0002); only its SDK compiler
+recommendation is excluded from Expo's install check.

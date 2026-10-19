@@ -2,7 +2,7 @@ import "../../global.css";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { StatusBar, useColorScheme } from "react-native";
 import { I18nProvider } from "../i18n";
 import { AppStoreProvider } from "../state/app-store";
 
@@ -17,6 +17,7 @@ export default function RootLayout() {
     <I18nProvider>
       <AppStoreProvider>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <StatusBar barStyle={colorScheme === "dark" ? "light-content" : "dark-content"} />
           <Stack screenOptions={{ headerShown: false }} />
         </ThemeProvider>
       </AppStoreProvider>

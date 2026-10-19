@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**", "!apps/mobile/src/uniwind-types.d.ts"]
   },
   "formatter": {
     "enabled": true,

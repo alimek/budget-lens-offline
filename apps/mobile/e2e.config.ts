@@ -17,7 +17,7 @@ export default {
         bundleId,
         launchArguments: [
           "--initialUrl",
-          "http://localhost:8081",
+          "http://localhost:8073",
           "-EXDevMenuShowsAtLaunch",
           "NO",
           "-EXDevMenuIsOnboardingFinished",
@@ -29,12 +29,22 @@ export default {
     },
     {
       name: "android",
+      // Android 17 recording retrieval fails in agent-device; screenshots remain enabled.
+      video: "off",
       engine: mobile({
         platform: "android",
         device: "BudgetLens-Android",
         session: "budget-lens-android",
       }),
-      app: { bundleId },
+      app: {
+        bundleId,
+        launchArguments: [
+          "-a",
+          "android.intent.action.VIEW",
+          "-d",
+          "exp+budget-lens://?__expo_url=http%3A%2F%2F127.0.0.1%3A8073&__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1",
+        ],
+      },
     },
   ],
 } satisfies E2EConfig;

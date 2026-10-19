@@ -33,7 +33,8 @@ test("opens Savings inside Overview", async ({ app, screen }) => {
   await expect(screen.getByTestId("screen-home")).toBeVisible();
 
   // Act
-  await screen.getByTestId("overview-open-savings").tap();
+  // Expo UI Android puts the test ID on a wrapper; tap its native button.
+  await screen.getByTestId("screen-home").getByRole("button").tap();
 
   // Assert
   await expect(screen.getByTestId("screen-savings")).toBeVisible();

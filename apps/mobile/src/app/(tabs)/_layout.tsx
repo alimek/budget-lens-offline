@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 export default function TabsLayout() {
   const { t } = useTranslation();
   return (
-    <NativeTabs disableTransparentOnScrollEdge>
+    <NativeTabs disableTransparentOnScrollEdge labelVisibilityMode="labeled">
       <NativeTabs.Trigger name="overview" testID="tab-overview">
         <NativeTabs.Trigger.Label>{t("nav.tabs.overview")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="dashboard" />
