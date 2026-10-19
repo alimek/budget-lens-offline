@@ -79,5 +79,7 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - [docs/features/](docs/features/) – short PRDs, one per MVP epic
 - [docs/testing.md](docs/testing.md) – testing strategy and rules
 - [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
+- [docs/github-automation.md](docs/github-automation.md) – label sync from `.github/labels.tsv` and the per-label
+  issue queue export (`scripts/github/`), token scopes and scheduling rules
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
   [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)
