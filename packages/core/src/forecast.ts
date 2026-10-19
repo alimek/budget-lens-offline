@@ -1,4 +1,4 @@
-import { convertMinor } from "./convert-minor";
+import { convertViaPln } from "./convert-via-pln";
 import { type CurrencyCode, isCurrencyCode } from "./currency";
 import {
   addMinorUnits,
@@ -7,8 +7,8 @@ import {
   subtractMinorUnits,
   toMinorUnits,
 } from "./money";
+import type { PaymentStatus } from "./month-closing";
 import {
-  type ItemType,
   type OccurrenceOverride,
   type RejectedOverride,
   resolveOccurrences,
@@ -20,13 +20,6 @@ import { addMonths, isYearMonth, type YearMonth } from "./year-month";
 /** Forecast-local currency requirement until the shared item model gains currency (#138). */
 export interface ForecastItem extends ScheduledItem {
   readonly currency: CurrencyCode;
-}
-
-export interface PaymentStatus {
-  readonly itemType: ItemType;
-  readonly itemId: string;
-  readonly month: YearMonth;
-  readonly paid: boolean;
 }
 
 /** Current cached candidate, quoted as 1 currency = mid PLN. Freshness is supplied by the cache (#8/#93). */
@@ -98,7 +91,7 @@ export type ForecastResult =
     }
   | { readonly ok: false; readonly error: ForecastError };
 
-const paymentKey = (itemType: ItemType, itemId: string, month: YearMonth): string =>
+const paymentKey = (itemType: ForecastItem["itemType"], itemId: string, month: YearMonth): string =>
   JSON.stringify([itemType, itemId, month]);
 
 /** Latest effective date wins; manual wins a tie, consistent with #39. Inputs contain current candidates only. */
@@ -200,7 +193,7 @@ function collectRates(
     const rate = rates.get(currency);
     if (rate === undefined) return { code: "missing-rate", currency };
     try {
-      convertMinor(toMinorUnits(0), currency, "PLN", () => rate.mid);
+      convertViaPln(toMinorUnits(0), currency, "PLN", () => rate.mid);
     } catch {
       return { code: "invalid-rate", currency };
     }
@@ -220,7 +213,7 @@ export function forecast(input: ForecastInput): ForecastResult {
   const used = new Map<CurrencyCode, ForecastRate>();
   const paid = new Set(
     paymentStatuses
-      .filter((status) => status.paid)
+      .filter((status) => status.settled)
       .map((status) => paymentKey(status.itemType, status.itemId, status.month)),
   );
   const rows: ForecastMonth[] = [];
@@ -242,7 +235,7 @@ export function forecast(input: ForecastInput): ForecastResult {
       for (const { item, amount } of remaining) {
         const rateError = collectRates(item.currency, settings.baseCurrency, rates, used);
         if (rateError !== undefined) return { ok: false, error: rateError };
-        const baseAmount = convertMinor(
+        const baseAmount = convertViaPln(
           amount,
           item.currency,
           settings.baseCurrency,

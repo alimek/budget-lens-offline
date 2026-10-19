@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addMinorUnits,
+  convertMinorExact,
   isMinorUnits,
   type MinorUnits,
   multiplyByRate,
@@ -182,4 +183,26 @@ describe("multiplyByRate", () => {
     // Assert
     expect(errors).toEqual(invalidRates.map(() => expect.any(RangeError)));
   });
+});
+
+it("preserves decimal-string precision near a rounding tie", () => {
+  // Arrange
+  const amount = toMinorUnits(1);
+
+  // Act
+  const result = convertMinorExact(amount, "0.49999999999999999", "1", "EUR", "PLN");
+
+  // Assert
+  expect(result).toBe(0);
+});
+
+it("rejects a zero denominator in exact conversion", () => {
+  // Arrange
+  const amount = toMinorUnits(1);
+
+  // Act
+  const action = () => convertMinorExact(amount, "1", "0", "EUR", "PLN");
+
+  // Assert
+  expect(action).toThrow("invalid-rate");
 });

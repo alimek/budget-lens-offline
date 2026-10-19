@@ -73,17 +73,26 @@ Example:
 ```ts
 it("opens the next month with the closing balance of the closed month", () => {
   // Arrange
-  const activeMonth = { month: "2026-12", openingBalance: toMinorUnits(100_000) };
+  const activeMonth = createInitialMonth(toYearMonth("2026-12"), toMinorUnits(100_000));
+  if (!activeMonth.ok) throw new Error("Invalid test setup");
 
   // Act
-  const { next } = closeMonth(activeMonth, { closingBalance: toMinorUnits(120_000), ...input });
+  const result = closeMonth([activeMonth.value], {
+    baseCurrency: "PLN",
+    rates: {},
+    currentMonth: toYearMonth("2026-12"),
+    closingBalance: toMinorUnits(120_000),
+    items: [],
+    overrides: [],
+    paymentStatuses: [],
+  });
 
   // Assert
-  expect(next).toMatchObject({ month: "2027-01", openingBalance: 120_000 });
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(result.value.next).toMatchObject({ month: "2027-01", openingBalance: 120_000 });
 });
 ```
-
-(Illustrative only – `closeMonth` is planned in #84.)
 
 ## Property-based tests
 
@@ -123,9 +132,12 @@ line):
   validation (`it.each` tables).
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
   stored data) and orphaned overrides.
-- `src/forecast.test.ts` and `src/convert-minor.test.ts` (#6): rolling balances, payment filtering, warning boundaries,
+- `src/forecast.test.ts` and `src/convert-via-pln.test.ts` (#6): rolling balances, payment filtering, warning boundaries,
   overrides and currency conversion; the forecast characterization compares rolling totals and warning severities
   with legacy at legacy thresholds.
+- `src/month-closing.test.ts` (#84): close totals after overrides, payment status, balance carry-forward,
+  foreign-currency snapshots and conversion, immutability and transition validation. Ported carry-forward and balance updates are compared
+  with legacy in `test/month-closing.characterization.test.ts`.
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data and the
   `CurrencyCode` fields and `baseCurrency` rename (#126), with explicit AAA sections.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported

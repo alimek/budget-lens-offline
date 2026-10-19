@@ -11,7 +11,7 @@ Domain terms used across the code and docs. Details are in [domain/](domain/).
 | `YearMonth` | A calendar month written as `YYYY-MM`; the only month format in the domain. | [recurrence](domain/recurrence.md) |
 | Schedule | One-time (`month`) or recurring (`intervalMonths`, `anchor`, optional `endMonth` and `dayOfMonth`) rule of an item. | [recurrence](domain/recurrence.md) |
 | Occurrence override | Change of the amount of, or skipping, one occurrence in one month (`occurrence_overrides`). Replaces the legacy name-based "(nadpisanie)" items. | [occurrence-overrides](domain/occurrence-overrides.md) |
-| Payment status | Whether an expense was paid / an income received in a given month. | [forecast](domain/forecast.md) |
+| Payment status | Whether an expense was paid / an income received for `(itemType, itemId, month)`; missing means unsettled. | [month-closing](domain/month-closing.md) |
 | Forecast | Month-by-month projection of the balance (rolling balance, total funds, warnings). | [forecast](domain/forecast.md) |
 | Month closing | Closing the active month: record its totals and open the next month with opening balance = closing balance. | [month-closing](domain/month-closing.md) |
 | Base currency | The currency of balances, totals and thresholds; items may use their own supported currency (`Settings.baseCurrency`, the legacy `default_currency`, typed `CurrencyCode`). | [settings](domain/settings.md) |

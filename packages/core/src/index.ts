@@ -1,4 +1,4 @@
-export { convertMinor } from "./convert-minor";
+export { convertViaPln } from "./convert-via-pln";
 export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
 export type {
@@ -9,12 +9,13 @@ export type {
   ForecastRate,
   ForecastResult,
   ForecastWarning,
-  PaymentStatus,
 } from "./forecast";
 export { forecast } from "./forecast";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,
+  convertMinor,
+  convertMinorExact,
   isMinorUnits,
   multiplyByRate,
   negateMinorUnits,
@@ -26,6 +27,25 @@ export type { FormatMoneyOptions } from "./money-format";
 export { formatMoney } from "./money-format";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
+export type {
+  ActiveMonth,
+  BudgetMonth,
+  ClosedMonth,
+  ClosedOccurrence,
+  CloseMonthInput,
+  ClosingConversion,
+  ClosingItem,
+  MonthClosing,
+  MonthClosingErrorCode,
+  PaymentStatus,
+} from "./month-closing";
+export {
+  buildClosedOccurrences,
+  closeMonth,
+  createInitialMonth,
+  updateBalance,
+  validateMonthEditable,
+} from "./month-closing";
 export type {
   ItemType,
   OccurrenceOverride,

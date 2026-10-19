@@ -242,7 +242,7 @@ it("matches legacy rolling totals and warning severities at legacy thresholds", 
       },
     ],
     paymentStatuses: [
-      { itemType: "income" as const, itemId: "inc-salary", month: fromMonth, paid: true },
+      { itemType: "income" as const, itemId: "inc-salary", month: fromMonth, settled: true },
     ],
     currentBalance: toMinorUnits(-1000000),
     totalSavings: toMinorUnits(2500000),

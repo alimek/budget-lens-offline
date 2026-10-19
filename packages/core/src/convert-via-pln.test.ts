@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type CurrencyCode, convertMinor, toMinorUnits } from "./index";
+import { type CurrencyCode, convertViaPln, toMinorUnits } from "./index";
 
 const rates: Partial<Record<CurrencyCode, string>> = {
   EUR: "4.3661",
@@ -7,7 +7,7 @@ const rates: Partial<Record<CurrencyCode, string>> = {
   JPY: "0.024574",
 };
 
-describe("convertMinor", () => {
+describe("convertViaPln", () => {
   it.each([
     [100000, "PLN", "EUR", 22904],
     [10000, "EUR", "PLN", 43661],
@@ -17,10 +17,13 @@ describe("convertMinor", () => {
     [10000, "PLN", "JPY", 4069],
     [1, "JPY", "EUR", 1],
   ] as const)("converts %s %s to %s with one rounding", (amount, from, to, expected) => {
+    // Arrange
     const source = toMinorUnits(amount);
 
-    const result = convertMinor(source, from, to, (currency) => rates[currency]);
+    // Act
+    const result = convertViaPln(source, from, to, (currency) => rates[currency]);
 
+    // Assert
     expect(result).toBe(expected);
   });
 
@@ -30,28 +33,37 @@ describe("convertMinor", () => {
     [3, 2],
     [-3, -2],
   ] as const)("rounds ties away from zero: %s", (amount, expected) => {
+    // Arrange
     const source = toMinorUnits(amount);
 
-    const result = convertMinor(source, "EUR", "PLN", () => "0.5");
+    // Act
+    const result = convertViaPln(source, "EUR", "PLN", () => "0.5");
 
+    // Assert
     expect(result).toBe(expected);
   });
 
   it("keeps identity exact without consulting rates", () => {
+    // Arrange
     const source = toMinorUnits(Number.MAX_SAFE_INTEGER);
 
-    const result = convertMinor(source, "JPY", "JPY", () => {
+    // Act
+    const result = convertViaPln(source, "JPY", "JPY", () => {
       throw new Error("Unexpected rate lookup");
     });
 
+    // Assert
     expect(result).toBe(source);
   });
 
   it("rejects conversion overflow", () => {
+    // Arrange
     const source = toMinorUnits(Number.MAX_SAFE_INTEGER);
 
-    const action = () => convertMinor(source, "EUR", "PLN", () => "2");
+    // Act
+    const action = () => convertViaPln(source, "EUR", "PLN", () => "2");
 
-    expect(action).toThrow("amount-overflow");
+    // Assert
+    expect(action).toThrow("Result exceeds the safe integer range");
   });
 });

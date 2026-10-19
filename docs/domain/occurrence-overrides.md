@@ -11,6 +11,8 @@ An `OccurrenceOverride` changes **one occurrence of one recurring item in one mo
 { id, itemType: "expense" | "income", itemId, month: YearMonth, amount?: MinorUnits, skipped?: boolean, note? }
 ```
 
+- Override amounts use the item's own currency; closing converts the effective occurrence into the locked base
+  currency and snapshots the rate ([month-closing.md](month-closing.md), #84).
 - Either `amount` (the occurrence uses this amount instead of the item's) or `skipped: true` (the occurrence is left
   out). Unique per `(itemType, itemId, month)`.
 - `amount` is `MinorUnits` and **≥ 0**: expenses and incomes are separate item types, so a refund is an income, not a

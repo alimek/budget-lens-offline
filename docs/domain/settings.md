@@ -17,7 +17,10 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
 
-Thresholds are in minor units of `baseCurrency`. Changing the currency does not convert them. A threshold of 0
+Thresholds are in minor units of `baseCurrency`. The base currency is chosen in onboarding and locked when
+onboarding is confirmed ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
+The settings value model has no onboarding lifecycle state; the app/persistence must reject later base-currency
+changes. Preparing settings during onboarding does not convert thresholds. A threshold of 0
 does not turn a warning off: `lowBalanceThreshold: 0` warns only for a balance below 0, and
 `largeExpenseThreshold: 0` warns for every month with a negative net change. Disabling warnings is
 not supported: #6 keeps zero thresholds active.
@@ -37,7 +40,8 @@ which narrows the earlier "any base currency" decision).
 **Currency decisions (#39/#124):** base currency is chosen in onboarding and locked after confirmation (#139).
 Items may have their own supported currency (#138); forecast converts each occurrence with injected current rates
 and one rounding through PLN (#6). Thresholds stay in base-currency minor units; no base-change conversion flow.
-See [forecast.md](forecast.md) and [exchange-rates.md](exchange-rates.md).
+Closing receives selected rates and stores converted totals (#84).
+See [forecast.md](forecast.md), [exchange-rates.md](exchange-rates.md) and [month-closing.md](month-closing.md).
 
 `DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
@@ -64,7 +68,7 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | `invalid-currency` | `baseCurrency`, `trackedCurrencies` | Not a string of three uppercase letters; for `trackedCurrencies`, not an array of such strings |
 | `unsupported-currency` | `baseCurrency`, `trackedCurrencies` | A well-formed code that is not a supported currency (e.g. `BGN`, `XAU`); for `trackedCurrencies`, any such element |
 | `duplicate-currency` | `trackedCurrencies` | The same code twice |
-| `base-currency-tracked` | `trackedCurrencies` | Contains `baseCurrency`: the base currency has no exchange rate against itself. To switch the base to a currently tracked currency, send `baseCurrency` and the new `trackedCurrencies` in one patch. |
+| `base-currency-tracked` | `trackedCurrencies` | Contains `baseCurrency`: the base currency has no exchange rate against itself. During onboarding, to choose a currently tracked currency as base, send `baseCurrency` and the new `trackedCurrencies` in one patch. |
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
 | `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
@@ -83,6 +87,10 @@ currency is removed from the stored tracked list before validation, preserving t
 back to the default, with the base currency removed. An empty tracked list is valid (`["USD"]` with base `USD`
 loads as `[]`). The pre-rename
 `defaultCurrency` key is an unknown key here: it is dropped and `baseCurrency` keeps its stored value or default.
+
+Per-item currencies are now in MVP ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)),
+superseding the earlier base-only item assumption in #39. Items retain their own currency; forecast/closing convert
+into the locked base currency. See [month-closing.md](month-closing.md) for the rate snapshot contract.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
 

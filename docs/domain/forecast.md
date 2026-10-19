@@ -1,7 +1,7 @@
 # Forecast
 
-Status: **implemented** in `packages/core/src/forecast.ts` (#6), with exact currency conversion in
-`src/convert-minor.ts`. No clock, I/O, storage or month-closing dependency.
+Status: **implemented** in `packages/core/src/forecast.ts` (#6), with exact currency conversion shared in
+`src/money.ts` via `src/convert-via-pln.ts`. No clock, I/O or storage.
 
 ## Input and output
 
@@ -19,7 +19,7 @@ returns `{ ok: true, currency, forecast, warnings, ratesUsed, rejectedOverrides,
 - Each month uses `resolveOccurrences`, which enumerates schedules through `occurrencesInRange`, replaces overridden
   amounts and removes skipped occurrences. Rejected overrides and invalid schedules are returned once, as in the
   resolver; ignored orphaned overrides can be found with `findOrphanedOverrides`.
-- Payment statuses are `{ itemType, itemId, month, paid }`; `paid: true` means paid expense or received income.
+- Payment statuses are `{ itemType, itemId, month, settled }`; `settled: true` means paid expense or received income.
   Only active-month completed occurrences are excluded. Future-month statuses are ignored. `currentBalance` already
   includes completed payments, so they must not be applied again. An override keeps its original item's payment key.
 - `currentBalance`, `totalSavings`, thresholds, all output rows and warning amounts are **base-currency MinorUnits**.
@@ -41,8 +41,8 @@ requires one rounding through PLN and current rates only.
 The cache validates dates (`YYYY-MM-DD`) and metadata before calling core. The forecast selects the newer
 `effectiveDate` for each currency; on a tie it prefers manual, following #39's default. No rate history lookup.
 
-Each needed foreign occurrence is converted **after overrides and payment filtering**, with `convertMinor`, then
-rounded before summing. PLN is implicit rate 1; base-currency items need no rate. Zero-valued foreign occurrences
+Each needed foreign occurrence is converted **after overrides and payment filtering**, with `convertViaPln`
+delegating to `money.ts`, then rounded before summing. PLN is implicit rate 1; base-currency items need no rate. Zero-valued foreign occurrences
 still require rates. Unused currencies, skipped items and completed active-month payments need none. Every month
 uses the same selected rates; no FX projection. Cross-currency conversion uses both legs without requiring equal
 effective dates; mixed-date and stale legs remain visible in `ratesUsed`.
@@ -74,9 +74,11 @@ Invalid schedules and stored overrides retain the resolver's nonfatal diagnostic
 
 ## Month closing and later integration
 
-This implementation builds only on merged core. It neither imports nor depends on #84 / PR #137.
+This implementation shares money arithmetic and the `PaymentStatus` type with merged #84 / PR #137.
+Forecast does not call month closing; both use `settled` for paid expenses and received incomes.
 After closing, the caller can start the next forecast with the new active month and its current balance.
-Closed-month charts must read stored totals and per-occurrence FX snapshots from #141, never this live-rate forecast.
+Closed-month charts must read stored totals and per-occurrence FX snapshots from #84, never this live-rate forecast.
+#141 can extend rate metadata and use decimal-string conversion without changing the rounding policy.
 #138 can later move currency onto the shared item/occurrence model. #140 can reuse the conversion and rate evidence
 here when integrating the rates cache and forecast hook (#88); #8/#92/#93 own fetching, storage and freshness.
 
@@ -87,6 +89,6 @@ month names/messages. It hardcodes low-balance and outflow thresholds (5000 / 10
 and applies name-based overrides. The port uses explicit months, Settings, warning codes and id-based overrides.
 
 `src/forecast.test.ts` covers rolling balances, payment keys, overrides/skips, warning boundaries, FX and failures.
-`src/convert-minor.test.ts` checks pair directions, ISO exponents and exact rounding. The forecast characterization
+`src/convert-via-pln.test.ts` checks pair directions, ISO exponents and exact rounding. The forecast characterization
 compares the fixture budget's rolling totals and warning severities at legacy thresholds; the old golden master
 remains unchanged. Deliberate differences are recorded in `test/LEGACY.md`.

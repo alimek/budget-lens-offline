@@ -1,3 +1,5 @@
+import { type CurrencyCode, currencyExponent } from "./currency";
+
 /**
  * Monetary amount expressed in minor currency units (e.g. 1 PLN = 100 minor units).
  * Always a safe integer, which avoids floating-point rounding errors.
@@ -61,13 +63,59 @@ export function negateMinorUnits(amount: MinorUnits): MinorUnits {
  * Throws a `RangeError` for a negative or non-finite rate and when the result leaves the safe integer range.
  */
 export function multiplyByRate(amount: MinorUnits, rate: number): MinorUnits {
-  const value = BigInt(toMinorUnits(amount));
+  return multiplyAtScale(amount, checkedRate(rate), "1", 0);
+}
+
+/** Converts between currency minor-unit scales, rounding only once, half away from zero. */
+export function convertMinor(
+  amount: MinorUnits,
+  rate: number,
+  source: CurrencyCode,
+  target: CurrencyCode,
+): MinorUnits {
+  return convertMinorExact(amount, checkedRate(rate), "1", source, target);
+}
+
+/**
+ * Exact decimal-string ratio: sourceRate / targetRate major units, with one final rounding.
+ * Both rates use the same quote currency (e.g. PLN); no intermediate cross-rate or amount is rounded.
+ * sourceRate may be zero; targetRate must be positive. Decimal exponent notation is accepted.
+ */
+export function convertMinorExact(
+  amount: MinorUnits,
+  sourceRate: string,
+  targetRate: string,
+  source: CurrencyCode,
+  target: CurrencyCode,
+): MinorUnits {
+  return multiplyAtScale(
+    amount,
+    sourceRate,
+    targetRate,
+    currencyExponent(target) - currencyExponent(source),
+  );
+}
+
+function checkedRate(rate: number): string {
   if (!Number.isFinite(rate) || rate < 0) {
     throw new RangeError(`Rate must be a finite, non-negative number, received: ${rate}`);
   }
-  const { coefficient, scale } = toDecimal(rate);
-  const product = value * coefficient;
-  const divisor = 10n ** scale;
+  return String(rate);
+}
+
+function multiplyAtScale(
+  amount: MinorUnits,
+  sourceRate: string,
+  targetRate: string,
+  exponentShift: number,
+): MinorUnits {
+  const value = BigInt(toMinorUnits(amount));
+  const source = toDecimal(sourceRate);
+  const target = toDecimal(targetRate);
+  if (target.coefficient === 0n) throw new RangeError("invalid-rate");
+  const product =
+    value * source.coefficient * 10n ** (target.scale + BigInt(Math.max(exponentShift, 0)));
+  const divisor = target.coefficient * 10n ** (source.scale + BigInt(Math.max(-exponentShift, 0)));
   let result = product / divisor;
   const remainder = product % divisor;
   const absRemainder = remainder < 0n ? -remainder : remainder;
@@ -81,8 +129,8 @@ export function multiplyByRate(amount: MinorUnits, rate: number): MinorUnits {
 }
 
 /** Exact decimal value of a finite, non-negative number as `coefficient / 10^scale`. */
-function toDecimal(rate: number): { coefficient: bigint; scale: bigint } {
-  const match = /^(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(rate));
+function toDecimal(rate: string): { coefficient: bigint; scale: bigint } {
+  const match = /^(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(rate);
   if (!match) {
     throw new RangeError(`Unsupported rate: ${rate}`);
   }

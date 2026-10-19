@@ -45,15 +45,16 @@ const eur: ForecastRate = {
 
 describe("forecast", () => {
   it("rolls across a year, applies overrides and skips, and ignores future payment statuses", () => {
+    // Arrange
     const data = input({
       items: [item("shared", "income", 1000), item("shared", "expense", 300)],
       currentBalance: money(2000),
       totalSavings: money(500),
       settings: { ...DEFAULT_SETTINGS, forecastHorizonMonths: 3 },
       paymentStatuses: [
-        { itemId: "shared", itemType: "expense", month: START, paid: true },
-        { itemId: "shared", itemType: "income", month: START, paid: true },
-        { itemId: "shared", itemType: "income", month: NEXT, paid: true },
+        { itemId: "shared", itemType: "expense", month: START, settled: true },
+        { itemId: "shared", itemType: "income", month: START, settled: true },
+        { itemId: "shared", itemType: "income", month: NEXT, settled: true },
       ],
       overrides: [
         { id: "override", itemId: "shared", itemType: "expense", month: NEXT, amount: money(500) },
@@ -67,8 +68,10 @@ describe("forecast", () => {
       ],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       forecast: [
@@ -94,18 +97,21 @@ describe("forecast", () => {
   });
 
   it("keeps expense and income payment keys separate, including false and other-month statuses", () => {
+    // Arrange
     const data = input({
       months: 1,
       items: [item("shared", "income", 1000), item("shared", "expense", 300)],
       paymentStatuses: [
-        { itemType: "income", itemId: "shared", month: START, paid: true },
-        { itemType: "expense", itemId: "shared", month: START, paid: false },
-        { itemType: "expense", itemId: "shared", month: NEXT, paid: true },
+        { itemType: "income", itemId: "shared", month: START, settled: true },
+        { itemType: "expense", itemId: "shared", month: START, settled: false },
+        { itemType: "expense", itemId: "shared", month: NEXT, settled: true },
       ],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       forecast: [{ income: 0, expenses: 300, balance: -300 }],
@@ -118,14 +124,17 @@ describe("forecast", () => {
     [99, "low-balance", "caution"],
     [100, undefined, undefined],
   ] as const)("uses the configured low-balance boundary at %s", (balance, code, type) => {
+    // Arrange
     const data = input({
       months: 1,
       currentBalance: money(balance),
       settings: { ...DEFAULT_SETTINGS, lowBalanceThreshold: money(100) },
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.warnings.map((warning) => [warning.code, warning.type])).toEqual(
@@ -144,6 +153,7 @@ describe("forecast", () => {
     [100, false],
     [101, true],
   ] as const)("warns only beyond the large-outflow threshold: %s", (amount, warns) => {
+    // Arrange
     const data = input({
       months: 1,
       currentBalance: money(1000),
@@ -155,8 +165,10 @@ describe("forecast", () => {
       },
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       warnings: warns
@@ -166,6 +178,7 @@ describe("forecast", () => {
   });
 
   it("keeps critical and outflow warnings together, with zero thresholds still active", () => {
+    // Arrange
     const data = input({
       months: 1,
       items: [item("bill", "expense", 1)],
@@ -176,8 +189,10 @@ describe("forecast", () => {
       },
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       warnings: [{ code: "negative-balance" }, { code: "large-outflow" }],
@@ -185,6 +200,7 @@ describe("forecast", () => {
   });
 
   it("converts mixed EUR and JPY items per row before summing in PLN, after overrides", () => {
+    // Arrange
     const data = input({
       months: 2,
       items: [
@@ -205,8 +221,10 @@ describe("forecast", () => {
       rates: [eur, { ...eur, currency: "JPY", mid: "0.024574" }],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       currency: "PLN",
@@ -219,6 +237,7 @@ describe("forecast", () => {
   });
 
   it("converts PLN items into an EUR base and selects the newer candidate, manual on ties", () => {
+    // Arrange
     const data = input({
       months: 1,
       items: [item("pln", "income", 10000)],
@@ -230,8 +249,10 @@ describe("forecast", () => {
       ],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       currency: "EUR",
@@ -241,6 +262,7 @@ describe("forecast", () => {
   });
 
   it("requires the non-PLN base leg and exposes both legs for a cross conversion", () => {
+    // Arrange
     const data = input({
       months: 1,
       items: [item("usd", "income", 10000, "USD")],
@@ -248,8 +270,10 @@ describe("forecast", () => {
       rates: [eur, { ...eur, currency: "USD", mid: "3.8827", stale: true }],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       forecast: [{ income: 8893 }],
@@ -261,26 +285,32 @@ describe("forecast", () => {
   });
 
   it("reports a missing base leg instead of mixing foreign amounts", () => {
+    // Arrange
     const data = input({
       months: 1,
       items: [item("pln", "income", 100)],
       settings: { ...DEFAULT_SETTINGS, baseCurrency: "EUR", trackedCurrencies: [] },
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toEqual({ ok: false, error: { code: "missing-rate", currency: "EUR" } });
   });
 
   it("prefers newer NBP over an older manual rate for every projected month", () => {
+    // Arrange
     const data = input({
       months: 2,
       items: [item("eur", "income", 10000, "EUR")],
       rates: [{ ...eur, source: "manual", effectiveDate: "2026-10-15", mid: "1" }, eur],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       forecast: [{ income: 43661 }, { income: 43661 }],
@@ -289,6 +319,7 @@ describe("forecast", () => {
   });
 
   it("requires no rate for paid, skipped, inactive or base-currency occurrences", () => {
+    // Arrange
     const data = input({
       months: 1,
       items: [
@@ -297,25 +328,30 @@ describe("forecast", () => {
         { ...item("later", "income", 100, "USD"), schedule: { kind: "one-time", month: NEXT } },
         item("base", "income", 10),
       ],
-      paymentStatuses: [{ itemType: "income", itemId: "paid", month: START, paid: true }],
+      paymentStatuses: [{ itemType: "income", itemId: "paid", month: START, settled: true }],
       overrides: [{ id: "skip", itemType: "expense", itemId: "skip", month: START, skipped: true }],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({ ok: true, forecast: [{ income: 10 }], ratesUsed: [] });
   });
 
   it.each([undefined, "0", "1e-2"])(
     "reports missing or invalid needed rates without returning partial totals: %s",
     (mid) => {
+      // Arrange
       const data = input({
         items: [item("eur", "income", 100, "EUR")],
         rates: mid === undefined ? [] : [{ ...eur, mid }],
       });
 
+      // Act
       const result = forecast(data);
 
+      // Assert
       expect(result).toEqual({
         ok: false,
         error: { code: mid === undefined ? "missing-rate" : "invalid-rate", currency: "EUR" },
@@ -324,33 +360,43 @@ describe("forecast", () => {
   );
 
   it.each([0, 121, 1.5])("rejects an invalid explicit horizon: %s", (months) => {
+    // Arrange
     const data = input({ months });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toEqual({ ok: false, error: { code: "invalid-horizon" } });
   });
 
   it("rejects a horizon outside the calendar range", () => {
+    // Arrange
     const data = input({ fromMonth: toYearMonth("9999-12"), months: 2 });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toEqual({ ok: false, error: { code: "invalid-horizon" } });
   });
 
   it("reports balance overflow instead of returning rounded money", () => {
+    // Arrange
     const data = input({
       currentBalance: money(Number.MAX_SAFE_INTEGER),
       items: [item("income", "income", 1)],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toEqual({ ok: false, error: { code: "amount-overflow" } });
   });
 
   it("keeps resolver diagnostics visible to the caller", () => {
+    // Arrange
     const data = input({
       months: 2,
       items: [
@@ -364,8 +410,10 @@ describe("forecast", () => {
       ],
     });
 
+    // Act
     const result = forecast(data);
 
+    // Assert
     expect(result).toMatchObject({
       ok: true,
       invalidItems: data.items,
