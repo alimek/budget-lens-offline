@@ -35,7 +35,7 @@
   (`agent.act()`, `agent.assert()`) need no model; agent steps and `e2e explore` use the configured model.
   Per #15, the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention
   and model configuration are defined in #15.
-  - **E2E does not run in CI** (#166): the Developer or Tester runs it locally on the Mac Studio
+  - **E2E does not run in CI** (#166): it runs locally on a dev machine
     ([ci.md](ci.md#native-builds-and-e2e-local)).
   - **Telemetry must be disabled.** The `e2e` CLI sends anonymous usage telemetry by default
     ([e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). Set `E2E_TELEMETRY_DISABLED=1` in every
@@ -45,10 +45,11 @@
     GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
-  - **UI PRs** include e2e evidence: **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a video
-    is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
+  - **UI PRs** include e2e evidence: **screenshots** (iOS + Android, simulator/emulator named; a video
+    is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
     Screenshots section of the PR template. A manual screenshot from a development build alone is not enough.
-  - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
+  - Only **dedicated simulators/emulators** are used (`E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never personal or
+    shared devices.
   - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 
 ## Rules
@@ -166,8 +167,9 @@ line):
 
 `apps/mobile/e2e/scaffold.e2e.ts` checks the home screen, the four other tabs and the Savings push
 with deterministic `getByTestId` locators. It uses no model or credentials. Each test has explicit AAA
-sections. The config names dedicated BudgetLens devices and records screenshots/video from development
-builds. They run locally on the Mac Studio with `pnpm --filter @budget-lens/mobile e2e:ios` /
-`e2e:android` (`BudgetLens-CI` / `BudgetLens-Android`), not in CI. Fallow lists the config and test glob as
+sections. The config targets dedicated devices (names from env, see
+[mobile development](mobile-development.md#development-builds)) and records screenshots/video from development
+builds. They run locally on a dev machine with `pnpm --filter @budget-lens/mobile e2e:ios` /
+`e2e:android`, not in CI. Fallow lists the config and test glob as
 real runner entry points (it has no e2e plugin).
 See [mobile development](mobile-development.md) for commands and the testID convention.

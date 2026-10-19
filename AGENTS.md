@@ -28,9 +28,11 @@ platform-agnostic TypeScript package.
   comments, screenshots or CI logs. Keep them only in the local env or GitHub Actions secrets; CI must never echo
   them; `.env*` is gitignored ([#15 e2e
   decisions](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
-- **Agent work is triggered by a label, never by polling**: Designer, Marketing and Research act only on issues
-  carrying `agent:design`, `agent:marketing` and `agent:research`; mechanical syncs (labels, issue lists) are plain
-  `gh` shell scripts in `scripts/agents/` – [docs/agents.md](docs/agents.md).
+- **Machine-agnostic repo.** No host-, user- or operator-specific data: no machine or host names, user names,
+  absolute home paths, local scheduler jobs, device serials or local simulator/emulator instances, and no references
+  to a specific agent or bot setup or who does what. Use env vars with documented defaults and generic wording ("a
+  local dev machine"); machine-specific automation lives outside the repo. `pnpm lint` enforces it
+  (`scripts/check-machine-agnostic.mjs`) and reviewers check it.
 
 Details and the rest of the conventions: [docs/conventions.md](docs/conventions.md).
 
@@ -49,28 +51,28 @@ pnpm check       # all of the above
 
 CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` (Conventional
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
-CI runs only these fast checks, all on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not in CI: the
-Developer or Tester runs them locally on the Mac Studio on `BudgetLens-*` simulators, and the evidence is
-screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
+CI runs only these fast checks, all on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not in CI: they run
+locally on a dev machine (macOS with Xcode for iOS, Android SDK for Android) on dedicated simulators/emulators, and
+the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 ## Workflow
 
 - One issue → one branch `dev/<issue-number>-<short-slug>` from the latest `origin/main`. Never push to `main`.
 - PR to `main` with an English description ending in `Closes #<n>`.
-- The **Reviewer** reviews and squash-merges after approval and fully green CI.
+- A reviewer squash-merges after approval and fully green CI.
 - Testing: e2e first; unit tests only for business logic, Arrange-Act-Assert; no coverage thresholds –
   [docs/testing.md](docs/testing.md).
-- UI PRs include e2e evidence: screenshots (iOS + Android, `BudgetLens-*` simulator/emulator named; a video is also
-  fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the PR
+- UI PRs include e2e evidence: screenshots (iOS + Android, simulator/emulator named; a video is also
+  fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the PR
   template's Screenshots section. A manual screenshot from a development build alone is not enough.
-- Run the app only on the dedicated `BudgetLens-*` simulators/emulators, never on personal or shared devices.
+- Run the app only on dedicated simulators/emulators (names via `E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never on
+  personal or shared devices.
 - Metro runs on the repo's fixed port **8073** – [docs/mobile-development.md](docs/mobile-development.md).
-- Docs rule: every PR that changes domain behaviour or architecture updates `docs/`; the Reviewer checks this.
+- Docs rule: every PR that changes domain behaviour or architecture updates `docs/`; reviewers check this.
 
 ## Docs
 
 - [docs/conventions.md](docs/conventions.md) – detailed conventions and workflow rules
-- [docs/agents.md](docs/agents.md) – agent triggers, the `scripts/agents/` sync scripts and the weekly routine review
 - [docs/glossary.md](docs/glossary.md) – domain glossary
 - [docs/architecture.md](docs/architecture.md) – current state, layout, packages, app stack (implemented and planned)
 - [docs/domain/](docs/domain/) – one file per domain area

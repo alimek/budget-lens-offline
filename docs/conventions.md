@@ -54,7 +54,7 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   `DO_NOT_TRACK=1`, but the repo standard is `E2E_TELEMETRY_DISABLED=1`.
 - Expo CLI (`@expo/cli` sends usage telemetry by default): `EXPO_NO_TELEMETRY=1`, set as a prefix in the
   `start`, `ios`, `android` and `export` scripts of `apps/mobile/package.json` (Expo does not run in CI, see
-  [ci.md](ci.md#native-builds-and-e2e-local)); set it yourself when calling `expo` directly on the Mac Studio
+  [ci.md](ci.md#native-builds-and-e2e-local)); set it yourself when calling `expo` directly on your dev machine
   (for example `EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild`).
 
 ## Workflow
@@ -63,21 +63,21 @@ Tool telemetry is disabled through environment variables, locally and in CI:
 - `main` is protected: changes only via pull request; never push to `main`.
 - PR to `main` with an English description ending in `Closes #<n>`. Stacked PRs are allowed (base on the parent
   branch and say so in the description).
-- The **Reviewer squash-merges** the PR after approval and fully green CI (with an English commit message).
-- **UI PRs** must include e2e evidence: **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a
-  video is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio,
+- A reviewer **squash-merges** the PR after approval and fully green CI (with an English commit message).
+- **UI PRs** must include e2e evidence: **screenshots** (iOS + Android, simulator/emulator named; a
+  video is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine,
   in the Screenshots section of the PR template (see [testing.md](testing.md)). A manual screenshot from a
   development build alone is not enough. Native builds and E2E do not run in CI (see
   [ci.md](ci.md#native-builds-and-e2e-local)).
-- Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.
+- Run the app only on **dedicated simulators/emulators** (names via `E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never
+  on personal or shared devices.
 - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 - **Docs rule:** every PR that changes domain behaviour or architecture updates the relevant file in `docs/`
-  (and [AGENTS.md](../AGENTS.md) if needed). The Reviewer checks this.
+  (and [AGENTS.md](../AGENTS.md) if needed). Reviewers check this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board
   mirrors them.
-- **Agent work needs a label.** Designer, Marketing and Research act only on issues carrying their `agent:*` label;
-  label and issue-list sync are plain `gh` shell scripts (`scripts/agents/`), and routines with no output for 7 days
-  are disabled. Rules and scripts: [agents.md](agents.md).
+- **Machine-agnostic repo:** no host-, user- or operator-specific data and no references to a specific agent or bot
+  setup (see the hard rule in [AGENTS.md](../AGENTS.md)); `pnpm lint` runs `scripts/check-machine-agnostic.mjs`.
 - PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).
 - CI gates: `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title`, `pr-body`; all must pass.
   Details: [ci.md](ci.md). Commands: [README.md](../README.md).
