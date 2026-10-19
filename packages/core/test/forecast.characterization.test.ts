@@ -2,11 +2,20 @@
  * Characterization tests for the legacy forecast (use-forecast.ts).
  * The clock is frozen to Sunday 2026-10-18 12:00 in Europe/Warsaw unless a test says otherwise.
  */
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
+import {
+  DEFAULT_SETTINGS,
+  type ForecastItem,
+  forecast,
+  type ItemType,
+  toMinorUnits,
+  toYearMonth,
+} from "../src/index";
 import { byId, expenses, incomes } from "./fixtures";
 import { freezeClockAt, useFrozenClock } from "./helpers";
 import { legacyForecast } from "./legacy/forecast";
-import type { LegacyExpense } from "./legacy/types";
+import type { LegacyExpense, LegacyIncome } from "./legacy/types";
+import { legacySchedule } from "./legacy-schedule";
 
 useFrozenClock("2026-10-18T10:00:00.000Z", "Europe/Warsaw");
 
@@ -57,7 +66,7 @@ describe("legacyForecast – balance", () => {
   });
 
   it("starts in the device's local month, not the UTC month", () => {
-    // LEGACY: the forecast reads `new Date()` in the device time zone – changed by #6.
+    // LEGACY: the forecast reads `new Date()` in the device time zone – fixed in #6: explicit fromMonth.
     // Arrange: 2026-10-31T23:30Z is already 1 November in Warsaw.
     const instant = "2026-10-31T23:30:00.000Z";
 
@@ -144,7 +153,7 @@ describe("legacyForecast – payment statuses", () => {
 
 describe("legacyForecast – warnings", () => {
   it("warns about a low balance only strictly between 0 and 5000", () => {
-    // LEGACY: balance 0 gives no warning, threshold 5000 is hard-coded – changed by #6 and #76.
+    // LEGACY: balance 0 gives no warning, threshold 5000 is hard-coded – fixed in #6 (src/forecast.test.ts).
     // Arrange
     const balances = [0, 0.01, 4999.99, 5000];
 
@@ -154,7 +163,7 @@ describe("legacyForecast – warnings", () => {
     // Assert
     expect(firstWarnings.map((w) => w?.type)).toEqual([undefined, "caution", "caution", undefined]);
     // LEGACY: Polish message with toLocaleString() without a locale – #2 part done (formatMoney takes the language);
-    // the warnings are ported in #6.
+    // #6 now returns warning codes and base-currency parameters (src/forecast.test.ts).
     expect(firstWarnings[2]?.message).toBe(
       `Za 1 mies. niskie saldo: ${(4999.99).toLocaleString()} PLN`,
     );
@@ -173,7 +182,7 @@ describe("legacyForecast – warnings", () => {
   });
 
   it("flags a large expense only when netChange is below -10000", () => {
-    // LEGACY: threshold -10000 is hard-coded – changed by #6 and #76.
+    // LEGACY: threshold -10000 is hard-coded – fixed in #6 (src/forecast.test.ts).
     // Arrange
     const atThreshold = [oneTimeExpense(10000, "2026-10")];
     const belowThreshold = [oneTimeExpense(10000.01, "2026-10")];
@@ -186,4 +195,88 @@ describe("legacyForecast – warnings", () => {
     expect(atThresholdWarnings).toEqual([]);
     expect(belowThresholdWarnings.map((w) => w.id)).toEqual(["info-0"]);
   });
+});
+
+/** Test-only fixture mapping; the offline app does not import legacy data. */
+function forecastItems(
+  items: readonly (LegacyExpense | LegacyIncome)[],
+  itemType: ItemType,
+): ForecastItem[] {
+  return items
+    .filter((item) => !item.id.endsWith("-override"))
+    .flatMap((item) => {
+      const schedule = legacySchedule(item, toYearMonth("2026-10"));
+      return schedule === null
+        ? []
+        : [
+            {
+              id: item.id,
+              itemType,
+              schedule,
+              currency: "PLN",
+              amount: toMinorUnits(Math.round(item.amount * 100)),
+            },
+          ];
+    });
+}
+
+it("matches legacy rolling totals and warning severities at legacy thresholds", () => {
+  // Arrange
+  const fromMonth = toYearMonth("2026-10");
+  const data = {
+    items: [...forecastItems(expenses, "expense"), ...forecastItems(incomes, "income")],
+    overrides: [
+      {
+        id: "rent",
+        itemId: "exp-rent",
+        itemType: "expense" as const,
+        month: toYearMonth("2026-11"),
+        amount: toMinorUnits(320000),
+      },
+      {
+        id: "salary",
+        itemId: "inc-salary",
+        itemType: "income" as const,
+        month: toYearMonth("2027-01"),
+        amount: toMinorUnits(950000),
+      },
+    ],
+    paymentStatuses: [
+      { itemType: "income" as const, itemId: "inc-salary", month: fromMonth, settled: true },
+    ],
+    currentBalance: toMinorUnits(-1000000),
+    totalSavings: toMinorUnits(2500000),
+    fromMonth,
+    settings: DEFAULT_SETTINGS,
+    rates: [],
+  };
+  const reference = legacyForecast(expenses, incomes, -10000, 25000, {
+    currentMonthKey: fromMonth,
+    incomeStatuses: new Map([["inc-salary", true]]),
+  });
+
+  // Act
+  const result = forecast(data);
+
+  // Assert
+  assert(result.ok);
+  expect(
+    result.forecast.map(({ income, expenses, netChange, balance, totalFunds }) => [
+      income,
+      expenses,
+      netChange,
+      balance,
+      totalFunds,
+    ]),
+  ).toEqual(
+    reference.forecast.map(({ income, expenses, netChange, balance, totalFunds }) =>
+      [income, expenses, netChange, balance, totalFunds].map((amount) => Math.round(amount * 100)),
+    ),
+  );
+  expect(result.warnings.map(({ type, month }) => [type, month])).toEqual(
+    reference.warnings.map((warning) => {
+      const index = Number(warning.id.split("-")[1]);
+      return [warning.type, result.forecast[index]?.month];
+    }),
+  );
 });
