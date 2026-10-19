@@ -17,13 +17,16 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
 
-Thresholds are in minor units of `baseCurrency`. The base currency is chosen in onboarding and locked when
-onboarding is confirmed ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
-The settings value model has no onboarding lifecycle state; the app/persistence must reject later base-currency
-changes. Preparing settings during onboarding does not convert thresholds. A threshold of 0
-does not turn a warning off: `lowBalanceThreshold: 0` warns only for a balance below 0, and
-`largeExpenseThreshold: 0` warns for every month with a negative net change. Whether a warning can be disabled is
-decided with the forecast warnings in #6.
+Thresholds are in minor units of `baseCurrency`. `baseCurrency` is chosen in the onboarding wizard and **locked once
+onboarding is confirmed** ([owner decision, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
+Before that confirmation it can still change freely; afterwards there is no base-currency change at all, so
+thresholds are never converted, which closes the threshold-conversion question left open by #24 and #124. Picking a
+different base while preparing settings during onboarding does not convert them either: they stay as typed, in the
+base currency the user settles on. Rejecting a base-currency patch after the confirmation is the lock of #139: the
+`Settings` value model here has no onboarding lifecycle state, so until #139 lands the app and the persistence layer
+must reject the change. A threshold of 0 does not turn a warning off: `lowBalanceThreshold: 0` warns only for a
+balance below 0, and `largeExpenseThreshold: 0` warns for every month with a negative net change. Whether a warning
+can be disabled is decided with the forecast warnings in #6.
 
 The maximum horizon is `MAX_FORECAST_HORIZON_MONTHS` (120 months, 10 years), so a corrupted stored value cannot make
 the forecast build an unbounded number of months.
@@ -37,10 +40,17 @@ codes with manually entered rates are out of scope
 ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752),
 which narrows the earlier "any base currency" decision).
 
-**Open question (cross-rate selection, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
-([exchange-rates.md](exchange-rates.md)), so converting tracked currencies into a non-PLN base needs cross-rates.
-How to select/compute cross-rates goes with that decision. The base currency cannot change after onboarding.
-Settings stores thresholds as typed; closing receives selected rates and stores converted totals (#84).
+**Cross-rates go via PLN.** Decided in #124
+([owner review 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)). NBP
+quotes 1 unit of a currency in PLN ([exchange-rates.md](exchange-rates.md)), so a non-PLN base gets no NBP quote of
+its own: every conversion goes through PLN, the implicit hub with `mid_PLN = 1`, as
+`toMinor = roundHalfAwayFromZero(amountMinor × midFrom × 10^(expTo − expFrom) / midTo)`. Both legs stay in one
+exact decimal calculation with **one** rounding step, half away from zero. Rounding an intermediate PLN amount or a
+pre-computed cross-rate is not allowed: double rounding can be off by a minor unit. The supported currencies above
+are PLN plus NBP table A only, so both legs always come from that one table. Choosing which quote to use is not part
+of the money arithmetic: a manual `1 X = y PLN` quote wins when it is newer than NBP, otherwise the current NBP `mid`
+is used, and core only ever receives an already chosen number. Closing receives those rates and stores the converted
+totals with them (#84, [month-closing.md](month-closing.md)); Settings stores thresholds as typed.
 
 `DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
