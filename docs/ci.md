@@ -112,15 +112,12 @@ repository owner's confirmation.
 The jobs use the same `.github/actions/setup` as the Linux jobs (pnpm from `packageManager` with the pnpm store
 cache, Node.js from `.nvmrc`). Like every workflow here they have `permissions: contents: read`, no secrets, no
 `pull_request_target`, and `actions/checkout` with `persist-credentials: false`. Fork PRs run them like the other
-jobs: the runner is a fresh GitHub-hosted VM per job, so no self-hosted machine executes untrusted code.
+jobs: the runner is a fresh GitHub-hosted VM per job, so no personal machine executes untrusted code.
 
 The runner image is pinned to `macos-26` rather than `macos-latest`, so a new macOS or default Xcode version arrives
 in a reviewed PR that bumps the label. Hosted macOS runners can queue for a few minutes at busy times; the jobs are
-not required, so they never block a merge. To pause them, disable the `macOS` workflow in the Actions tab
+not required, so they never block a merge. To pause them, disable the `macOS and iOS` workflow in the Actions tab
 (`gh workflow disable macos.yml`).
-
-No self-hosted runner is used. A self-hosted runner on the Mac Studio was tried for #148 and removed: the repository is
-public, so it would have needed fork guards and OS-level isolation on a personal machine for little gain.
 
 ## Planned gates (when `apps/mobile` exists)
 

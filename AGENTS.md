@@ -46,8 +46,8 @@ pnpm check       # all of the above
 
 CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` (Conventional
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
-The `macOS` workflow runs `macos-typecheck`, `macos-vitest` and `ios-build` on the GitHub-hosted `macos-26` runner
-(not required checks); see [docs/ci.md](docs/ci.md#macos-jobs). There is no self-hosted runner.
+The `macOS and iOS` workflow runs `macos-typecheck`, `macos-vitest` and `ios-build` on the GitHub-hosted `macos-26`
+runner (not required checks); see [docs/ci.md](docs/ci.md#macos-jobs).
 
 ## Workflow
 
