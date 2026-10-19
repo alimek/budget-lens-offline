@@ -158,6 +158,21 @@ shell variable; never print, log or commit them.
 
 If the runner is offline, the self-hosted jobs stay queued (they are not required, so merges are not blocked).
 
+### Disabling the runner
+
+Use this when the runner misbehaves, a job looks suspicious, or the Mac Studio is needed for something else:
+
+```sh
+cd ~/actions-runner
+./svc.sh stop                      # stop now; jobs stay queued on GitHub
+./svc.sh uninstall                 # optional: remove the launchd service (survives reboot otherwise)
+```
+
+To take it off the repository entirely, also run `./config.sh remove --token <removal token>` (token handling as
+above). Self-hosted jobs then stay queued until the runner is back; they are not required checks, so PRs can still
+merge. To pause only the self-hosted jobs without touching the runner, disable the `macOS (self-hosted)` workflow in
+the Actions tab (`gh workflow disable macos.yml`).
+
 ## Planned gates (when `apps/mobile` exists)
 
 `expo-doctor`, `expo-export` (matrix `ios` / `android`), `migrations` (`drizzle-kit check`), `e2e-android`
