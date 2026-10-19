@@ -9,6 +9,9 @@ import { type CurrencyCode, currencyExponent } from "./currency";
  */
 export type MinorUnits = number & { readonly __brand: "MinorUnits" };
 
+/** A valid money operation whose result leaves the safe-integer range. */
+export class MoneyOverflowError extends RangeError {}
+
 export function isMinorUnits(value: number): value is MinorUnits {
   return Number.isSafeInteger(value);
 }
@@ -34,7 +37,7 @@ export function sumMinorUnits(amounts: readonly MinorUnits[]): MinorUnits {
   for (const amount of amounts) {
     total += toMinorUnits(amount);
     if (!Number.isSafeInteger(total)) {
-      throw new RangeError("Sum exceeds the safe integer range");
+      throw new MoneyOverflowError("Sum exceeds the safe integer range");
     }
   }
   return toMinorUnits(total);
@@ -123,7 +126,7 @@ function multiplyAtScale(
     result += product < 0n ? -1n : 1n;
   }
   if (result > BigInt(Number.MAX_SAFE_INTEGER) || result < BigInt(Number.MIN_SAFE_INTEGER)) {
-    throw new RangeError("Result exceeds the safe integer range");
+    throw new MoneyOverflowError("Result exceeds the safe integer range");
   }
   return toMinorUnits(Number(result));
 }

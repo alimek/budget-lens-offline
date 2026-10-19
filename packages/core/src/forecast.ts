@@ -4,23 +4,22 @@ import {
   addMinorUnits,
   isMinorUnits,
   type MinorUnits,
+  MoneyOverflowError,
   subtractMinorUnits,
   toMinorUnits,
 } from "./money";
-import type { PaymentStatus } from "./month-closing";
+import type { ClosingItem, PaymentStatus } from "./month-closing";
 import {
   type OccurrenceOverride,
   type RejectedOverride,
   resolveOccurrences,
-  type ScheduledItem,
 } from "./occurrence-overrides";
+import { validateSchedule } from "./recurrence";
 import { MAX_FORECAST_HORIZON_MONTHS, type Settings, updateSettings } from "./settings";
-import { addMonths, isYearMonth, type YearMonth } from "./year-month";
+import { addMonths, daysInMonth, isYearMonth, type YearMonth } from "./year-month";
 
-/** Forecast-local currency requirement until the shared item model gains currency (#138). */
-export interface ForecastItem extends ScheduledItem {
-  readonly currency: CurrencyCode;
-}
+/** Shared currency-bearing item until #138 moves currency onto ScheduledItem. */
+export type ForecastItem = ClosingItem;
 
 /** Current cached candidate, quoted as 1 currency = mid PLN. Freshness is supplied by the cache (#8/#93). */
 export interface ForecastRate {
@@ -87,7 +86,6 @@ export type ForecastResult =
       readonly warnings: readonly ForecastWarning[];
       readonly ratesUsed: readonly ForecastRate[];
       readonly rejectedOverrides: readonly RejectedOverride[];
-      readonly invalidItems: readonly ForecastItem[];
     }
   | { readonly ok: false; readonly error: ForecastError };
 
@@ -158,8 +156,17 @@ function validItem(item: ForecastItem): boolean {
     isCurrencyCode(item.currency) &&
     isMinorUnits(item.amount) &&
     item.amount >= 0 &&
-    (item.itemType === "income" || item.itemType === "expense")
+    (item.itemType === "income" || item.itemType === "expense") &&
+    validateSchedule(item.schedule).length === 0
   );
+}
+
+/** Fixed-width calendar dates keep lexicographic rate selection chronological, including leap days. */
+function validRateDate(date: string): boolean {
+  if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const month = date.slice(0, 7);
+  const day = Number(date.slice(8));
+  return isYearMonth(month) && day >= 1 && day <= daysInMonth(month);
 }
 
 function inputError(input: ForecastInput): ForecastError | undefined {
@@ -177,7 +184,11 @@ function inputError(input: ForecastInput): ForecastError | undefined {
     return { code: "invalid-amount" };
   }
   const invalid = items.find((item) => !validItem(item));
-  return invalid === undefined ? undefined : { code: "invalid-item", itemId: invalid.id };
+  if (invalid !== undefined) return { code: "invalid-item", itemId: invalid.id };
+  const invalidRate = input.rates.find((rate) => !validRateDate(rate.effectiveDate));
+  return invalidRate === undefined
+    ? undefined
+    : { code: "invalid-rate", currency: invalidRate.currency };
 }
 
 /** Validate only needed legs; cache their metadata for the UI once across the horizon. */
@@ -194,7 +205,8 @@ function collectRates(
     if (rate === undefined) return { code: "missing-rate", currency };
     try {
       convertViaPln(toMinorUnits(0), currency, "PLN", () => rate.mid);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof RangeError) || error.message !== "invalid-rate") throw error;
       return { code: "invalid-rate", currency };
     }
     used.set(currency, rate);
@@ -220,13 +232,11 @@ export function forecast(input: ForecastInput): ForecastResult {
   const warnings: ForecastWarning[] = [];
   let balance = currentBalance;
   let rejectedOverrides: readonly RejectedOverride[] = [];
-  let invalidItems: readonly ForecastItem[] = [];
   try {
     for (let index = 0; index < months; index++) {
       const month = addMonths(fromMonth, index);
       const resolved = resolveOccurrences(items, overrides, month);
       rejectedOverrides = resolved.rejectedOverrides;
-      invalidItems = resolved.invalidItems;
       let income = toMinorUnits(0);
       let expenses = toMinorUnits(0);
       const remaining = resolved.occurrences.filter(
@@ -258,7 +268,7 @@ export function forecast(input: ForecastInput): ForecastResult {
       warnings.push(...warningsFor(row, index, settings));
     }
   } catch (error) {
-    if (!(error instanceof RangeError)) throw error;
+    if (!(error instanceof MoneyOverflowError)) throw error;
     return { ok: false, error: { code: "amount-overflow" } };
   }
   return {
@@ -268,6 +278,5 @@ export function forecast(input: ForecastInput): ForecastResult {
     warnings,
     ratesUsed: [...used.values()],
     rejectedOverrides,
-    invalidItems,
   };
 }

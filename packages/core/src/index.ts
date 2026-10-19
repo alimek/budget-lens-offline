@@ -17,6 +17,7 @@ export {
   convertMinor,
   convertMinorExact,
   isMinorUnits,
+  MoneyOverflowError,
   multiplyByRate,
   negateMinorUnits,
   subtractMinorUnits,

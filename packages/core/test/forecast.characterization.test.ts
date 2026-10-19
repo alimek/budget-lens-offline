@@ -2,7 +2,7 @@
  * Characterization tests for the legacy forecast (use-forecast.ts).
  * The clock is frozen to Sunday 2026-10-18 12:00 in Europe/Warsaw unless a test says otherwise.
  */
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import {
   DEFAULT_SETTINGS,
   type ForecastItem,
@@ -259,8 +259,7 @@ it("matches legacy rolling totals and warning severities at legacy thresholds", 
   const result = forecast(data);
 
   // Assert
-  expect(result.ok).toBe(true);
-  if (!result.ok) return;
+  assert(result.ok);
   expect(
     result.forecast.map(({ income, expenses, netChange, balance, totalFunds }) => [
       income,

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 import {
   DEFAULT_SETTINGS,
   type ForecastInput,
@@ -135,8 +135,7 @@ describe("forecast", () => {
     const result = forecast(data);
 
     // Assert
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    assert(result.ok);
     expect(result.warnings.map((warning) => [warning.code, warning.type])).toEqual(
       code === undefined ? [] : [[code, type]],
     );
@@ -395,16 +394,68 @@ describe("forecast", () => {
     expect(result).toEqual({ ok: false, error: { code: "amount-overflow" } });
   });
 
-  it("keeps resolver diagnostics visible to the caller", () => {
+  it.each(["zzz", "2026-02-29", "2026-04-31", "2026-13-01", "2026-10-00", "2026-1-01"])(
+    "rejects an invalid candidate date before rate selection: %s",
+    (effectiveDate) => {
+      // Arrange
+      const data = input({
+        months: 1,
+        items: [item("eur", "income", 100, "EUR")],
+        rates: [eur, { ...eur, effectiveDate, source: "manual" }],
+      });
+
+      // Act
+      const result = forecast(data);
+
+      // Assert
+      expect(result).toEqual({ ok: false, error: { code: "invalid-rate", currency: "EUR" } });
+    },
+  );
+
+  it("accepts a leap-day quote and selects it chronologically", () => {
+    // Arrange
+    const data = input({
+      months: 1,
+      items: [item("eur", "income", 100, "EUR")],
+      rates: [
+        { ...eur, effectiveDate: "2024-02-29" },
+        { ...eur, mid: "1", effectiveDate: "2024-02-28" },
+      ],
+    });
+
+    // Act
+    const result = forecast(data);
+
+    // Assert
+    expect(result).toMatchObject({
+      ok: true,
+      forecast: [{ income: 437 }],
+      ratesUsed: [{ effectiveDate: "2024-02-29" }],
+    });
+  });
+
+  it.each([
+    {
+      ...item("bad", "income", 10),
+      schedule: { kind: "recurring" as const, intervalMonths: 0, anchor: START },
+    },
+    item("bad", "income", -1),
+  ])("rejects invalid item amounts and schedules consistently", (invalidItem) => {
+    // Arrange
+    const data = input({ items: [invalidItem] });
+
+    // Act
+    const result = forecast(data);
+
+    // Assert
+    expect(result).toEqual({ ok: false, error: { code: "invalid-item", itemId: "bad" } });
+  });
+
+  it("keeps rejected override diagnostics visible to the caller", () => {
     // Arrange
     const data = input({
       months: 2,
-      items: [
-        {
-          ...item("bad", "income", 10),
-          schedule: { kind: "recurring", intervalMonths: 0, anchor: START },
-        },
-      ],
+      items: [item("bad", "income", 10)],
       overrides: [
         { id: "bad", itemId: "bad", itemType: "income", month: START, amount: money(-1) },
       ],
@@ -416,9 +467,8 @@ describe("forecast", () => {
     // Assert
     expect(result).toMatchObject({
       ok: true,
-      invalidItems: data.items,
       rejectedOverrides: [{ errors: ["invalid-amount"] }],
-      forecast: [{ income: 0 }, { income: 0 }],
+      forecast: [{ income: 10 }, { income: 10 }],
     });
   });
 });

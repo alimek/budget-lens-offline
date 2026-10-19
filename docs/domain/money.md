@@ -19,10 +19,10 @@ currency fields as `CurrencyCode` (#126) and rejects other codes with `unsupport
   non-integers, `NaN`, `±Infinity` and values outside the safe integer range; normalizes `-0` to `0`.
 - `isMinorUnits(value)` – type guard (`Number.isSafeInteger`).
 - `sumMinorUnits(amounts)` – sums without mutating the input; validates every amount and checks the safe range
-  after **each** addition, so an intermediate overflow/underflow throws `RangeError` instead of returning a wrong
+  after **each** addition, so an intermediate overflow/underflow throws `MoneyOverflowError` instead of returning a wrong
   result.
 - `addMinorUnits(a, b)`, `subtractMinorUnits(a, b)`, `negateMinorUnits(amount)` – exact; a result outside the safe
-  range throws `RangeError`.
+  range throws `MoneyOverflowError`.
 - `multiplyByRate(amount, rate)` – multiplies by a rate (e.g. an NBP `mid`, per 1 unit of the currency) and rounds
   to whole minor units **half away from zero** (0.5 → 1, −0.5 → −1). The rate is taken as the decimal it prints
   as (`String(rate)`) and the product is computed with `bigint`, so `100 × 0.285` is exactly 28.5 → 29 (a float
@@ -78,6 +78,9 @@ returns
   need the planned `@formatjs/intl-pluralrules` polyfill (#37/#77); this change does not add it.
 
 Parsing remains independent of Intl and unchanged. Never pass plain numbers where `MinorUnits` is expected.
+
+`MoneyOverflowError` is a `RangeError` subclass for arithmetic/conversion results outside the safe-integer range.
+Invalid inputs still throw ordinary `RangeError`, allowing forecast to report overflow without masking unrelated failures.
 
 ### Currency conversion (#84)
 

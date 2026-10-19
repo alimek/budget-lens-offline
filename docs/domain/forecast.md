@@ -6,19 +6,18 @@ Status: **implemented** in `packages/core/src/forecast.ts` (#6), with exact curr
 ## Input and output
 
 `forecast({ items, overrides, paymentStatuses, currentBalance, totalSavings, fromMonth, months?, settings, rates })`
-returns `{ ok: true, currency, forecast, warnings, ratesUsed, rejectedOverrides, invalidItems }`, or
+returns `{ ok: true, currency, forecast, warnings, ratesUsed, rejectedOverrides }`, or
 `{ ok: false, error }`. A failure returns no partial totals.
 
 - `fromMonth` is the **active** month, passed explicitly. This API projects open and future months; it does not read
   or recalculate closed history. `months` includes the active month, defaults to `Settings.forecastHorizonMonths`
   and must be an integer from 1 to `MAX_FORECAST_HORIZON_MONTHS`, within the supported calendar range.
-- Each `ForecastItem` extends `ScheduledItem` with required `currency: CurrencyCode`. This local requirement avoids
-  changing the shared item model before #138. A resolved occurrence retains its currency through `occurrence.item`;
+- Each `ForecastItem` is an alias of `ClosingItem`, including required `currency: CurrencyCode`, until #138
+  moves currency onto the shared item model. A resolved occurrence retains its currency through `occurrence.item`;
   its override amount is in that same currency. Items must have valid identifiers and unique `(itemType, id)` keys
   on load; payment statuses must be unique per `(itemType, itemId, month)`.
 - Each month uses `resolveOccurrences`, which enumerates schedules through `occurrencesInRange`, replaces overridden
-  amounts and removes skipped occurrences. Rejected overrides and invalid schedules are returned once, as in the
-  resolver; ignored orphaned overrides can be found with `findOrphanedOverrides`.
+  amounts and removes skipped occurrences. Rejected overrides are returned once, as in the resolver; ignored orphaned overrides can be found with `findOrphanedOverrides`.
 - Payment statuses are `{ itemType, itemId, month, settled }`; `settled: true` means paid expense or received income.
   Only active-month completed occurrences are excluded. Future-month statuses are ignored. `currentBalance` already
   includes completed payments, so they must not be applied again. An override keeps its original item's payment key.
@@ -38,7 +37,9 @@ requires one rounding through PLN and current rates only.
 
 `rates` contains current cached candidates, at most one per currency and source (`nbp` or `manual`), with
 `{ currency, mid, effectiveDate, source, stale }`. `mid` is a positive decimal string, PLN per **one major unit**.
-The cache validates dates (`YYYY-MM-DD`) and metadata before calling core. The forecast selects the newer
+The forecast validates every candidate date as a real `YYYY-MM-DD` calendar date, including leap years, before
+selecting any rates. A malformed date fails with `invalid-rate`, even on an unused candidate. The cache validates
+source/freshness metadata before calling core. The forecast selects the newer
 `effectiveDate` for each currency; on a tie it prefers manual, following #39's default. No rate history lookup.
 
 Each needed foreign occurrence is converted **after overrides and payment filtering**, with `convertViaPln`
@@ -70,11 +71,13 @@ change produces an outflow warning. Critical and outflow warnings can coexist.
 
 Errors are codes, never UI strings: `invalid-settings`, `invalid-month`, `invalid-horizon`, `invalid-amount`,
 `invalid-item` (with `itemId`), `missing-rate` / `invalid-rate` (with `currency`), and `amount-overflow`.
-Invalid schedules and stored overrides retain the resolver's nonfatal diagnostics.
+Invalid item amounts, currencies, types and schedules all fail with `invalid-item`, without partial totals.
+Rejected stored overrides retain the resolver's nonfatal diagnostics. Only `MoneyOverflowError` from the shared
+money arithmetic maps to `amount-overflow`; other unexpected errors propagate.
 
 ## Month closing and later integration
 
-This implementation shares money arithmetic and the `PaymentStatus` type with merged #84 / PR #137.
+This implementation shares money arithmetic, `ClosingItem` and the `PaymentStatus` type with merged #84 / PR #137.
 Forecast does not call month closing; both use `settled` for paid expenses and received incomes.
 After closing, the caller can start the next forecast with the new active month and its current balance.
 Closed-month charts must read stored totals and per-occurrence FX snapshots from #84, never this live-rate forecast.

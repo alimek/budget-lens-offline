@@ -51,7 +51,7 @@ in base currency. See [money.md](money.md) for the shared conversion APIs.
 The final [#124 owner decisions](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263755326)
 supersede the early research: table A only, current rates only, fetch once a day on app open, freshness based on
 24 hours since the last successful fetch. Manual rates are PLN-quoted and win when newer; the forecast uses the
-newer effective date and prefers manual on a tie. Cache inputs must validate date/source metadata. Both conversion
+newer effective date and prefers manual on a tie. Forecast validates candidate calendar dates before selection; the cache validates source metadata. Both conversion
 legs may have different dates; the forecast reports the actual legs with their supplied stale flags. The UI can
 show the older effective date and flag either stale leg.
 

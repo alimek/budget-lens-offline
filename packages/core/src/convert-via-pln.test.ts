@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type CurrencyCode, convertViaPln, toMinorUnits } from "./index";
+import { type CurrencyCode, convertViaPln, MoneyOverflowError, toMinorUnits } from "./index";
 
 const rates: Partial<Record<CurrencyCode, string>> = {
   EUR: "4.3661",
@@ -64,6 +64,6 @@ describe("convertViaPln", () => {
     const action = () => convertViaPln(source, "EUR", "PLN", () => "2");
 
     // Assert
-    expect(action).toThrow("Result exceeds the safe integer range");
+    expect(action).toThrow(MoneyOverflowError);
   });
 });
