@@ -39,6 +39,16 @@ export interface Settings {
 /** Upper bound of `rateMaxAgeBusinessDays` (four working weeks), so a corrupted value cannot hide stale rates forever. */
 export const MAX_RATE_MAX_AGE_BUSINESS_DAYS = 20;
 
+/** A freshness threshold: an integer number of business days from 1 to {@link MAX_RATE_MAX_AGE_BUSINESS_DAYS}. */
+export function isValidRateMaxAgeBusinessDays(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 1 &&
+    value <= MAX_RATE_MAX_AGE_BUSINESS_DAYS
+  );
+}
+
 /** Upper bound of `forecastHorizonMonths` (10 years), so a corrupted value cannot make the forecast hang. */
 export const MAX_FORECAST_HORIZON_MONTHS = 120;
 
@@ -138,12 +148,7 @@ const FIELD_CHECKS = {
   forecastHorizonMonths: ({ forecastHorizonMonths }) =>
     isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
   rateMaxAgeBusinessDays: ({ rateMaxAgeBusinessDays }) =>
-    typeof rateMaxAgeBusinessDays === "number" &&
-    Number.isSafeInteger(rateMaxAgeBusinessDays) &&
-    rateMaxAgeBusinessDays >= 1 &&
-    rateMaxAgeBusinessDays <= MAX_RATE_MAX_AGE_BUSINESS_DAYS
-      ? undefined
-      : "invalid-rate-max-age",
+    isValidRateMaxAgeBusinessDays(rateMaxAgeBusinessDays) ? undefined : "invalid-rate-max-age",
 } satisfies Record<keyof Settings, Check>;
 
 function validate(settings: UntrustedSettings): SettingsError[] {

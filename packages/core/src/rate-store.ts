@@ -1,5 +1,7 @@
 import { type CurrencyCode, isCurrencyCode } from "./currency";
 import {
+  assertFreshnessThreshold,
+  assertRateDate,
   isRateStale,
   isStoredRate,
   type RateResult,
@@ -41,19 +43,26 @@ export interface CurrentRate {
   readonly stale: boolean;
 }
 
-/** Read only: app-open refresh is separate. Old rates remain available without a network connection. */
+/**
+ * Read only: app-open refresh is separate. Old rates remain available without a network connection. `today` is
+ * the Europe/Warsaw date (`warsawDate(new Date())`), the calendar NBP's `effectiveDate` uses.
+ */
 export async function getRate(
   currency: CurrencyCode,
-  options: { readonly store: RateStore; readonly now: string; readonly maxAgeBusinessDays: number },
+  options: {
+    readonly store: RateStore;
+    readonly today: string;
+    readonly maxAgeBusinessDays: number;
+  },
 ): Promise<RateResult<CurrentRate>> {
-  const { store, now, maxAgeBusinessDays } = options;
-  // Validate options even for PLN or a missing quote.
-  isRateStale(now, now, maxAgeBusinessDays);
+  const { store, today, maxAgeBusinessDays } = options;
+  assertRateDate(today);
+  assertFreshnessThreshold(maxAgeBusinessDays);
   if (!isCurrencyCode(currency)) return { ok: false, error: { code: "unsupported-currency" } };
   if (currency === "PLN") {
     return {
       ok: true,
-      value: { currency, mid: "1", effectiveDate: now, source: "implicit", stale: false },
+      value: { currency, mid: "1", effectiveDate: today, source: "implicit", stale: false },
     };
   }
   let rates: readonly StoredRate[];
@@ -77,7 +86,7 @@ export async function getRate(
       mid: selected.mid,
       effectiveDate: selected.effectiveDate,
       source: selected.source,
-      stale: isRateStale(selected.effectiveDate, now, maxAgeBusinessDays),
+      stale: isRateStale(selected.effectiveDate, today, maxAgeBusinessDays),
     },
   };
 }

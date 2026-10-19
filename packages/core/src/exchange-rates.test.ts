@@ -1,9 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import nbpResponses from "../test/fixtures/nbp-responses.json";
-import type { NbpFetch, RateStore, StoredRate } from "./index";
+import type { AbortSignalLike, NbpFetch, RateStore, StoredRate } from "./index";
 import {
   businessDaysBetween,
-  convertMinor,
   convertMinorExact,
   createMemoryRateStore,
   DEFAULT_SETTINGS,
@@ -16,6 +15,7 @@ import {
   requiredRateCurrencies,
   selectCurrentRates,
   toMinorUnits,
+  warsawDate,
 } from "./index";
 
 const NOW = Date.parse("2026-10-19T12:00:00Z");
@@ -36,6 +36,10 @@ function tableResponse(rates: readonly { code: string; mid: unknown }[]) {
   return [{ table: "A", no: "202/A/NBP/2026", effectiveDate: "2026-10-16", rates }];
 }
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("NBP quotes", () => {
   it("uses recorded JPY mid per one yen and values yen in grosze with existing money arithmetic", async () => {
     // Arrange
@@ -44,7 +48,7 @@ describe("NBP quotes", () => {
     // Act
     const result = await fetchNbpRate("JPY", fetchFn);
     const grosze = result.ok
-      ? convertMinor(toMinorUnits(10_000), Number(result.value.mid), "JPY", "PLN")
+      ? convertMinorExact(toMinorUnits(10_000), result.value.mid, "1", "JPY", "PLN")
       : undefined;
 
     // Assert
@@ -55,6 +59,7 @@ describe("NBP quotes", () => {
     expect(grosze).toBe(toMinorUnits(24_574));
     expect(fetchFn).toHaveBeenCalledWith(
       "https://api.nbp.pl/api/exchangerates/rates/A/JPY/?format=json",
+      { signal: expect.objectContaining({ aborted: false }) },
     );
   });
 
@@ -109,19 +114,26 @@ describe("NBP quotes", () => {
     expect(result).toEqual({ ok: false, error: { code: "network-error", currency: "USD" } });
   });
 
-  it("returns a network error when the request never resolves, after the default timeout", async () => {
+  it("aborts a request that never resolves after the default timeout and leaves no timer", async () => {
     // Arrange
     vi.useFakeTimers();
-    const fetchFn: NbpFetch = vi.fn(() => new Promise<never>(() => {}));
+    const signals: AbortSignalLike[] = [];
+    const fetchFn: NbpFetch = (_url, { signal }) => {
+      signals.push(signal);
+      return new Promise<never>(() => {});
+    };
 
     // Act
     const pending = fetchNbpRates(["USD", "EUR"], fetchFn);
-    await vi.advanceTimersByTimeAsync(NBP_TIMEOUT_MS);
+    await vi.advanceTimersByTimeAsync(NBP_TIMEOUT_MS - 1);
+    const abortedEarly = signals.map((signal) => signal.aborted);
+    await vi.advanceTimersByTimeAsync(1);
     const results = await pending;
-    vi.useRealTimers();
 
     // Assert
-    expect(NBP_TIMEOUT_MS).toBe(10_000);
+    expect(abortedEarly).toEqual([false]);
+    expect(signals.map((signal) => signal.aborted)).toEqual([true]);
+    expect(vi.getTimerCount()).toBe(0);
     expect(results.get("USD")).toEqual({
       ok: false,
       error: { code: "network-error", currency: "USD" },
@@ -132,19 +144,50 @@ describe("NBP quotes", () => {
     });
   });
 
-  it("applies a custom timeout to a response body that never arrives", async () => {
+  it("aborts a response body that never arrives with the same signal", async () => {
     // Arrange
-    const fetchFn: NbpFetch = async () => ({
-      ok: true,
-      status: 200,
-      json: () => new Promise<never>(() => {}),
-    });
+    vi.useFakeTimers();
+    let requestSignal: AbortSignalLike | undefined;
+    const fetchFn: NbpFetch = async (_url, { signal }) => {
+      requestSignal = signal;
+      return { ok: true, status: 200, json: () => new Promise<never>(() => {}) };
+    };
 
     // Act
-    const result = await fetchNbpRate("USD", fetchFn, { timeoutMs: 5 });
+    const pending = fetchNbpRate("USD", fetchFn, { timeoutMs: 5 });
+    await vi.advanceTimersByTimeAsync(5);
+    const result = await pending;
+
+    // Assert
+    expect(requestSignal?.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(result).toEqual({ ok: false, error: { code: "network-error", currency: "USD" } });
+  });
+
+  it("maps a fetch rejected with an AbortError to a network error", async () => {
+    // Arrange
+    const fetchFn: NbpFetch = async () => {
+      throw Object.assign(new Error("The operation was aborted."), { name: "AbortError" });
+    };
+
+    // Act
+    const result = await fetchNbpRate("USD", fetchFn);
 
     // Assert
     expect(result).toEqual({ ok: false, error: { code: "network-error", currency: "USD" } });
+  });
+
+  it("clears the timer after a successful request", async () => {
+    // Arrange
+    vi.useFakeTimers();
+    const fetchFn = fetchReturning(nbpResponses.usd);
+
+    // Act
+    const result = await fetchNbpRate("USD", fetchFn);
+
+    // Assert
+    expect(result.ok).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("rejects unreadable JSON without leaking a transport exception", async () => {
@@ -185,6 +228,7 @@ describe("NBP quotes", () => {
     expect(results.has("PLN")).toBe(false);
     expect(fetchFn).toHaveBeenCalledExactlyOnceWith(
       "https://api.nbp.pl/api/exchangerates/tables/A/?format=json",
+      { signal: expect.objectContaining({ aborted: false }) },
     );
   });
 
@@ -267,12 +311,12 @@ describe("current rate lookup", () => {
       // Act
       const lenient = await getRate("USD", {
         store,
-        now: "2026-10-19",
+        today: "2026-10-19",
         maxAgeBusinessDays: settings.rateMaxAgeBusinessDays,
       });
       const byDefault = await getRate("USD", {
         store,
-        now: "2026-10-19",
+        today: "2026-10-19",
         maxAgeBusinessDays: DEFAULT_SETTINGS.rateMaxAgeBusinessDays,
       });
 
@@ -295,12 +339,11 @@ describe("current rate lookup", () => {
       // Act
       const result = await getRate("USD", {
         store,
-        now: "2026-10-19",
+        today: "2026-10-19",
         maxAgeBusinessDays: DEFAULT_SETTINGS.rateMaxAgeBusinessDays,
       });
 
       // Assert
-      expect(DEFAULT_SETTINGS.rateMaxAgeBusinessDays).toBe(2);
       expect(result).toMatchObject({
         ok: true,
         value: { mid: "3.6512", source, effectiveDate: "2026-10-16", stale: false },
@@ -313,7 +356,7 @@ describe("current rate lookup", () => {
     const store = createMemoryRateStore();
 
     // Act
-    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
+    const result = await getRate("USD", { store, today: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(result).toEqual({ ok: false, error: { code: "missing-rate", currency: "USD" } });
@@ -327,7 +370,7 @@ describe("current rate lookup", () => {
     };
 
     // Act
-    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
+    const result = await getRate("USD", { store, today: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(result).toEqual({ ok: false, error: { code: "invalid-rate", currency: "USD" } });
@@ -344,7 +387,7 @@ describe("current rate lookup", () => {
     };
 
     // Act
-    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
+    const result = await getRate("USD", { store, today: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(result).toMatchObject({
@@ -417,6 +460,37 @@ describe("current rate lookup", () => {
   });
 });
 
+describe("Warsaw date", () => {
+  it.each([
+    ["the last second of a CEST day", "2026-10-18T21:59:59Z", "2026-10-18"],
+    ["Warsaw midnight (CEST), still the previous day in UTC", "2026-10-18T22:00:00Z", "2026-10-19"],
+    ["UTC midnight, 02:00 in Warsaw", "2026-10-19T00:00:00Z", "2026-10-19"],
+    ["the last second of a CET day", "2026-01-15T22:59:59Z", "2026-01-15"],
+    ["Warsaw midnight (CET)", "2026-01-15T23:00:00Z", "2026-01-16"],
+    ["the evening before DST starts", "2026-03-28T22:59:59Z", "2026-03-28"],
+    ["midnight on the DST start day (CET)", "2026-03-28T23:00:00Z", "2026-03-29"],
+    ["the last second of the DST start day (CEST)", "2026-03-29T21:59:59Z", "2026-03-29"],
+    ["midnight after DST starts (CEST)", "2026-03-29T22:00:00Z", "2026-03-30"],
+    ["02:59:59 CEST, just before DST ends", "2026-10-25T00:59:59Z", "2026-10-25"],
+    ["the last second of the DST end day (CET)", "2026-10-25T22:59:59Z", "2026-10-25"],
+    ["midnight after DST ends (CET)", "2026-10-25T23:00:00Z", "2026-10-26"],
+  ])("returns Warsaw's calendar date at %s", (_case, instant, expected) => {
+    // Act
+    const date = warsawDate(new Date(instant));
+
+    // Assert
+    expect(date).toBe(expected);
+  });
+
+  it("rejects an invalid instant", () => {
+    // Act
+    const check = () => warsawDate(new Date(Number.NaN));
+
+    // Assert
+    expect(check).toThrow(RangeError);
+  });
+});
+
 describe("app-open rate refresh", () => {
   it("gets currencies from Settings, items and savings, including the non-PLN base", () => {
     // Arrange
@@ -439,12 +513,11 @@ describe("app-open rate refresh", () => {
     await store.set(quote({ effectiveDate: "2026-10-15", fetchedAt: NOW - 86_400_000 }));
     await store.set(quote({ source: "manual", mid: "4" }));
     const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
-    const today = "2026-10-19";
 
     // Act
-    const results = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW, today });
-    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 3_599_999, today });
-    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 3_600_000, today });
+    const results = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW });
+    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 3_599_999 });
+    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 3_600_000 });
 
     // Assert
     expect(fetchFn).toHaveBeenCalledTimes(2);
@@ -453,18 +526,20 @@ describe("app-open rate refresh", () => {
   });
 
   it.each([
-    ["Saturday", "2026-10-17"],
-    ["Sunday", "2026-10-18"],
+    ["Saturday", "2026-10-17T12:00:00+02:00"],
+    ["Sunday", "2026-10-18T12:00:00+02:00"],
+    ["Sunday 23:30 in Warsaw (already Monday east of Warsaw)", "2026-10-18T23:30:00+02:00"],
   ])(
     "does not refetch Friday's table on %s, however long ago it was fetched",
-    async (_day, today) => {
+    async (_day, instant) => {
+      const now = Date.parse(instant);
       // Arrange
       const store = createMemoryRateStore();
-      await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: NOW - 7 * 86_400_000 }));
+      await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: now - 7 * 86_400_000 }));
       const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
 
       // Act
-      const results = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW, today });
+      const results = await refreshNbpRates(["USD"], { store, fetchFn, now });
 
       // Assert
       expect(fetchFn).not.toHaveBeenCalled();
@@ -493,7 +568,6 @@ describe("app-open rate refresh", () => {
       store,
       fetchFn,
       now: mondayMorning + 6 * 3_600_000,
-      today: "2026-10-19",
     });
 
     // Assert
@@ -517,11 +591,10 @@ describe("app-open rate refresh", () => {
       store,
       fetchFn,
       now: mondayMorning,
-      today: "2026-10-19",
     });
     const lookup = await getRate("USD", {
       store,
-      now: "2026-10-19",
+      today: "2026-10-19",
       maxAgeBusinessDays: DEFAULT_SETTINGS.rateMaxAgeBusinessDays,
     });
 
@@ -531,6 +604,37 @@ describe("app-open rate refresh", () => {
       ok: true,
       value: { mid: "3.9", effectiveDate: "2026-10-16", stale: false },
     });
+  });
+
+  it("refetches Friday's table from Monday 00:30 in Warsaw, while it is still Sunday in UTC", async () => {
+    // Arrange: 2026-10-18T22:30Z is Monday 00:30 in Warsaw.
+    const now = Date.parse("2026-10-18T22:30:00Z");
+    const store = createMemoryRateStore();
+    await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: now - 2 * 86_400_000 }));
+    const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
+
+    // Act
+    await refreshNbpRates(["USD"], { store, fetchFn, now });
+
+    // Assert
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("never replaces a newer cached table with an older NBP response, but records the fetch", async () => {
+    // Arrange: Monday's table is cached; on Tuesday a stale proxy still serves Friday's table.
+    const now = Date.parse("2026-10-20T12:00:00+02:00");
+    const cached = quote({ mid: "3.7", effectiveDate: "2026-10-19", fetchedAt: now - 86_400_000 });
+    const store = createMemoryRateStore();
+    await store.set(cached);
+    const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
+
+    // Act
+    const results = await refreshNbpRates(["USD"], { store, fetchFn, now });
+
+    // Assert
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(results.get("USD")).toEqual({ ok: true, value: { ...cached, fetchedAt: now } });
+    expect(await store.get("USD")).toEqual([{ ...cached, fetchedAt: now }]);
   });
 
   it("keeps the last rate after a failed refresh and returns it stale offline", async () => {
@@ -547,9 +651,8 @@ describe("app-open rate refresh", () => {
       store,
       fetchFn,
       now: NOW,
-      today: "2026-10-19",
     });
-    const lookup = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
+    const lookup = await getRate("USD", { store, today: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(refresh.get("USD")).toMatchObject({ ok: false, error: { code: "network-error" } });
@@ -579,7 +682,6 @@ describe("app-open rate refresh", () => {
       store,
       fetchFn,
       now: NOW,
-      today: "2026-10-19",
     });
 
     // Assert

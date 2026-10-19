@@ -7,8 +7,19 @@ import {
   type RateResult,
 } from "./exchange-rates";
 
-/** Structural fetch contract: works without DOM, Node or Expo types. No global fetch is read. */
-export type NbpFetch = (url: string) => Promise<{
+/** Structural `AbortSignal`: core keeps `types: []`, so DOM/Node types are not available. */
+export interface AbortSignalLike {
+  readonly aborted: boolean;
+}
+
+/**
+ * Structural fetch contract: works without DOM, Node or Expo types. No global fetch is read. The global `fetch` of
+ * RN/Hermes and Node fits as is; it must honour `signal`, which is aborted when the request times out.
+ */
+export type NbpFetch = (
+  url: string,
+  init: { readonly signal: AbortSignalLike },
+) => Promise<{
   readonly ok: boolean;
   readonly status: number;
   json(): Promise<unknown>;
@@ -20,28 +31,18 @@ const API = "https://api.nbp.pl/api/exchangerates";
 export const NBP_TIMEOUT_MS = 10_000;
 
 export interface NbpRequestOptions {
-  /** Milliseconds before the request is abandoned and reported as `network-error`. */
+  /** Milliseconds before the request (response and body) is aborted and reported as `network-error`. */
   readonly timeoutMs?: number;
 }
 
-/** Every supported runtime (Hermes, Node) has timers; core keeps `types: []`, so they are typed structurally. */
-const timers = globalThis as unknown as {
+/** Timers and `AbortController` exist in every supported runtime (Hermes, Node); typed structurally. */
+const runtime = globalThis as unknown as {
   setTimeout(callback: () => void, ms: number): unknown;
   clearTimeout(handle: unknown): void;
+  AbortController: new () => { readonly signal: AbortSignalLike; abort(): void };
 };
 
-/** Resolves to `undefined` after `ms`; `fetchFn` has no abort contract, so a timed-out request is only abandoned. */
-async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
-  let handle: unknown;
-  const timeout = new Promise<undefined>((resolve) => {
-    handle = timers.setTimeout(() => resolve(undefined), ms);
-  });
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    timers.clearTimeout(handle);
-  }
-}
+const TIMED_OUT = Symbol("timed-out");
 
 function object(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -57,32 +58,20 @@ function timeoutOf(options: NbpRequestOptions): number {
 
 const NETWORK_ERROR: RateResult<never> = { ok: false, error: { code: "network-error" } };
 
-/** A rejected or timed-out body read; parsed JSON is never `undefined`, so `undefined` means the timeout. */
-async function readBody(
-  response: Awaited<ReturnType<NbpFetch>>,
-  timeoutMs: number,
-): Promise<RateResult<unknown>> {
-  try {
-    const body = await withTimeout(response.json(), timeoutMs);
-    return body === undefined ? NETWORK_ERROR : { ok: true, value: body };
-  } catch {
-    return { ok: false, error: { code: "invalid-response" } };
-  }
-}
-
-async function request(
+/** Response and body share one signal and one deadline; an abort or the deadline is a `network-error`. */
+async function exchange(
   url: string,
   fetchFn: NbpFetch,
-  options: NbpRequestOptions,
+  signal: AbortSignalLike,
+  deadline: Promise<typeof TIMED_OUT>,
 ): Promise<RateResult<unknown>> {
-  const timeoutMs = timeoutOf(options);
-  let response: Awaited<ReturnType<NbpFetch>> | undefined;
+  let response: Awaited<ReturnType<NbpFetch>> | typeof TIMED_OUT;
   try {
-    response = await withTimeout(fetchFn(url), timeoutMs);
+    response = await Promise.race([fetchFn(url, { signal }), deadline]);
   } catch {
     return NETWORK_ERROR;
   }
-  if (response === undefined) return NETWORK_ERROR;
+  if (response === TIMED_OUT) return NETWORK_ERROR;
   if (!response.ok) {
     return {
       ok: false,
@@ -92,7 +81,35 @@ async function request(
       },
     };
   }
-  return readBody(response, timeoutMs);
+  try {
+    const body = await Promise.race([response.json(), deadline]);
+    return body === TIMED_OUT ? NETWORK_ERROR : { ok: true, value: body };
+  } catch {
+    // An aborted body read rejects with an `AbortError`; anything else is unreadable JSON.
+    return signal.aborted ? NETWORK_ERROR : { ok: false, error: { code: "invalid-response" } };
+  }
+}
+
+/** One `AbortController` and one timer per request; the timer is always cleared. */
+async function request(
+  url: string,
+  fetchFn: NbpFetch,
+  options: NbpRequestOptions,
+): Promise<RateResult<unknown>> {
+  const timeoutMs = timeoutOf(options);
+  const controller = new runtime.AbortController();
+  let handle: unknown;
+  const deadline = new Promise<typeof TIMED_OUT>((resolve) => {
+    handle = runtime.setTimeout(() => {
+      controller.abort();
+      resolve(TIMED_OUT);
+    }, timeoutMs);
+  });
+  try {
+    return await exchange(url, fetchFn, controller.signal, deadline);
+  } finally {
+    runtime.clearTimeout(handle);
+  }
 }
 
 /** Preserve the API's printed decimal exactly, including small rates printed with an exponent. */

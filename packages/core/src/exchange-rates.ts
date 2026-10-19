@@ -1,5 +1,5 @@
 import { type CurrencyCode, isCurrencyCode } from "./currency";
-import type { Settings } from "./settings";
+import { isValidRateMaxAgeBusinessDays, type Settings } from "./settings";
 import { daysInMonth, isYearMonth } from "./year-month";
 
 export type RateSource = "nbp" | "manual";
@@ -41,6 +41,35 @@ export function isRateDate(value: unknown): value is string {
   const month = value.slice(0, 7);
   const day = Number(value.slice(8));
   return isYearMonth(month) && day >= 1 && day <= daysInMonth(month);
+}
+
+/** Throws `RangeError("invalid-rate-date")` unless `value` is a valid `YYYY-MM-DD` calendar date. */
+export function assertRateDate(value: unknown): asserts value is string {
+  if (!isRateDate(value)) throw new RangeError("invalid-rate-date");
+}
+
+/** Throws `RangeError("invalid-rate-freshness")` unless `value` is a valid `rateMaxAgeBusinessDays`. */
+export function assertFreshnessThreshold(value: unknown): asserts value is number {
+  if (!isValidRateMaxAgeBusinessDays(value)) throw new RangeError("invalid-rate-freshness");
+}
+
+const WARSAW_DATE = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Warsaw",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/**
+ * The Europe/Warsaw calendar date (`YYYY-MM-DD`) of an instant. NBP's `effectiveDate` is a Warsaw date, so
+ * freshness and the refresh gate compare it with Warsaw's today, whatever the device time zone (including DST).
+ */
+export function warsawDate(instant: Date): string {
+  if (Number.isNaN(instant.getTime())) throw new RangeError("invalid-instant");
+  const parts = new Map(WARSAW_DATE.formatToParts(instant).map((part) => [part.type, part.value]));
+  const date = `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
+  assertRateDate(date);
+  return date;
 }
 
 export function isRateQuote(value: unknown): value is RateQuote {
@@ -128,7 +157,8 @@ function countBusinessDays(from: number, to: number): number {
  * Holidays are not modelled (MVP). Returns 0 when `to` is not after `from`. Pure: no clock, no host timezone.
  */
 export function businessDaysBetween(from: string, to: string): number {
-  if (!isRateDate(from) || !isRateDate(to)) throw new RangeError("invalid-rate-date");
+  assertRateDate(from);
+  assertRateDate(to);
   return countBusinessDays(toDayNumber(from) + 1, toDayNumber(to));
 }
 
@@ -141,7 +171,8 @@ function isBusinessDay(day: number): boolean {
  * newer NBP table may have been published since. Used by the app-open refresh gate.
  */
 export function isNewerTableDue(effectiveDate: string, today: string): boolean {
-  if (!isRateDate(effectiveDate) || !isRateDate(today)) throw new RangeError("invalid-rate-date");
+  assertRateDate(effectiveDate);
+  assertRateDate(today);
   const todayNumber = toDayNumber(today);
   return (
     businessDaysBetween(effectiveDate, today) > 0 ||
@@ -152,20 +183,13 @@ export function isNewerTableDue(effectiveDate: string, today: string): boolean {
 /**
  * A quote is stale when at least `maxAgeBusinessDays` business days (Mon–Fri, no holidays) lie strictly between
  * its effective date and today, i.e. when the effective date is older than `maxAgeBusinessDays` business days
- * before today. Applies to NBP and manual quotes alike; the caller passes today's local YYYY-MM-DD, never a clock.
+ * before today. Applies to NBP and manual quotes alike; `today` is the Warsaw date ({@link warsawDate}), never a clock.
  */
 export function isRateStale(
   effectiveDate: string,
   today: string,
   maxAgeBusinessDays: number,
 ): boolean {
-  if (
-    !isRateDate(effectiveDate) ||
-    !isRateDate(today) ||
-    !Number.isSafeInteger(maxAgeBusinessDays) ||
-    maxAgeBusinessDays <= 0
-  ) {
-    throw new RangeError("invalid-rate-freshness");
-  }
+  assertFreshnessThreshold(maxAgeBusinessDays);
   return businessDaysBetween(effectiveDate, today) >= maxAgeBusinessDays;
 }

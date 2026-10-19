@@ -6,6 +6,7 @@ export {
   isRateStale,
   requiredRateCurrencies,
   selectCurrentRates,
+  warsawDate,
 } from "./exchange-rates";
 export type {
   ForecastError,
@@ -54,7 +55,7 @@ export {
   updateBalance,
   validateMonthEditable,
 } from "./month-closing";
-export type { NbpFetch, NbpRequestOptions } from "./nbp-client";
+export type { AbortSignalLike, NbpFetch, NbpRequestOptions } from "./nbp-client";
 export { fetchNbpRate, fetchNbpRates, NBP_TIMEOUT_MS } from "./nbp-client";
 export type {
   ItemType,
@@ -98,6 +99,7 @@ export type {
 } from "./settings";
 export {
   DEFAULT_SETTINGS,
+  isValidRateMaxAgeBusinessDays,
   loadSettings,
   MAX_FORECAST_HORIZON_MONTHS,
   MAX_RATE_MAX_AGE_BUSINESS_DAYS,
