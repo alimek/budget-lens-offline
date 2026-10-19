@@ -17,7 +17,10 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
 
-Thresholds are in minor units of `baseCurrency`. Changing the currency does not convert them. A threshold of 0
+Thresholds are in minor units of `baseCurrency`. The base currency is chosen in onboarding and locked when
+onboarding is confirmed ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
+The settings value model has no onboarding lifecycle state; the app/persistence must reject later base-currency
+changes. Preparing settings during onboarding does not convert thresholds. A threshold of 0
 does not turn a warning off: `lowBalanceThreshold: 0` warns only for a balance below 0, and
 `largeExpenseThreshold: 0` warns for every month with a negative net change. Whether a warning can be disabled is
 decided with the forecast warnings in #6.
@@ -34,10 +37,10 @@ codes with manually entered rates are out of scope
 ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752),
 which narrows the earlier "any base currency" decision).
 
-**Open question (cross-rates, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
+**Open question (cross-rate selection, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
 ([exchange-rates.md](exchange-rates.md)), so converting tracked currencies into a non-PLN base needs cross-rates.
-How to compute them, and what happens to the thresholds when the base currency changes (converted or kept as typed),
-go with that decision. Until then, Settings stores the thresholds as typed and does not convert them.
+How to select/compute cross-rates goes with that decision. The base currency cannot change after onboarding.
+Settings stores thresholds as typed; closing receives selected rates and stores converted totals (#84).
 
 `DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
@@ -45,7 +48,7 @@ web app defaulted to Polish (the offline app follows the device language, epic #
 
 ## Renaming `defaultCurrency` to `baseCurrency` (#39, #126)
 
-The legacy setting is called `default_currency`, which suggests an item can pick another one; it cannot – it **is**
+The legacy setting is called `default_currency`, which originally suggested an item could pick another one; the field **is**
 the base currency of the budget
 ([#39 research, open question 1](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6254390483),
 default "yes"). So the field is `baseCurrency`, the validation error code is `base-currency-tracked`, and the schema
@@ -65,7 +68,7 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | `invalid-currency` | `baseCurrency`, `trackedCurrencies` | Not a string of three uppercase letters; for `trackedCurrencies`, not an array of such strings |
 | `unsupported-currency` | `baseCurrency`, `trackedCurrencies` | A well-formed code that is not a supported currency (e.g. `BGN`, `XAU`); for `trackedCurrencies`, any such element |
 | `duplicate-currency` | `trackedCurrencies` | The same code twice |
-| `base-currency-tracked` | `trackedCurrencies` | Contains `baseCurrency`: the base currency has no exchange rate against itself. To switch the base to a currently tracked currency, send `baseCurrency` and the new `trackedCurrencies` in one patch. |
+| `base-currency-tracked` | `trackedCurrencies` | Contains `baseCurrency`: the base currency has no exchange rate against itself. During onboarding, to choose a currently tracked currency as base, send `baseCurrency` and the new `trackedCurrencies` in one patch. |
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
 | `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
@@ -84,6 +87,10 @@ currency is removed from the stored tracked list before validation, preserving t
 back to the default, with the base currency removed. An empty tracked list is valid (`["USD"]` with base `USD`
 loads as `[]`). The pre-rename
 `defaultCurrency` key is an unknown key here: it is dropped and `baseCurrency` keeps its stored value or default.
+
+Per-item currencies are now in MVP ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)),
+superseding the earlier base-only item assumption in #39. Items retain their own currency; forecast/closing convert
+into the locked base currency. See [month-closing.md](month-closing.md) for the rate snapshot contract.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
 

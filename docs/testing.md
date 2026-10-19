@@ -78,6 +78,8 @@ it("opens the next month with the closing balance of the closed month", () => {
 
   // Act
   const result = closeMonth([activeMonth.value], {
+    baseCurrency: "PLN",
+    rates: {},
     currentMonth: toYearMonth("2026-12"),
     closingBalance: toMinorUnits(120_000),
     items: [],
@@ -131,7 +133,7 @@ line):
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
   stored data) and orphaned overrides.
 - `src/month-closing.test.ts` (#84): close totals after overrides, payment status, balance carry-forward,
-  closed snapshots, immutability and transition validation. Ported carry-forward and balance updates are compared
+  foreign-currency snapshots and conversion, immutability and transition validation. Ported carry-forward and balance updates are compared
   with legacy in `test/month-closing.characterization.test.ts`.
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data and the
   `CurrencyCode` fields and `baseCurrency` rename (#126), with explicit AAA sections.

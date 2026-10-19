@@ -32,7 +32,7 @@ currency fields as `CurrencyCode` (#126) and rejects other codes with `unsupport
     currencies have the same exponent (e.g. EUR → PLN, both 2). When the exponents differ, the result must also be
     scaled by `10^(targetExponent − sourceExponent)`: `multiplyByRate(10000 /* ¥10 000 */, 0.024574)` gives `246`,
     i.e. 2,46 zł, while the correct value is 24 574 groszy = 245,74 zł (100× more). This scaling is not done by
-    `multiplyByRate`; it is handled by `convertMinor` (#39), planned with #8/#92. Until then, do not use
+    `multiplyByRate`; it is handled by `convertMinor` (#84). Do not use
     `multiplyByRate` alone to convert between currencies with different exponents (JPY, ISK, KRW, CLP).
 
 ### Parsing (`packages/core/src/money-parse.ts`)
@@ -79,6 +79,14 @@ returns
 
 Parsing remains independent of Intl and unchanged. Never pass plain numbers where `MinorUnits` is expected.
 
+### Currency conversion (#84)
+
+`convertMinor(amount, rate, source, target)` converts between supported currencies using their ISO exponents.
+The rate is target major units per source major unit. It shares exact BigInt decimal arithmetic with
+`multiplyByRate`, scales before rounding and rounds once, half away from zero, to target minor units.
+It throws `RangeError` for invalid rates/currencies or overflow, like the other money primitives. Closing catches
+conversion failures and returns domain error codes; fetching/choosing rates remains outside money arithmetic.
+
 ## Legacy behaviour
 
 - Amounts are JavaScript floats in TypeScript and `DECIMAL(12,2)` in the database; dialogs parse input with
@@ -96,5 +104,6 @@ These behaviours are pinned in `packages/core/test/format.characterization.test.
 ## Not covered yet
 
 - From #38/#39, not part of #2: `display: "code"`, privacy masking (#79), month and date labels, `allowNegative`
-  and the other parser changes proposed in #38, and the `convertMinor` cross-rate conversion (#8/#92).
+  and the other parser changes proposed in #38, and cross-rate selection from NBP/manual quotes (#8/#92).
+  `convertMinor` arithmetic is implemented in #84.
 - Warning messages that use `toLocaleString()` without a locale (#6).

@@ -126,6 +126,8 @@ describe("ported month transitions compared with legacy", () => {
     const legacy = legacyCloseMonth(row).nextMonthInsert;
 
     const result = closeMonth([current], {
+      baseCurrency: "PLN",
+      rates: {},
       currentMonth: current.month,
       closingBalance: current.closingBalance,
       items: [],

@@ -1,6 +1,7 @@
 # Exchange rates (NBP)
 
-Status: **not implemented yet** in `packages/core` – tracked in #8.
+Status: the NBP client/cache is **not implemented yet** (#8). Exact minor-unit conversion (`convertMinor`) and
+caller-supplied rates in closing snapshots are implemented in #84; see [month-closing.md](month-closing.md).
 
 ## Legacy behaviour (`lib/exchange-rates/refresh.ts`)
 
@@ -31,10 +32,16 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 - An injected `RateStore` cache (`get`, `set`, `getAll`); in-memory implementation in core for tests, SQLite in the app.
 - `getRate(currency, { now, maxAgeHours })` – fresh cached rate, otherwise try to refresh; without network return the
   last rate with `stale: true` and its `effectiveDate` (weekends/holidays have no new table).
-- Convert an amount in a currency to PLN `MinorUnits` using the rate as returned (per 1 unit) with `convertMinor`
-  (#39, #8/#92). It multiplies by the rate with `multiplyByRate` (#2, rounds half away from zero) **and** scales by
-  `10^(targetExponent − sourceExponent)`: `multiplyByRate` keeps the scale of the source amount, so on its own it is
-  only correct when both currencies have the same exponent. Example: ¥10 000 (`10000` JPY minor units, exponent 0)
-  × 0.024574 is 245,74 zł = `24574` groszy (exponent 2); `multiplyByRate` alone gives `246` (2,46 zł, 100× too
-  small). See [money.md](money.md#type-and-operations-packagescoresrcmoneyts).
+- `convertMinor(amount, rate, source, target)` is implemented in core money arithmetic (#84). Rates are target
+  major units per source major unit, with exact decimal multiplication, exponent scaling and one final rounding.
+  For a non-PLN base, the caller computes/selects the cross-rate; core closing does not assume NBP's PLN quote is
+  already a base-currency rate.
 - Currencies come from `Settings.trackedCurrencies` ([settings.md](settings.md)).
+
+## Owner decision: item currencies and frozen history
+
+[2026-10-19 decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126):
+items have their own currency in MVP; the base currency is locked after onboarding. Forecast uses the latest
+cached NBP rate or a newer manual rate. At close, the caller supplies the selected foreign-to-base rates.
+Closing snapshots retain each original amount/currency, applied rate and converted base amount, so later quotes
+never rewrite history. Rate fetching, cache/manual precedence and onboarding enforcement remain outside #84.

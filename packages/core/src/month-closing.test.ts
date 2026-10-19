@@ -1,20 +1,18 @@
 import { describe, expect, it } from "vitest";
+import type { CurrencyCode } from "./currency";
 import { toMinorUnits } from "./money";
 import {
   type ActiveMonth,
   type BudgetMonth,
   buildClosedOccurrences,
   type CloseMonthInput,
+  type ClosingItem,
   closeMonth,
   createInitialMonth,
   type PaymentStatus,
   updateBalance,
 } from "./month-closing";
-import {
-  type OccurrenceOverride,
-  resolveOccurrences,
-  type ScheduledItem,
-} from "./occurrence-overrides";
+import { type OccurrenceOverride, resolveOccurrences } from "./occurrence-overrides";
 import { toYearMonth, type YearMonth } from "./year-month";
 
 const december = toYearMonth("2026-12");
@@ -30,13 +28,16 @@ const active: ActiveMonth = Object.freeze({
   netChange: money(20_000),
 });
 const input: CloseMonthInput = {
+  baseCurrency: "PLN",
+  rates: {},
   currentMonth: december,
   closingBalance: money(120_000),
   items: [],
   overrides: [],
   paymentStatuses: [],
 };
-const item = (id: string, itemType: "expense" | "income", amount: number): ScheduledItem => ({
+const item = (id: string, itemType: "expense" | "income", amount: number): ClosingItem => ({
+  currency: "PLN",
   id,
   itemType,
   amount: money(amount),
@@ -55,7 +56,7 @@ const payment = (
 
 describe("month closing", () => {
   it("stores effective totals and actual balance change, carrying December's balance into January", () => {
-    const items: readonly ScheduledItem[] = [
+    const items: readonly ClosingItem[] = [
       item("rent", "expense", 30_000),
       item("skip", "expense", 40_000),
       item("salary", "income", 90_000),
@@ -110,7 +111,7 @@ describe("month closing", () => {
   });
 
   it("lists only unpaid/unreceived effective occurrences, matching payment by type, id and month", () => {
-    const items: readonly ScheduledItem[] = [
+    const items: readonly ClosingItem[] = [
       item("same", "expense", 100),
       item("same", "income", 200),
       item("pending", "expense", 0),
@@ -131,13 +132,140 @@ describe("month closing", () => {
     expect(result.value.closed.closedOccurrences).toHaveLength(4);
   });
 
+  it("freezes original currency, applied rate and converted totals after overrides", () => {
+    const items: ClosingItem[] = [
+      { ...item("rent", "expense", 10_000), currency: "EUR" },
+      { ...item("salary", "income", 10_000), currency: "JPY" },
+      item("local", "expense", 500),
+    ];
+    const rates = { EUR: 4.25, JPY: 0.024574, PLN: 999 };
+    const overrides: OccurrenceOverride[] = [
+      {
+        id: "rent-adjustment",
+        itemId: "rent",
+        itemType: "expense",
+        month: december,
+        amount: money(15_000),
+      },
+    ];
+
+    const result = closeMonth([active], { ...input, items, rates, overrides });
+    rates.EUR = 5;
+    items[0] = { ...item("rent", "expense", 1), currency: "USD" };
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.closed).toMatchObject({
+      baseCurrency: "PLN",
+      totalExpenses: 64_250,
+      totalIncome: 24_574,
+    });
+    expect(result.value.closed.closedOccurrences).toEqual([
+      {
+        ...payment("rent", "expense", false),
+        amount: 15_000,
+        currency: "EUR",
+        rate: 4.25,
+        baseAmount: 63_750,
+      },
+      {
+        ...payment("salary", "income", false),
+        amount: 10_000,
+        currency: "JPY",
+        rate: 0.024574,
+        baseAmount: 24_574,
+      },
+      {
+        ...payment("local", "expense", false),
+        amount: 500,
+        currency: "PLN",
+        rate: 1,
+        baseAmount: 500,
+      },
+    ]);
+    expect(result.value.unpaid[0]?.baseAmount).toBe(63_750);
+  });
+
+  it.each([
+    { source: "PLN", target: "JPY", amount: 99, rate: 0.5, expected: 0 },
+    { source: "PLN", target: "JPY", amount: 100, rate: 0.5, expected: 1 },
+    { source: "JPY", target: "PLN", amount: 1, rate: 0.005, expected: 1 },
+    { source: "EUR", target: "USD", amount: 101, rate: 1.5, expected: 152 },
+  ] satisfies {
+    source: CurrencyCode;
+    target: CurrencyCode;
+    amount: number;
+    rate: number;
+    expected: number;
+  }[])(
+    "converts $source to $target with one final rounding ($amount at $rate)",
+    ({ source, target, amount, rate, expected }) => {
+      const items = [{ ...item("foreign", "income", amount), currency: source }];
+
+      const result = closeMonth([active], {
+        ...input,
+        items,
+        baseCurrency: target,
+        rates: { [source]: rate },
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.closed.totalIncome).toBe(money(expected));
+    },
+  );
+
+  it.each([
+    { rates: {}, error: "missing-exchange-rate" },
+    { rates: { EUR: 0 }, error: "invalid-exchange-rate" },
+    { rates: { EUR: -1 }, error: "invalid-exchange-rate" },
+    { rates: { EUR: Number.NaN }, error: "invalid-exchange-rate" },
+    { rates: { EUR: Number.POSITIVE_INFINITY }, error: "invalid-exchange-rate" },
+    { rates: { EUR: Number.MAX_VALUE }, error: "amount-overflow" },
+  ])("rejects unavailable or unsafe foreign conversion: $error", ({ rates, error }) => {
+    const items: ClosingItem[] = [{ ...item("foreign", "expense", 100), currency: "EUR" }];
+
+    const result = closeMonth([active], { ...input, items, rates });
+
+    expect(result).toEqual({ ok: false, error });
+  });
+
+  it("requires rates only for effective foreign occurrences", () => {
+    const items: ClosingItem[] = [
+      { ...item("skipped", "expense", 100), currency: "EUR" },
+      {
+        ...item("later", "income", 100),
+        currency: "USD",
+        schedule: { kind: "one-time", month: january },
+      },
+    ];
+    const overrides: OccurrenceOverride[] = [
+      {
+        id: "skip",
+        itemId: "skipped",
+        itemType: "expense",
+        month: december,
+        skipped: true,
+      },
+    ];
+
+    const result = closeMonth([active], { ...input, items, overrides, rates: {} });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.closed.closedOccurrences).toEqual([]);
+  });
+
   it.each([
     { months: [], error: "no-active-month" },
     { months: [active], patch: { currentMonth: "2026-13" as YearMonth }, error: "invalid-month" },
     { months: [active, { ...active, month: january }], error: "multiple-active-months" },
     { months: [active], patch: { currentMonth: toYearMonth("2026-11") }, error: "future-month" },
     {
-      months: [active, { ...active, month: january, status: "closed", closedOccurrences: [] }],
+      months: [
+        active,
+        { ...active, month: january, status: "closed", baseCurrency: "PLN", closedOccurrences: [] },
+      ],
       error: "next-month-exists",
     },
     {
@@ -217,13 +345,24 @@ describe("month closing", () => {
     const status = { ...payment("rent", "expense") };
     const { occurrences } = resolveOccurrences([source], [], december);
 
-    const snapshot = buildClosedOccurrences(occurrences, [status]);
+    const snapshot = buildClosedOccurrences(occurrences, [status], input);
     source.amount = money(999);
     status.settled = false;
 
     expect(snapshot).toEqual({
       ok: true,
-      value: [{ itemType: "expense", itemId: "rent", month: december, amount: 100, settled: true }],
+      value: [
+        {
+          itemType: "expense",
+          itemId: "rent",
+          month: december,
+          amount: 100,
+          currency: "PLN",
+          rate: 1,
+          baseAmount: 100,
+          settled: true,
+        },
+      ],
     });
     if (!snapshot.ok) return;
     expect(Object.isFrozen(snapshot.value)).toBe(true);

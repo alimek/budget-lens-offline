@@ -1,4 +1,6 @@
+import { type CurrencyCode, isCurrencyCode } from "./currency";
 import {
+  convertMinor,
   isMinorUnits,
   type MinorUnits,
   subtractMinorUnits,
@@ -22,9 +24,23 @@ export interface PaymentStatus {
   readonly settled: boolean;
 }
 
+/** Scheduled amounts remain in the item's own currency. */
+export interface ClosingItem extends ScheduledItem {
+  readonly currency: CurrencyCode;
+}
+
+/** Base-currency major units per source major unit, selected by the caller for the closing month. */
+export interface ClosingConversion {
+  readonly baseCurrency: CurrencyCode;
+  readonly rates: Readonly<Partial<Record<CurrencyCode, number>>>;
+}
+
 /** Frozen facts, independent of item names, rules and overrides after closing. */
 export interface ClosedOccurrence extends PaymentStatus {
   readonly amount: MinorUnits;
+  readonly currency: CurrencyCode;
+  readonly rate: number;
+  readonly baseAmount: MinorUnits;
 }
 
 interface MonthTotals {
@@ -43,6 +59,7 @@ export interface ActiveMonth extends MonthTotals {
 
 export interface ClosedMonth extends MonthTotals {
   readonly status: "closed";
+  readonly baseCurrency: CurrencyCode;
   readonly closedOccurrences: readonly ClosedOccurrence[];
 }
 
@@ -56,6 +73,9 @@ export type MonthClosingErrorCode =
   | "future-month"
   | "next-month-exists"
   | "month-out-of-range"
+  | "invalid-currency"
+  | "missing-exchange-rate"
+  | "invalid-exchange-rate"
   | "invalid-amount"
   | "amount-overflow"
   | "invalid-occurrences"
@@ -120,23 +140,47 @@ export function updateBalance(month: BudgetMonth, balance: MinorUnits): Result<A
   }
 }
 
+function convertOccurrenceAmount(
+  amount: MinorUnits,
+  currency: CurrencyCode,
+  conversion: ClosingConversion,
+): Result<Pick<ClosedOccurrence, "rate" | "baseAmount">> {
+  if (!isCurrencyCode(currency)) return failure("invalid-currency");
+  const rate = currency === conversion.baseCurrency ? 1 : conversion.rates[currency];
+  if (rate === undefined) return failure("missing-exchange-rate");
+  if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
+    return failure("invalid-exchange-rate");
+  }
+  try {
+    const baseAmount = convertMinor(amount, rate, currency, conversion.baseCurrency);
+    return { ok: true, value: { rate, baseAmount } };
+  } catch {
+    return failure("amount-overflow");
+  }
+}
+
+function validPaymentStatus(status: PaymentStatus): boolean {
+  return (
+    status !== null &&
+    typeof status === "object" &&
+    (status.itemType === "expense" || status.itemType === "income") &&
+    typeof status.itemId === "string" &&
+    status.itemId.length > 0 &&
+    validMonth(status.month) &&
+    typeof status.settled === "boolean"
+  );
+}
+
 /** Snapshot policy isolated here so #40 can change it without changing the close transition. */
 export function buildClosedOccurrences(
-  occurrences: readonly ResolvedOccurrence<ScheduledItem>[],
+  occurrences: readonly ResolvedOccurrence<ClosingItem>[],
   paymentStatuses: readonly PaymentStatus[],
+  conversion: ClosingConversion,
 ): Result<readonly ClosedOccurrence[]> {
+  if (!isCurrencyCode(conversion.baseCurrency)) return failure("invalid-currency");
   const payments = new Map<string, boolean>();
   for (const status of paymentStatuses) {
-    if (
-      status === null ||
-      typeof status !== "object" ||
-      (status.itemType !== "expense" && status.itemType !== "income") ||
-      typeof status.itemId !== "string" ||
-      status.itemId.length === 0 ||
-      !validMonth(status.month) ||
-      typeof status.settled !== "boolean"
-    )
-      return failure("invalid-payment-status");
+    if (!validPaymentStatus(status)) return failure("invalid-payment-status");
     const key = paymentKey(status);
     if (payments.has(key)) return failure("duplicate-payment-status");
     payments.set(key, status.settled);
@@ -148,16 +192,26 @@ export function buildClosedOccurrences(
     const key = paymentKey(identity);
     if (seen.has(key)) return failure("invalid-occurrences");
     if (!validAmount(amount) || amount < 0) return failure("invalid-amount");
+    const converted = convertOccurrenceAmount(amount, item.currency, conversion);
+    if (!converted.ok) return converted;
     seen.add(key);
-    snapshot.push(Object.freeze({ ...identity, amount, settled: payments.get(key) ?? false }));
+    snapshot.push(
+      Object.freeze({
+        ...identity,
+        amount,
+        currency: item.currency,
+        ...converted.value,
+        settled: payments.get(key) ?? false,
+      }),
+    );
   }
   return { ok: true, value: Object.freeze(snapshot) };
 }
 
-export interface CloseMonthInput {
+export interface CloseMonthInput extends ClosingConversion {
   readonly currentMonth: YearMonth;
   readonly closingBalance: MinorUnits;
-  readonly items: readonly ScheduledItem[];
+  readonly items: readonly ClosingItem[];
   readonly overrides: readonly OccurrenceOverride[];
   readonly paymentStatuses: readonly PaymentStatus[];
 }
@@ -193,20 +247,21 @@ export function closeMonth(
   if (resolved.invalidItems.length > 0 || resolved.rejectedOverrides.length > 0) {
     return failure("invalid-occurrences");
   }
-  const snapshot = buildClosedOccurrences(resolved.occurrences, input.paymentStatuses);
+  const snapshot = buildClosedOccurrences(resolved.occurrences, input.paymentStatuses, input);
   if (!snapshot.ok) return snapshot;
   try {
     const totalIncome = sumMinorUnits(
-      snapshot.value.filter((row) => row.itemType === "income").map((row) => row.amount),
+      snapshot.value.filter((row) => row.itemType === "income").map((row) => row.baseAmount),
     );
     const totalExpenses = sumMinorUnits(
-      snapshot.value.filter((row) => row.itemType === "expense").map((row) => row.amount),
+      snapshot.value.filter((row) => row.itemType === "expense").map((row) => row.baseAmount),
     );
     const closed: ClosedMonth = Object.freeze({
       ...updated.value,
       status: "closed",
       totalIncome,
       totalExpenses,
+      baseCurrency: input.baseCurrency,
       closedOccurrences: snapshot.value,
     });
     return {

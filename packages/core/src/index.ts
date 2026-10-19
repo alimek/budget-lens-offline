@@ -3,6 +3,7 @@ export { isCurrencyCode } from "./currency";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,
+  convertMinor,
   isMinorUnits,
   multiplyByRate,
   negateMinorUnits,
@@ -20,6 +21,8 @@ export type {
   ClosedMonth,
   ClosedOccurrence,
   CloseMonthInput,
+  ClosingConversion,
+  ClosingItem,
   MonthClosing,
   MonthClosingErrorCode,
   PaymentStatus,
