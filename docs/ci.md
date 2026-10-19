@@ -12,6 +12,9 @@ status check. Making checks required in the `main` ruleset is the repository own
 - `.github/workflows/pr.yml` checks the PR metadata on `opened`, `edited`, `reopened` and `synchronize`:
   `pr-title`, `pr-body`. A separate workflow, so editing the title or body re-runs only these jobs. They do not
   run on push to `main` (there is no PR there).
+- `.github/workflows/macos.yml` runs on every same-repo pull request and on every push to `main` on the
+  self-hosted Mac Studio runner: `macos-typecheck`, `macos-vitest`, `ios-build`. See
+  [Self-hosted macOS runner](#self-hosted-macos-runner).
 - Shared setup: `.github/actions/setup` (pnpm from `packageManager` with the pnpm store cache, Node.js from `.nvmrc`,
   `pnpm install --frozen-lockfile`). `typecheck` and `test` also restore the local Turborepo cache
   (`.turbo/cache`, via `actions/cache`). `.nvmrc` is a Turborepo `globalDependencies` entry, so a Node.js bump
@@ -93,6 +96,65 @@ license fail.
 Reviewed exceptions are listed in `EXCEPTIONS` in the script: a package name pattern, the exact license and a
 reason. Current exception: `lightningcss` (and its platform binaries), MPL-2.0, a dev-only transitive dependency of
 Vite (Vitest), never modified or shipped in the app.
+
+## Self-hosted macOS runner
+
+Typecheck, unit tests and the iOS simulator build also run on Grzegorz's Mac Studio, so PRs get an iOS build without
+hosted macOS minutes (#148). These jobs are **not required status checks** yet; making them required is part of #149
+and needs the repository owner's confirmation.
+
+| | |
+| --- | --- |
+| Runner name | `mac-studio-aliclaw` (repository runner of `alimek/budget-lens-offline`) |
+| Labels | `self-hosted`, `macOS`, `aliclaw` (GitHub adds `ARM64` automatically); jobs use `runs-on: [self-hosted, macOS, aliclaw]` |
+| Machine / user | Mac Studio (Apple silicon), macOS user `aliclaw` |
+| Directory | `~/actions-runner` (runner binaries; job workspaces in `~/actions-runner/_work`, Node.js tool cache in `~/actions-runner/_work/_tool`) |
+| Service | launchd user agent `actions.runner.alimek-budget-lens-offline.mac-studio-aliclaw` (`~/Library/LaunchAgents/…plist`), logs in `~/Library/Logs/actions.runner.alimek-budget-lens-offline.mac-studio-aliclaw/` |
+| Simulator | `BudgetLens-CI` (iPhone 16, iOS 27.0); the `ios-build` job uses only `BudgetLens-*` simulators, preferring `BudgetLens-CI` |
+
+Jobs (`.github/workflows/macos.yml`):
+
+| Job | What it does |
+| --- | --- |
+| `macos-typecheck` | `pnpm turbo run typecheck` |
+| `macos-vitest` | `pnpm turbo run test` |
+| `ios-build` | Picks a `BudgetLens-*` simulator (fails if there is none). When `apps/mobile` exists: `expo prebuild --platform ios --clean` (incl. `pod install`) and `xcodebuild … -sdk iphonesimulator -destination "platform=iOS Simulator,id=<BudgetLens UDID>" CODE_SIGNING_ALLOWED=NO build`. Until the app scaffold lands (#109) it only selects the simulator and reports a notice. |
+
+The jobs use the same `.github/actions/setup` as the hosted jobs (pnpm from `packageManager`, installed per job in
+`$RUNNER_TEMP`; Node.js from `.nvmrc` via `actions/setup-node` into the runner's tool cache).
+
+### Security rules (mandatory)
+
+The repository is public, so a self-hosted runner must never execute untrusted code.
+
+- **Fork guard on every self-hosted job:**
+  `if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository`.
+  A fork PR does not schedule these jobs at all. Any new job with `runs-on: [self-hosted, …]` must carry it.
+- **Fork workflow approval:** the repository setting requires approval for workflow runs from fork PRs of **all
+  outside contributors** (`approval_policy: all_external_contributors`, Settings → Actions → General).
+- **No `pull_request_target`** in workflows that check out PR code, and none on the self-hosted runner.
+- **No secrets** in self-hosted jobs; `permissions: contents: read`; `actions/checkout` with
+  `persist-credentials: false`.
+- The runner and its jobs stay inside `~/actions-runner` (plus Xcode/CocoaPods/pnpm caches of the `aliclaw` user) and
+  use only `BudgetLens-*` simulators. They must not touch `~/agents`, `~/agent-development` or other projects.
+
+### Operating the runner
+
+```sh
+cd ~/actions-runner
+./svc.sh status            # launchd service state
+./svc.sh stop && ./svc.sh start
+gh api repos/alimek/budget-lens-offline/actions/runners --jq '.runners[] | {name, status, labels: [.labels[].name]}'
+```
+
+Upgrade: the runner updates itself. Re-register (for example on a new machine): `./svc.sh stop && ./svc.sh uninstall`,
+`./config.sh remove --token <removal token>`, then `./config.sh --unattended --url
+https://github.com/alimek/budget-lens-offline --token <registration token> --name mac-studio-aliclaw --labels
+self-hosted,macOS,aliclaw` and `./svc.sh install && ./svc.sh start`. Get tokens with `gh api -X POST
+repos/alimek/budget-lens-offline/actions/runners/registration-token --jq .token` (or `remove-token`) straight into a
+shell variable; never print, log or commit them.
+
+If the runner is offline, the self-hosted jobs stay queued (they are not required, so merges are not blocked).
 
 ## Planned gates (when `apps/mobile` exists)
 
