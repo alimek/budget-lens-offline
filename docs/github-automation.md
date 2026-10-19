@@ -6,12 +6,12 @@ machine-specific paths or users. Both are idempotent: a second run in a row chan
 
 | Script | What it does | GitHub access |
 | --- | --- | --- |
-| `sync-labels.sh` | Reconciles the repository labels with `scripts/github/labels.tsv` | Issues: read and write |
+| `sync-labels.sh` | Reconciles the repository labels with `.github/labels.tsv` | Issues: read and write |
 | `sync-issue-list.sh` | Exports one local queue file per label with the open issues carrying it | Issues: read |
 
-## Label sync from `labels.tsv`
+## Label sync from `.github/labels.tsv`
 
-`scripts/github/labels.tsv` is the source of truth for the label set: one label per line,
+`.github/labels.tsv` is the source of truth for the label set: one label per line,
 `name<TAB>color<TAB>description`, color as six lowercase hex digits without `#`, description up to 100
 characters. Change a label by editing this file in a PR.
 

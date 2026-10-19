@@ -1,6 +1,7 @@
 # Canonical label set for alimek/budget-lens-offline. One label per line: name<TAB>color<TAB>description.
 # Color is six lowercase hex digits without #. An empty description is allowed.
-# Source of truth for scripts/github/sync-labels.sh. Update this file in the PR that changes a label.
+# Source of truth for scripts/github/sync-labels.sh (docs/github-automation.md). Update this file in the PR that
+# changes a label.
 accessibility	f143ab	Barrier affecting people with disabilities
 agent:design	5319e7	Work item for the design track
 agent:developer	1d76db	Work item for the development track

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Reconcile the repository's GitHub labels with the canonical label set in labels.tsv.
+# Reconcile the repository's GitHub labels with the canonical label set in .github/labels.tsv.
 #
 # The file is the source of truth, GitHub is the target. The script is idempotent - running it twice changes nothing
-# on the second run. It only creates and edits labels; it deletes labels that are missing from labels.tsv only when
+# on the second run. It only creates and edits labels; it deletes labels that are missing from the file only when
 # --prune is passed.
 #
 # Usage:
@@ -11,7 +11,7 @@
 # Environment:
 #   GH_TOKEN              fine-grained token used for every gh call (required, see Auth)
 #   BL_REPO               default repository (default: alimek/budget-lens-offline)
-#   BL_LABELS_FILE        default canonical label file (default: labels.tsv next to this script)
+#   BL_LABELS_FILE        default canonical label file (default: .github/labels.tsv in this clone)
 #
 # Exit codes: 0 success (also when nothing changed), 1 usage, validation or missing-token error, 2 a gh call failed.
 # Requires: gh, bash, awk, sort, mktemp.
@@ -29,7 +29,7 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 repo="${BL_REPO:-alimek/budget-lens-offline}"
-labels_file="${BL_LABELS_FILE:-$script_dir/labels.tsv}"
+labels_file="${BL_LABELS_FILE:-$script_dir/../../.github/labels.tsv}"
 dry_run=0
 prune=0
 
