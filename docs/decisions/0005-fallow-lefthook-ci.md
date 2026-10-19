@@ -12,5 +12,5 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 - Stricter gates (#18): Biome with `--error-on-warnings`, stricter TypeScript options, Fallow with every rule at
   `error`, `audit`, `licenses`, `pr-title` and `pr-body` jobs. See [../ci.md](../ci.md).
 
-**Consequences.** Changes reach `main` only through PRs. The Reviewer squash-merges after approval and fully
+**Consequences.** Changes reach `main` only through PRs. A reviewer squash-merges after approval and fully
 green CI.

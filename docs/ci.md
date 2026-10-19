@@ -24,7 +24,7 @@ status check. Making checks required in the `main` ruleset is the repository own
 
 | Job | Fails when |
 | --- | --- |
-| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`) |
+| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or host-, user- or agent-setup-specific content (`scripts/check-machine-agnostic.mjs`, see [AGENTS.md](../AGENTS.md)) |
 | `typecheck` | Any TypeScript 7 error with the strict options in `tsconfig.base.json` |
 | `test` | Any failing Vitest test (coverage is reported, no thresholds) |
 | `fallow` | Any unused file, export, type or dependency (dev dependencies too), unlisted dependency, cycle or stale suppression |
@@ -102,13 +102,14 @@ Owner decision (#166, 2026-10-19): CI on GitHub runs only the fast checks above,
 builds the app natively (no macOS/iOS or Android runner, no `expo prebuild`, `xcodebuild`, Gradle or simulator) and
 no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow from #148.
 
-- Native builds (iOS and Android development builds) and E2E tests run **locally on the Mac Studio**, done by the
-  Developer or the Tester, only on the dedicated **`BudgetLens-*` simulators/emulators**.
-- The evidence on the PR is **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a video is
-  also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
+- Native builds (iOS and Android development builds) and E2E tests run **locally on a dev machine** (macOS with
+  Xcode for iOS, Android SDK for Android), only on **dedicated simulators/emulators** (see
+  [mobile development](mobile-development.md#development-builds)).
+- The evidence on the PR is **screenshots** (iOS + Android, simulator/emulator named; a video is
+  also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
   **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a
   development build alone is not enough. It is required for every PR
-  that changes UI; the Reviewer checks it. `pr-body` does not check it (it only checks `Closes #N`), so non-UI PRs
+  that changes UI; reviewers check it. `pr-body` does not check it (it only checks `Closes #N`), so non-UI PRs
   can leave the section out.
 
 ## Planned gates (when `apps/mobile` exists)

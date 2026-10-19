@@ -3,6 +3,10 @@ import type { E2EConfig } from "e2e";
 
 const bundleId = "com.budgetlens.offline";
 
+// Dedicated simulator/emulator names; override per machine (docs/mobile-development.md#development-builds).
+const iosSimulator = process.env["E2E_IOS_SIMULATOR"] ?? "BudgetLens-iOS";
+const androidAvd = process.env["E2E_ANDROID_AVD"] ?? "BudgetLens-Android";
+
 export default {
   tests: "e2e/**/*.e2e.ts",
   workers: 1,
@@ -12,7 +16,7 @@ export default {
   targets: [
     {
       name: "ios",
-      engine: mobile({ platform: "ios", device: "BudgetLens-CI", session: "budget-lens-ios" }),
+      engine: mobile({ platform: "ios", device: iosSimulator, session: "budget-lens-ios" }),
       app: {
         bundleId,
         launchArguments: [
@@ -33,7 +37,7 @@ export default {
       video: "off",
       engine: mobile({
         platform: "android",
-        device: "BudgetLens-Android",
+        device: androidAvd,
         session: "budget-lens-android",
       }),
       app: {

@@ -6,9 +6,17 @@ from the repository root with `pnpm install`. Native projects are generated loca
 
 ## Development builds
 
-Use development builds, not Expo Go. Select only a dedicated `BudgetLens-*` simulator/emulator;
-never let Expo auto-select a personal/shared device. The smoke config names `BudgetLens-CI` (iOS)
-and `BudgetLens-Android` (Android). Those devices must exist before running tests.
+Use development builds, not Expo Go. Select only a dedicated simulator/emulator that you create for
+this project; never let Expo auto-select a personal/shared device. The e2e config reads the device
+names from env vars; the defaults follow the recommended `BudgetLens-*` naming convention:
+
+| Env var | Platform | Default |
+| --- | --- | --- |
+| `E2E_IOS_SIMULATOR` | iOS simulator name | `BudgetLens-iOS` |
+| `E2E_ANDROID_AVD` | Android emulator (AVD) name | `BudgetLens-Android` |
+
+Create the devices (or point the env vars at your own dedicated ones) before running tests, for
+example `E2E_IOS_SIMULATOR=My-iPhone pnpm --filter @budget-lens/mobile e2e:ios`.
 
 ```sh
 EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --port 8073
@@ -27,9 +35,9 @@ scaffold opens no database or Budget Lens service.
 
 ## Checks and smoke evidence
 
-CI on GitHub runs only the fast checks; native builds, `expo prebuild` and e2e run **locally on the Mac Studio**
-on the `BudgetLens-*` devices ([ci.md](ci.md#native-builds-and-e2e-local)). With Metro running on 8073 and the
-development build installed on `BudgetLens-CI` / `BudgetLens-Android`:
+CI on GitHub runs only the fast checks; native builds, `expo prebuild` and e2e run **locally on a dev machine**
+on the dedicated devices ([ci.md](ci.md#native-builds-and-e2e-local)). With Metro running on 8073 and the
+development build installed on those simulators/emulators:
 
 ```sh
 pnpm check
