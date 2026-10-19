@@ -50,7 +50,8 @@ effective dates; mixed-date and stale legs remain visible in `ratesUsed`.
 
 `ratesUsed` contains the selected non-PLN legs actually used, including the base leg when needed. It preserves
 `mid`, `effectiveDate`, `source` and `stale` so the UI can show rate evidence. Freshness is supplied by the cache:
-stale means at least 24 hours since the last successful fetch (#8/#93); core never reads time. Missing or invalid
+stale means at least `Settings.rateMaxAgeBusinessDays` (default 2) business days strictly between the effective date
+and today ([exchange-rates.md](exchange-rates.md), #8); core never reads time. Missing or invalid
 needed rates fail the forecast rather than silently substituting zero.
 
 ## Warnings and errors

@@ -53,9 +53,9 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   behaviour: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). The CLI also honours
   `DO_NOT_TRACK=1`, but the repo standard is `E2E_TELEMETRY_DISABLED=1`.
 - Expo CLI (`@expo/cli` sends usage telemetry by default): `EXPO_NO_TELEMETRY=1`, set as a prefix in the
-  `start`, `ios`, `android` and `export` scripts of `apps/mobile/package.json` and in the `env` of
-  `.github/workflows/macos.yml` (iOS prebuild); set it yourself when calling
-  `expo` directly (for example `EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild`).
+  `start`, `ios`, `android` and `export` scripts of `apps/mobile/package.json` (Expo does not run in CI, see
+  [ci.md](ci.md#native-builds-and-e2e-local)); set it yourself when calling `expo` directly on the Mac Studio
+  (for example `EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild`).
 
 ## Workflow
 
@@ -64,8 +64,11 @@ Tool telemetry is disabled through environment variables, locally and in CI:
 - PR to `main` with an English description ending in `Closes #<n>`. Stacked PRs are allowed (base on the parent
   branch and say so in the description).
 - The **Reviewer squash-merges** the PR after approval and fully green CI (with an English commit message).
-- **UI PRs** must include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
-  development build (see [testing.md](testing.md)).
+- **UI PRs** must include e2e evidence: **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a
+  video is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio,
+  in the Screenshots section of the PR template (see [testing.md](testing.md)). A manual screenshot from a
+  development build alone is not enough. Native builds and E2E do not run in CI (see
+  [ci.md](ci.md#native-builds-and-e2e-local)).
 - Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.
 - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 - **Docs rule:** every PR that changes domain behaviour or architecture updates the relevant file in `docs/`

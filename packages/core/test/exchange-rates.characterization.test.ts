@@ -90,7 +90,7 @@ describe("refreshExchangeRate", () => {
   });
 
   it("propagates network errors unchanged", async () => {
-    // LEGACY: no offline fallback, the raw fetch error reaches the caller – changed by #8.
+    // LEGACY: no offline fallback – fixed in #8: getRate retains cached quotes (src/exchange-rates.test.ts).
     // Arrange
     const offline = vi.fn<typeof fetch>(() => Promise.reject(new TypeError("fetch failed")));
 
@@ -117,7 +117,7 @@ describe("refreshExchangeRate", () => {
 
 describe("refreshAllExchangeRates", () => {
   it("refreshes the hard-coded currency list", async () => {
-    // LEGACY: fixed list instead of user_settings.tracked_currencies – changed by #8.
+    // LEGACY: fixed list – fixed in #8: requiredRateCurrencies reads Settings (src/exchange-rates.test.ts).
     // Arrange
     const upsert = upsertEchoing();
 
@@ -130,7 +130,7 @@ describe("refreshAllExchangeRates", () => {
   });
 
   it("fails as a whole when a single currency fails", async () => {
-    // LEGACY: Promise.all – one failing currency discards all other rates – changed by #8.
+    // LEGACY: Promise.all – fixed in #8: refreshNbpRates keeps successes (src/exchange-rates.test.ts).
     // Arrange
     const fetchFn = vi.fn<typeof fetch>((input) =>
       Promise.resolve(

@@ -27,6 +27,10 @@ scaffold opens no database or Budget Lens service.
 
 ## Checks and smoke evidence
 
+CI on GitHub runs only the fast checks; native builds, `expo prebuild` and e2e run **locally on the Mac Studio**
+on the `BudgetLens-*` devices ([ci.md](ci.md#native-builds-and-e2e-local)). With Metro running on 8073 and the
+development build installed on `BudgetLens-CI` / `BudgetLens-Android`:
+
 ```sh
 pnpm check
 EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo export --platform ios --platform android
@@ -38,8 +42,10 @@ The e2e scripts disable telemetry. Tests use no agent steps, model provider or s
 action targets the native button
 inside `screen-home`: Expo UI on Android exposes `overview-open-savings` on a wrapper.
 Results, screenshots, traces and video are written under `apps/mobile/.e2e/<platform>/` (ignored); review the
-report before attaching evidence to a PR. A passing bundle export does not prove that a native
-build starts. The broader e2e setup/CI plan remains in #15; mobile CI gates remain in #109.
+report before attaching evidence to a PR. UI PRs attach the iOS and Android screenshots (device named) and the
+e2e command in the Screenshots section of the [PR template](../.github/pull_request_template.md). A passing
+bundle export does not prove that a native build starts. The broader e2e setup remains in #15; the fast mobile
+CI gates (no native build) remain in #109.
 
 ## Test IDs
 

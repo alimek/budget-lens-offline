@@ -4,6 +4,7 @@ import {
   DEFAULT_SETTINGS,
   loadSettings,
   MAX_FORECAST_HORIZON_MONTHS,
+  MAX_RATE_MAX_AGE_BUSINESS_DAYS,
   toMinorUnits,
   updateSettings,
 } from "./index";
@@ -22,6 +23,7 @@ describe("updateSettings", () => {
       language: "en",
       trackedCurrencies: ["EUR"],
       lowBalanceThreshold: toMinorUnits(0),
+      rateMaxAgeBusinessDays: 3,
     });
 
     // Assert
@@ -32,6 +34,7 @@ describe("updateSettings", () => {
         language: "en",
         trackedCurrencies: ["EUR"],
         lowBalanceThreshold: 0,
+        rateMaxAgeBusinessDays: 3,
       },
     });
     expect(current).toEqual(DEFAULT_SETTINGS);
@@ -125,6 +128,38 @@ describe("updateSettings", () => {
 });
 
 describe("loadSettings", () => {
+  it.each([0, -1, 1.5, MAX_RATE_MAX_AGE_BUSINESS_DAYS + 1, "2", null])(
+    "rejects an invalid rate freshness threshold and defaults stored data: %s",
+    (rateMaxAgeBusinessDays) => {
+      // Arrange
+      const changes = untrusted({ rateMaxAgeBusinessDays });
+
+      // Act
+      const updated = updateSettings(DEFAULT_SETTINGS, changes);
+      const loaded = loadSettings(changes);
+
+      // Assert
+      expect(updated).toEqual({
+        ok: false,
+        errors: [{ field: "rateMaxAgeBusinessDays", code: "invalid-rate-max-age" }],
+      });
+      expect(loaded.rateMaxAgeBusinessDays).toBe(2);
+    },
+  );
+
+  it("drops the legacy hour-based threshold and defaults to 2 business days", () => {
+    // Arrange
+    const stored = { language: "pl", rateMaxAgeHours: 48 };
+
+    // Act
+    const loaded = loadSettings(stored);
+
+    // Assert
+    expect(loaded).toEqual({ ...DEFAULT_SETTINGS, language: "pl" });
+    expect(loaded.rateMaxAgeBusinessDays).toBe(2);
+    expect(loaded).not.toHaveProperty("rateMaxAgeHours");
+  });
+
   it.each([
     { trackedCurrencies: ["USD", "EUR"], expected: ["EUR"] },
     { trackedCurrencies: ["USD"], expected: [] },

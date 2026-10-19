@@ -49,8 +49,9 @@ pnpm check       # all of the above
 
 CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` (Conventional
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
-The `macOS and iOS` workflow runs `macos-typecheck`, `macos-vitest` and `ios-build` on the GitHub-hosted `macos-26`
-runner (not required checks); see [docs/ci.md](docs/ci.md#macos-jobs).
+CI runs only these fast checks, all on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not in CI: the
+Developer or Tester runs them locally on the Mac Studio on `BudgetLens-*` simulators, and the evidence is
+screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 ## Workflow
 
@@ -59,7 +60,9 @@ runner (not required checks); see [docs/ci.md](docs/ci.md#macos-jobs).
 - The **Reviewer** reviews and squash-merges after approval and fully green CI.
 - Testing: e2e first; unit tests only for business logic, Arrange-Act-Assert; no coverage thresholds –
   [docs/testing.md](docs/testing.md).
-- UI PRs include e2e evidence (screenshots or video) from a development build.
+- UI PRs include e2e evidence: screenshots (iOS + Android, `BudgetLens-*` simulator/emulator named; a video is also
+  fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the PR
+  template's Screenshots section. A manual screenshot from a development build alone is not enough.
 - Run the app only on the dedicated `BudgetLens-*` simulators/emulators, never on personal or shared devices.
 - Metro runs on the repo's fixed port **8073** – [docs/mobile-development.md](docs/mobile-development.md).
 - Docs rule: every PR that changes domain behaviour or architecture updates `docs/`; the Reviewer checks this.

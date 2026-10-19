@@ -11,6 +11,7 @@ What exists today in `packages/core`:
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
 - occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
 - the `Settings` model (#76);
+- injected NBP table-A client, current-rate store contract, shared rate selection and app-open refresh (#8);
 - balance forecast, warning codes and exact cross-currency conversion (#6, see [domain/forecast.md](domain/forecast.md));
 - month closing, balance updates and per-occurrence payment status (#84, see [domain/month-closing.md](domain/month-closing.md));
 - characterization tests of the legacy implementation (#3).
@@ -56,8 +57,8 @@ nothing app- or platform-specific.
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
-Planned content: NBP exchange-rate client with an injected
-offline cache (#8).
+NBP uses an injected fetch and `RateStore` (#8); SQLite storage (#92) and app
+lifecycle refresh integration (#93) remain in Stage 1.
 Legacy behaviour is pinned by characterization tests first (#3).
 
 ## App stack (Stage 1)
@@ -78,7 +79,7 @@ implemented and what is still planned:
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
 | i18n | Polish and English; no hardcoded UI strings | Implemented (#73): bundled PL/EN locale files, device-language initialization |
 | Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) | Planned (#30) |
-| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests on `BudgetLens-*` devices; CI plan in #15/#109 |
+| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests run locally on the Mac Studio on `BudgetLens-*` devices (not in CI, [ci.md](ci.md#native-builds-and-e2e-local)); setup in #15 |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build

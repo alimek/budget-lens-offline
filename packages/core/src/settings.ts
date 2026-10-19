@@ -28,6 +28,25 @@ export interface Settings {
   readonly largeExpenseThreshold: MinorUnits;
   /** Number of months the forecast projects, including the start month: 1 to {@link MAX_FORECAST_HORIZON_MONTHS}. */
   readonly forecastHorizonMonths: number;
+  /**
+   * A quote (NBP or manual) is stale when at least this many business days (Mon–Fri, no holidays) lie strictly
+   * between its effective date and today: 1 to {@link MAX_RATE_MAX_AGE_BUSINESS_DAYS}. Polish public holidays are
+   * not modelled (MVP). Replaces the earlier `rateMaxAgeHours` (#8).
+   */
+  readonly rateMaxAgeBusinessDays: number;
+}
+
+/** Upper bound of `rateMaxAgeBusinessDays` (four working weeks), so a corrupted value cannot hide stale rates forever. */
+export const MAX_RATE_MAX_AGE_BUSINESS_DAYS = 20;
+
+/** A freshness threshold: an integer number of business days from 1 to {@link MAX_RATE_MAX_AGE_BUSINESS_DAYS}. */
+export function isValidRateMaxAgeBusinessDays(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 1 &&
+    value <= MAX_RATE_MAX_AGE_BUSINESS_DAYS
+  );
 }
 
 /** Upper bound of `forecastHorizonMonths` (10 years), so a corrupted value cannot make the forecast hang. */
@@ -41,6 +60,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   lowBalanceThreshold: toMinorUnits(500_000),
   largeExpenseThreshold: toMinorUnits(1_000_000),
   forecastHorizonMonths: 13,
+  rateMaxAgeBusinessDays: 2,
 });
 
 export type SettingsErrorCode =
@@ -51,7 +71,8 @@ export type SettingsErrorCode =
   | "base-currency-tracked"
   | "invalid-threshold"
   | "negative-threshold"
-  | "invalid-forecast-horizon";
+  | "invalid-forecast-horizon"
+  | "invalid-rate-max-age";
 
 /** A validation problem with one field; the UI translates `code`, so no message is returned. */
 export interface SettingsError {
@@ -126,6 +147,8 @@ const FIELD_CHECKS = {
   largeExpenseThreshold: ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold),
   forecastHorizonMonths: ({ forecastHorizonMonths }) =>
     isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
+  rateMaxAgeBusinessDays: ({ rateMaxAgeBusinessDays }) =>
+    isValidRateMaxAgeBusinessDays(rateMaxAgeBusinessDays) ? undefined : "invalid-rate-max-age",
 } satisfies Record<keyof Settings, Check>;
 
 function validate(settings: UntrustedSettings): SettingsError[] {
@@ -196,5 +219,6 @@ function freezeSettings(next: Settings): Settings {
     lowBalanceThreshold: next.lowBalanceThreshold,
     largeExpenseThreshold: next.largeExpenseThreshold,
     forecastHorizonMonths: next.forecastHorizonMonths,
+    rateMaxAgeBusinessDays: next.rateMaxAgeBusinessDays,
   });
 }
