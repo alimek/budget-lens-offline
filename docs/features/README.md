@@ -15,6 +15,13 @@ the base currency at the latest cached NBP rate (or a newer manual rate). The ba
 and locked once onboarding is confirmed. At month close, the rate used for each foreign-currency occurrence is
 snapshotted, so closed months never change.
 
+Other owner decisions of 2026-10-19 reflected in the PRDs:
+- Dashboard is the first, main tab ([#36](https://github.com/alimek/budget-lens-offline/issues/36)).
+- English is the source language; no translation checks in CI; missing keys fall back to English ([#37](https://github.com/alimek/budget-lens-offline/issues/37)).
+- App lock (biometric/PIN) is post-MVP ([#34](https://github.com/alimek/budget-lens-offline/issues/34)).
+- Backup direction: an encrypted file whose key is stored automatically in the platform's synced secret store; an
+  optional recovery code only for switching platforms ([#48](https://github.com/alimek/budget-lens-offline/issues/48)).
+
 | Epic | PRD |
 | --- | --- |
 | E1 [#23](https://github.com/alimek/budget-lens-offline/issues/23) App shell & encrypted local storage | [app-shell-storage.md](app-shell-storage.md) |

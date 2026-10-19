@@ -33,7 +33,8 @@ that blurs amounts.
 
 - As a user, I enter "1 234,56" or "1234.56" and get the same amount.
 - As a user, I enter an amount in EUR or JPY for an item, with the correct number of decimals.
-- As a user, I see the app in Polish or English, following my device by default.
+- As a user, I see the app in Polish or English, following my device by default; anything not yet translated
+  appears in English.
 - As a user, I set my low-balance and large-expense thresholds (in the base currency).
 - As a user, I can see my base currency in Settings but cannot change it after onboarding.
 - As a user, I blur all amounts with one tap.
@@ -41,7 +42,9 @@ that blurs amounts.
 ## Acceptance criteria (high level)
 
 - No floats for amounts. Amounts are formatted with native `Intl` per locale and currency.
-- No hardcoded UI strings; the CI missing-key check passes.
+- No hardcoded UI strings. **English is the source language**; missing keys fall back to English at runtime.
+  There are **no translation checks in CI** ([#37](https://github.com/alimek/budget-lens-offline/issues/37), final owner decision 2026-10-19). Translations are
+  filled in before release.
 - Thresholds and currencies come only from `Settings`. `baseCurrency` is immutable after onboarding (core + repository).
 - Privacy mode leaves no amount readable on any screen.
 
@@ -59,7 +62,8 @@ that blurs amounts.
 
 ## Open questions
 
-- i18n library: [#37](https://github.com/alimek/budget-lens-offline/issues/37).
+- i18n library: [#37](https://github.com/alimek/budget-lens-offline/issues/37) (decided: English source language, no CI translation checks; library choice per
+  the research report).
 - Formatting on Hermes: [#38](https://github.com/alimek/budget-lens-offline/issues/38).
 - Currency model (decided: per-item currency in MVP, [owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)): [#39](https://github.com/alimek/budget-lens-offline/issues/39).
 - Cross rates: [#124](https://github.com/alimek/budget-lens-offline/issues/124).

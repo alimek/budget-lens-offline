@@ -5,42 +5,52 @@ Epic: [#30](https://github.com/alimek/budget-lens-offline/issues/30) · Status: 
 ## Problem
 
 People don't want to lose their budget when they change or lose a phone, but they won't hand their data to a company
-server.
+server, and they won't remember another password.
 
 ## Goal
 
-Users back up an encrypted snapshot to their **own** iCloud app container or Google Drive appdata folder, manually or
-on a schedule, and restore it on a new device with their recovery secret. There is no Budget Lens server and no
-plaintext in the cloud.
+Direction from the [owner, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6262913616):
+- The backup is an **encrypted file** in the user's **own** iCloud app container or Google Drive appDataFolder.
+- Its key is stored **automatically** in the platform's synced secret store: iOS Keychain with iCloud sync, Android
+  Block Store. The user doesn't need to remember anything.
+- After a reinstall or on a new device of the same platform, the app finds both the file and the key on its own.
+- An **optional recovery code** (or export) is offered only for switching platforms (iOS ↔ Android).
+- There is no Budget Lens server and no plaintext in the cloud.
 
 ## Scope
 
 **In:**
-- Encrypted snapshot format ([#96](https://github.com/alimek/budget-lens-offline/issues/96)), including items with their currencies, rate snapshots, cached and manual
-  rates, and the locked base currency.
-- Recovery secret ([#97](https://github.com/alimek/budget-lens-offline/issues/97)).
+- Encrypted backup file ([#96](https://github.com/alimek/budget-lens-offline/issues/96)), including items with their currencies, rate snapshots, manual rates and the
+  locked base currency.
+- Synced key storage (iOS Keychain `kSecAttrSynchronizable`, Android Block Store).
 - iCloud ([#98](https://github.com/alimek/budget-lens-offline/issues/98)) and Google Drive ([#99](https://github.com/alimek/budget-lens-offline/issues/99)) providers.
-- Backup settings and schedule ([#100](https://github.com/alimek/budget-lens-offline/issues/100)).
-- Restore flow ([#116](https://github.com/alimek/budget-lens-offline/issues/116)).
+- Backup settings, manual and automatic backups ([#100](https://github.com/alimek/budget-lens-offline/issues/100)).
+- Automatic restore during onboarding ([#116](https://github.com/alimek/budget-lens-offline/issues/116)).
+- Optional recovery code + file export for a platform switch ([#97](https://github.com/alimek/budget-lens-offline/issues/97)).
 
 **Out:**
 - Two-way record sync / CloudKit merge.
 - Shared wallet.
 - Any Budget Lens backend.
-- Changing the base currency on restore (it comes from the snapshot).
+- A mandatory user password.
+- App lock (post-MVP, [#34](https://github.com/alimek/budget-lens-offline/issues/34)).
 
 ## User stories
 
-- As a user, I create a recovery secret and back up to iCloud or Google Drive.
-- As a user, I see when my last backup ran.
-- As a user with a new phone, I restore my budget during onboarding by entering my recovery secret.
-- As a user, I understand that losing the recovery secret means losing the backup.
+- As a user, I turn on backup and never have to remember a password.
+- As a user, I see when my last backup ran and can back up now.
+- As a user who reinstalls the app or sets up a new phone of the same platform, my budget is found and restored
+  automatically.
+- As a user moving from iPhone to Android (or back), I export the backup file and use a recovery code to restore it.
 
 ## Acceptance criteria (high level)
 
-- Cloud files are unreadable without the recovery secret. A tampered file is rejected.
+- Cloud files are unreadable without the key. A tampered file is rejected.
+- Same-platform restore works without any user secret when the platform's key sync is available.
+- When key sync is not available (e.g. iCloud Keychain off, Android without screen lock / E2EE), the app says so
+  and offers the recovery code.
 - A backup made on device A restores on device B with identical data, including closed months and rate snapshots.
-- Restore runs migrations for older snapshot versions.
+  Older backup versions are migrated on restore.
 
 ## Success criteria
 
@@ -57,8 +67,22 @@ plaintext in the cloud.
 
 ## Open questions
 
-- DB key & recovery model: [#34](https://github.com/alimek/budget-lens-offline/issues/34).
-- Backup format & encryption: [#48](https://github.com/alimek/budget-lens-offline/issues/48).
-- MVP sync scope: [#49](https://github.com/alimek/budget-lens-offline/issues/49).
-- Cloud providers without a server: [#50](https://github.com/alimek/budget-lens-offline/issues/50).
+The [#48 research report](https://github.com/alimek/budget-lens-offline/issues/48) (2026-10-19) found that the direction holds with conditions:
+- "Remember nothing" depends on iCloud Keychain (iOS) or Google Backup + screen lock (Android).
+- expo-secure-store can't sync keys, so a small native module is needed.
+- A platform switch needs the exported file as well as the code.
+
+Its open questions for Grzegorz are **not decided yet** ([#48](https://github.com/alimek/budget-lens-offline/issues/48)):
+- accepting the conditional promise
+- our own synced-key module
+- a recovery code that is offered, not forced
+- a JSON payload in a `BLBK` AES-GCM container
+- default backup frequency "after changes"
+- retention
+- excluding NBP rate rows
+
+Other research:
 - Backup scheduling: [#51](https://github.com/alimek/budget-lens-offline/issues/51).
+- Cloud providers without a server: [#50](https://github.com/alimek/budget-lens-offline/issues/50).
+- MVP sync scope: [#49](https://github.com/alimek/budget-lens-offline/issues/49).
+- DB key model: [#34](https://github.com/alimek/budget-lens-offline/issues/34) (Q2 superseded by #48).

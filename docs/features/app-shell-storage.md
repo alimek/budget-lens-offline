@@ -19,17 +19,22 @@ no sign-up, and the first launch guides the user through a short onboarding.
 - `packages/db` (Drizzle schema + migrations).
 - SQLCipher with a device-only random key, a cipher guard, and a recovery screen for "database present, key missing".
 - Onboarding (language, **base currency step + lock confirmation**, starting balance, privacy explanation).
+- Main navigation with the **Dashboard as the first, main tab** ([#36](https://github.com/alimek/budget-lens-offline/issues/36), owner decision 2026-10-19). The
+  remaining tabs are refined with the Designer within the Android 5-tab limit.
 
 **Out:**
 - Accounts and any Budget Lens server.
 - Cloud backup ([E8](cloud-backup.md)).
 - Changing the base currency after onboarding.
+- App lock (biometric/PIN): post-MVP ([#34](https://github.com/alimek/budget-lens-offline/issues/34), owner decision 2026-10-19).
 
 ## User stories
 
 - As a new user, I can start budgeting without creating an account.
 - As a new user, I choose my base currency once during onboarding and confirm that it cannot be changed later.
 - As a user, I can trust that my data is encrypted at rest and never leaves my phone unless I back it up myself.
+- As a user who reinstalls the app or gets a new phone of the same platform, onboarding finds my backup on its
+  own ([#48](https://github.com/alimek/budget-lens-offline/issues/48), [E8](cloud-backup.md)).
 - As a user who lost the encryption key (e.g. restored a phone backup), I see a clear recovery screen instead of an
   empty or broken app.
 
@@ -67,4 +72,4 @@ no sign-up, and the first launch guides the user through a short onboarding.
 
 - DB key & recovery model: [#34](https://github.com/alimek/budget-lens-offline/issues/34).
 - Schema & migrations (incl. `items.currency`, rate snapshots): [#35](https://github.com/alimek/budget-lens-offline/issues/35).
-- App architecture & navigation: [#36](https://github.com/alimek/budget-lens-offline/issues/36).
+- App architecture & navigation: [#36](https://github.com/alimek/budget-lens-offline/issues/36) (decided: Dashboard first; remaining tabs open).

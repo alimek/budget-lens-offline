@@ -11,8 +11,8 @@ currencies.
 
 A forecast over a configurable horizon (default from `Settings`) of the rolling balance and total funds, **in the base
 currency**. Foreign-currency items are converted at the latest cached NBP rate (or a newer manual rate), and the UI
-shows which rates were used. Warnings (negative, low balance, large expense) use `Settings` thresholds. A home
-dashboard summarizes it.
+shows which rates were used. Warnings (negative, low balance, large expense) use `Settings` thresholds. The **Dashboard is the
+first, main tab** of the app and summarizes it ([#36](https://github.com/alimek/budget-lens-offline/issues/36), owner decision 2026-10-19).
 
 ## Scope
 
@@ -33,7 +33,7 @@ dashboard summarizes it.
 - As a user, I get a warning when a month is projected below my low-balance threshold.
 - As a user with a USD subscription, I see it included in base-currency terms, with the rate date and a stale badge
   when offline for long.
-- As a user, I open the app and see my balance, the next warning and a mini forecast.
+- As a user, I open the app on the Dashboard (first tab) and see my balance, the next warning and a mini forecast.
 
 ## Acceptance criteria (high level)
 
