@@ -32,7 +32,7 @@ first, main tab** of the app and summarizes it ([#36](https://github.com/alimek/
 - As a user, I see my projected balance for each of the next 12 months.
 - As a user, I get a warning when a month is projected below my low-balance threshold.
 - As a user with a USD subscription, I see it included in base-currency terms, with the rate date and a stale badge
-  when offline for long.
+  when the last successful fetch is more than 24 h old.
 - As a user, I open the app on the Dashboard (first tab) and see my balance, the next warning and a mini forecast.
 
 ## Acceptance criteria (high level)
@@ -41,6 +41,7 @@ first, main tab** of the app and summarizes it ([#36](https://github.com/alimek/
 - Conversion uses the #124 strategy (one rounding, half away from zero). A missing rate gives a translatable
   warning, never a silent 0.
 - Closed months use snapshotted rates; only open and future months use current rates.
+- Rates: rates are fetched **once a day on app open**; fresh = less than 24 h since the last successful fetch, older is shown as stale; offline the last stored rate is used; **only the current rate per currency is stored** (no rate history) ([#124 #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950), [#35 Q7 #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). Manual rates (`1 X = y PLN`) win when newer; cross rates go via PLN; table A only.
 
 ## Success criteria
 
@@ -58,4 +59,5 @@ first, main tab** of the app and summarizes it ([#36](https://github.com/alimek/
 
 - Charting library: [#44](https://github.com/alimek/budget-lens-offline/issues/44).
 - Warning semantics & notifications: [#45](https://github.com/alimek/budget-lens-offline/issues/45).
-- NBP caching & refresh policy: [#46](https://github.com/alimek/budget-lens-offline/issues/46).
+- NBP caching & refresh: triggers and max age decided ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)); [#46](https://github.com/alimek/budget-lens-offline/issues/46) covers the remaining edge cases
+  (weekends/holidays, errors, fixtures).

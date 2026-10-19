@@ -39,7 +39,14 @@ and never rewrites history.
 
 - Items are never active before their start or after their end. The recurrence preview text matches the engine.
 - Every item has a required currency (PLN + NBP table A). Amounts use that currency's exponent.
-- Rule edits from a month on keep past months unchanged.
+- Rule edits from a month on keep past months unchanged ([owner review #40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), all defaults accepted):
+  - A later scheduled change is kept, with a notice and a "replace" option.
+  - Overrides that are no longer scheduled are listed and deleted in the same transaction after confirmation. Kept
+    overrides stay, with a "reset these months" option.
+  - "Fix everywhere" only when no closed month uses the version.
+  - New items start no earlier than the active month.
+  - The edit form defaults to "From this month on" when the item has closed history.
+- The base-value hint uses the current stored rate (no rate history), fetched once a day on app open.
 
 ## Success criteria
 
@@ -54,6 +61,7 @@ and never rewrites history.
 
 ## Open questions
 
-- Rule versioning model: [#40](https://github.com/alimek/budget-lens-offline/issues/40).
+- Rule versioning model: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided).
 - Categories in MVP: [#41](https://github.com/alimek/budget-lens-offline/issues/41).
-- Can an item's currency change after creation (proposed: no)? See [#81](https://github.com/alimek/budget-lens-offline/issues/81).
+- Item currency after creation: fixed, like `kind` (archive and recreate to change it), per the accepted
+  [#40](https://github.com/alimek/budget-lens-offline/issues/40) recommendation. See [#81](https://github.com/alimek/budget-lens-offline/issues/81).

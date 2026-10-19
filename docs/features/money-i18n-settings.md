@@ -41,7 +41,12 @@ that blurs amounts.
 
 ## Acceptance criteria (high level)
 
-- No floats for amounts. Amounts are formatted with native `Intl` per locale and currency.
+- No floats for amounts. Amounts are formatted with native `Intl` ([#131](https://github.com/alimek/budget-lens-offline/issues/131), ADR 0012) following the app language
+  (pl / en-GB), with 2 fraction digits everywhere and capitalized month titles. Ambiguous input like `1.234` is
+  rejected with a clear message ([owner review #38](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750)).
+- i18n uses i18next + react-i18next + i18next-cli, JSON v4 plurals, namespaces per feature, translations in the repo,
+  and the system language with an in-app override ([owner review #37](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263678423)).
+- `baseCurrency` (renamed from `defaultCurrency`); conversions round half away from zero ([owner review #39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210)).
 - No hardcoded UI strings. **English is the source language**; missing keys fall back to English at runtime.
   There are **no translation checks in CI** ([#37](https://github.com/alimek/budget-lens-offline/issues/37), final owner decision 2026-10-19). Translations are
   filled in before release.
@@ -62,8 +67,7 @@ that blurs amounts.
 
 ## Open questions
 
-- i18n library: [#37](https://github.com/alimek/budget-lens-offline/issues/37) (decided: English source language, no CI translation checks; library choice per
-  the research report).
-- Formatting on Hermes: [#38](https://github.com/alimek/budget-lens-offline/issues/38).
+- i18n: [#37](https://github.com/alimek/budget-lens-offline/issues/37) (decided, [owner review #37](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263678423)).
+- Formatting on Hermes: [#38](https://github.com/alimek/budget-lens-offline/issues/38) (decided; Q1 superseded by native `Intl`, [owner review #38](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750)).
 - Currency model (decided: per-item currency in MVP, [owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)): [#39](https://github.com/alimek/budget-lens-offline/issues/39).
-- Cross rates: [#124](https://github.com/alimek/budget-lens-offline/issues/124).
+- Cross rates and refresh: [#124](https://github.com/alimek/budget-lens-offline/issues/124) (decided, [owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)).

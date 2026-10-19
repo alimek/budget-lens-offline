@@ -19,6 +19,8 @@ Other owner decisions of 2026-10-19 reflected in the PRDs:
 - Dashboard is the first, main tab ([#36](https://github.com/alimek/budget-lens-offline/issues/36)).
 - English is the source language; no translation checks in CI; missing keys fall back to English ([#37](https://github.com/alimek/budget-lens-offline/issues/37)).
 - App lock (biometric/PIN) is post-MVP ([#34](https://github.com/alimek/budget-lens-offline/issues/34)).
+- Owner review 2026-10-19: the remaining research defaults of [#34](https://github.com/alimek/budget-lens-offline/issues/34)–[#40](https://github.com/alimek/budget-lens-offline/issues/40) and [#124](https://github.com/alimek/budget-lens-offline/issues/124) are accepted, with two
+  changes: rates are fetched **once a day on app open**; fresh = less than 24 h since the last successful fetch, older is shown as stale; offline the last stored rate is used; **only the current rate per currency is stored** (no rate history) ([#124 #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950), [#35 Q7 #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). The rate used at month close stays in the closed-month snapshot ([#141](https://github.com/alimek/budget-lens-offline/issues/141)).
 - Backup direction: an encrypted file whose key is stored automatically in the platform's synced secret store; an
   optional recovery code only for switching platforms ([#48](https://github.com/alimek/budget-lens-offline/issues/48)).
 

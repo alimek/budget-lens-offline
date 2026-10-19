@@ -35,7 +35,10 @@ base currency.
 
 ## Acceptance criteria (high level)
 
-- Overrides are keyed by item and month (never by name) and are stored in the item's currency.
+- Overrides are keyed by `(item_id, month)` (never by name; one `items` table with `kind`) and are stored in the
+  item's currency. Payment status is its own table ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
+- Open months convert at the current stored rate; a stale badge appears after 24 h without a successful fetch
+  ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)).
 - Totals equal the sum of resolved occurrences converted to the base currency, each row rounded before summing.
 - Past (closed) months are read-only and show snapshotted rates.
 

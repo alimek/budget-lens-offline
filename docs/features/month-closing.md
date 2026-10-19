@@ -35,7 +35,11 @@ with opening = closing. Closed months never change.
 
 - The close is atomic: totals, rate snapshots and the next month are written together or not at all.
 - December closes into January of the next year. Opening = previous closing.
-- Closing is blocked with a clear message when a needed rate is missing; the user can enter a manual rate.
+- Closing is blocked with a clear message when a needed rate is missing; the user can enter a manual rate
+  (`1 X = y PLN`).
+- The snapshot records the current stored rate (NBP or a newer manual rate) at close time, per occurrence in
+  `closed_occurrences` ([owner review #40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), Q3). It is kept with the closed month, not in `exchange_rates`, which stores only the
+  current rate per currency ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). There is no savings snapshot at close ([owner review #39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210)).
 
 ## Success criteria
 
@@ -51,5 +55,5 @@ with opening = closing. Closed months never change.
 ## Open questions
 
 - Month lifecycle edge cases: [#43](https://github.com/alimek/budget-lens-offline/issues/43).
-- `closed_occurrences` design: [#40](https://github.com/alimek/budget-lens-offline/issues/40).
-- Cross rates: [#124](https://github.com/alimek/budget-lens-offline/issues/124).
+- `closed_occurrences`: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided: yes).
+- Cross rates: [#124](https://github.com/alimek/budget-lens-offline/issues/124) (decided).

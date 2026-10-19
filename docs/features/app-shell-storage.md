@@ -17,7 +17,14 @@ no sign-up, and the first launch guides the user through a short onboarding.
 **In:**
 - `apps/mobile` scaffold, navigation skeleton, design-system component layer.
 - `packages/db` (Drizzle schema + migrations).
-- SQLCipher with a device-only random key, a cipher guard, and a recovery screen for "database present, key missing".
+- SQLCipher with a device-only random key (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), a cipher guard, and a recovery screen
+  for "database present, key missing". "Start over" keeps the orphaned DB for 30 days or until the first successful
+  backup. The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
+- Schema per [#35](https://github.com/alimek/budget-lens-offline/issues/35): one `items` table with `kind`, rule versions as rows, payment status as its own table, no SQL
+  default for `items.currency`, an encrypted copy before every pending migration, Drizzle 0.45.x ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
+- App structure per [#36](https://github.com/alimek/budget-lens-offline/issues/36): native tabs, editors as `formSheet` routes, Expo UI for settings/pickers/switches, a
+  non-secret `bl.lang` mirror, explicit Android backup rules without `allowBackup=false`, typed routes after beta
+  ([owner review #36](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263678079)).
 - Onboarding (language, **base currency step + lock confirmation**, starting balance, privacy explanation).
 - Main navigation with the **Dashboard as the first, main tab** ([#36](https://github.com/alimek/budget-lens-offline/issues/36), owner decision 2026-10-19). The
   remaining tabs are refined with the Designer within the Android 5-tab limit.
@@ -70,6 +77,6 @@ no sign-up, and the first launch guides the user through a short onboarding.
 
 ## Open questions
 
-- DB key & recovery model: [#34](https://github.com/alimek/budget-lens-offline/issues/34).
-- Schema & migrations (incl. `items.currency`, rate snapshots): [#35](https://github.com/alimek/budget-lens-offline/issues/35).
-- App architecture & navigation: [#36](https://github.com/alimek/budget-lens-offline/issues/36) (decided: Dashboard first; remaining tabs open).
+- DB key & recovery model: [#34](https://github.com/alimek/budget-lens-offline/issues/34) (decided, [owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
+- Schema & migrations: [#35](https://github.com/alimek/budget-lens-offline/issues/35) (decided; Q7 changed to "current rate only", [owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
+- App architecture & navigation: [#36](https://github.com/alimek/budget-lens-offline/issues/36) (decided; the remaining tabs are still open with the Designer).
