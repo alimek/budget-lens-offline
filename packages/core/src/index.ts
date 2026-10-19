@@ -1,10 +1,23 @@
 export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
+export type {
+  ForecastError,
+  ForecastInput,
+  ForecastItem,
+  ForecastMonth,
+  ForecastRate,
+  ForecastResult,
+  ForecastWarning,
+} from "./forecast";
+export { forecast } from "./forecast";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,
   convertMinor,
+  convertMinorExact,
+  convertViaPln,
   isMinorUnits,
+  MoneyOverflowError,
   multiplyByRate,
   negateMinorUnits,
   subtractMinorUnits,
