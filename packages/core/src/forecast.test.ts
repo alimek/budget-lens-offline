@@ -139,13 +139,11 @@ describe("forecast", () => {
     expect(result.warnings.map((warning) => [warning.code, warning.type])).toEqual(
       code === undefined ? [] : [[code, type]],
     );
-    if (code !== undefined)
-      expect(result.warnings[0]?.params).toEqual({
-        amount: balance,
-        threshold: balance < 0 ? 0 : 100,
-        currency: "PLN",
-        monthsAhead: 1,
-      });
+    expect(result.warnings.map((warning) => warning.params)).toEqual(
+      code === undefined
+        ? []
+        : [{ amount: balance, threshold: balance < 0 ? 0 : 100, currency: "PLN", monthsAhead: 1 }],
+    );
   });
 
   it.each([

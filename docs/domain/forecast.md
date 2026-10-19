@@ -1,7 +1,7 @@
 # Forecast
 
-Status: **implemented** in `packages/core/src/forecast.ts` (#6), with exact currency conversion shared in
-`src/money.ts` via `src/convert-via-pln.ts`. No clock, I/O or storage.
+Status: **implemented** in `packages/core/src/forecast.ts` (#6), with exact currency conversion (`convertViaPln`)
+shared in `src/money.ts`. No clock, I/O or storage.
 
 ## Input and output
 
@@ -92,6 +92,6 @@ month names/messages. It hardcodes low-balance and outflow thresholds (5000 / 10
 and applies name-based overrides. The port uses explicit months, Settings, warning codes and id-based overrides.
 
 `src/forecast.test.ts` covers rolling balances, payment keys, overrides/skips, warning boundaries, FX and failures.
-`src/convert-via-pln.test.ts` checks pair directions, ISO exponents and exact rounding. The forecast characterization
+`src/money.test.ts` (`convertViaPln`) checks pair directions, ISO exponents and exact rounding. The forecast characterization
 compares the fixture budget's rolling totals and warning severities at legacy thresholds; the old golden master
 remains unchanged. Deliberate differences are recorded in `test/LEGACY.md`.

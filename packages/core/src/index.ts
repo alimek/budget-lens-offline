@@ -1,4 +1,3 @@
-export { convertViaPln } from "./convert-via-pln";
 export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
 export type {
@@ -16,6 +15,7 @@ export {
   addMinorUnits,
   convertMinor,
   convertMinorExact,
+  convertViaPln,
   isMinorUnits,
   MoneyOverflowError,
   multiplyByRate,

@@ -1,7 +1,7 @@
-import { convertViaPln } from "./convert-via-pln";
 import { type CurrencyCode, isCurrencyCode } from "./currency";
 import {
   addMinorUnits,
+  convertViaPln,
   isMinorUnits,
   type MinorUnits,
   MoneyOverflowError,
