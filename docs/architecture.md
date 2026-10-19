@@ -3,7 +3,7 @@
 ## Current state
 
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
-issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
+issue by issue. `apps/mobile` now contains the Expo development-client scaffold (#73). `packages/db` (Drizzle schema) is planned.
 What exists today in `packages/core`:
 - money in integer minor units: the `MinorUnits` type, exact operations, parsing and native `Intl.NumberFormat`
   currency formatting for `pl` and `en`, always showing full amounts (#2/#131, see [domain/money.md](domain/money.md) and
@@ -19,7 +19,7 @@ What exists today in `packages/core`:
 ## Repository layout
 
 ```
-apps/                    # applications; apps/mobile (Expo) will be added in Stage 1
+apps/mobile/             # Expo development client, Router, i18n, provider-scoped Zustand
 packages/core/           # pure TypeScript domain logic, tested with Vitest
   src/index.ts           # public API – everything exported from here
   test/                  # legacy characterization tests (#3): fixtures, legacy reference, snapshots, LEGACY.md
@@ -30,7 +30,7 @@ docs/                    # architecture, conventions, glossary, domain, decision
 ## Overview
 
 ```
-apps/mobile  (planned, Stage 1)   Expo app: UI, navigation, state, platform integrations
+apps/mobile  (scaffold, Stage 1)   Expo app: UI, navigation, state, platform integrations
    │ depends on
    ├── packages/db   (planned)    Drizzle schema + migrations for expo-sqlite (SQLCipher)
    └── packages/core (exists)     pure TypeScript domain logic
@@ -61,24 +61,25 @@ NBP uses an injected fetch and `RateStore` (#8); SQLite storage (#92) and app
 lifecycle refresh integration (#93) remain in Stage 1.
 Legacy behaviour is pinned by characterization tests first (#3).
 
-## Planned app stack (Stage 1)
+## App stack (Stage 1)
 
-Decided, not implemented yet (see [decisions/](decisions/); sources: #1 "Decyzje", the [#1 decisions
+Decided stack (see [decisions/](decisions/); sources: #1 "Decyzje", the [#1 decisions
 comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427) and the #10
-research with its correction comment):
+research with its correction comment). The Status column says what the #73 `apps/mobile` scaffold
+implemented and what is still planned:
 
-| Concern | Choice |
-| --- | --- |
-| Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) |
-| Navigation | Expo Router |
-| UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views |
-| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store |
-| Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) |
-| App state | Zustand with the provider pattern (store created inside a React provider) |
-| Network data | TanStack Query only when network requests are added (NBP rates, license) |
-| i18n | Polish and English; no hardcoded UI strings |
-| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) |
-| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core |
+| Concern | Choice | Status |
+| --- | --- | --- |
+| Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) | Implemented (#73): Expo SDK 58 development client |
+| Navigation | Expo Router | Implemented (#73) |
+| UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73): Expo UI in `src/ui/native`, Uniwind layout; shared tokens/components in #119 |
+| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Planned (#75) |
+| Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) | Planned (#75) |
+| App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
+| Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
+| i18n | Polish and English; no hardcoded UI strings | Implemented (#73): bundled PL/EN locale files, device-language initialization |
+| Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) | Planned (#30) |
+| Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests run locally on the Mac Studio on `BudgetLens-*` devices (not in CI, [ci.md](ci.md#native-builds-and-e2e-local)); setup in #15 |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
 of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build
@@ -96,3 +97,20 @@ Not decided yet; do not treat these as part of the stack:
 
 pnpm workspaces + Turborepo, TypeScript 7 (`tsc`), Vitest, Biome, Fallow, Lefthook, GitHub Actions. See
 [README.md](../README.md) for commands and CI details, and [decisions/](decisions/) for the reasoning.
+
+## Mobile scaffold (#73)
+
+`apps/mobile` uses a custom entry for the English/Polish plural-rules polyfill and Expo Router.
+Bundled i18n initializes synchronously from the device locale before navigation. The root contains
+`I18nProvider` → `AppStoreProvider` → Router `ThemeProvider` → Stack. The Zustand vanilla store is
+created once per provider with an injectable clock; it currently holds only the selected month.
+No SQLite data is copied into Zustand. Boot guards, DB injection and migrations belong to #75;
+onboarding and recovery belong to #59/#60. No database is opened by this scaffold.
+
+The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
+Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,
+using a small Expo UI native-button adapter. Other screens are translated placeholders. Typed routes
+remain off. Uniwind handles custom layout; shared tokens/components remain in #119.
+Expo UI imports are restricted by Biome to `src/ui/native/`.
+
+Development commands and test IDs: [mobile development](mobile-development.md).

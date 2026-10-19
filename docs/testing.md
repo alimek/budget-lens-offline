@@ -49,8 +49,7 @@
     is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
     Screenshots section of the PR template. A manual screenshot from a development build alone is not enough.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
-  - Metro runs on the repo's **fixed port**; the number is not chosen yet and will be defined with `apps/mobile`
-    in #15.
+  - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 
 ## Rules
 
@@ -162,3 +161,13 @@ line):
   exchange rates, month closing and formatting (including the check that `formatMoney` matches the legacy
   `formatCurrency` away from rounding halves). They use explicit AAA sections and the frozen-clock exception
   from rule 5.
+
+## Scaffold smoke tests (#73)
+
+`apps/mobile/e2e/scaffold.e2e.ts` checks the home screen, the four other tabs and the Savings push
+with deterministic `getByTestId` locators. It uses no model or credentials. Each test has explicit AAA
+sections. The config names dedicated BudgetLens devices and records screenshots/video from development
+builds. They run locally on the Mac Studio with `pnpm --filter @budget-lens/mobile e2e:ios` /
+`e2e:android` (`BudgetLens-CI` / `BudgetLens-Android`), not in CI. Fallow lists the config and test glob as
+real runner entry points (it has no e2e plugin).
+See [mobile development](mobile-development.md) for commands and the testID convention.

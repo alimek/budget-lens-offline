@@ -52,6 +52,10 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   and CI ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252);
   behaviour: [e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). The CLI also honours
   `DO_NOT_TRACK=1`, but the repo standard is `E2E_TELEMETRY_DISABLED=1`.
+- Expo CLI (`@expo/cli` sends usage telemetry by default): `EXPO_NO_TELEMETRY=1`, set as a prefix in the
+  `start`, `ios`, `android` and `export` scripts of `apps/mobile/package.json` (Expo does not run in CI, see
+  [ci.md](ci.md#native-builds-and-e2e-local)); set it yourself when calling `expo` directly on the Mac Studio
+  (for example `EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild`).
 
 ## Workflow
 
@@ -66,8 +70,7 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   development build alone is not enough. Native builds and E2E do not run in CI (see
   [ci.md](ci.md#native-builds-and-e2e-local)).
 - Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.
-- Metro runs on the repo's **fixed port**. The port number is not chosen yet; it will be defined together with
-  `apps/mobile` in #15.
+- Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
 - **Docs rule:** every PR that changes domain behaviour or architecture updates the relevant file in `docs/`
   (and [AGENTS.md](../AGENTS.md) if needed). The Reviewer checks this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board

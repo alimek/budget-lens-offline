@@ -93,8 +93,8 @@ alternative is allowed; `AND` needs every part allowed. GPL, AGPL, LGPL, any oth
 license fail.
 
 Reviewed exceptions are listed in `EXCEPTIONS` in the script: a package name pattern, the exact license and a
-reason. Current exception: `lightningcss` (and its platform binaries), MPL-2.0, a dev-only transitive dependency of
-Vite (Vitest), never modified or shipped in the app.
+reason. Current exception: `lightningcss` (and its platform binaries), MPL-2.0, a build-time dependency of
+Vite (Vitest) and Uniwind, never modified or shipped in the app.
 
 ## Native builds and E2E (local)
 
@@ -116,3 +116,9 @@ no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow 
 Only fast checks that run on `ubuntu-latest` without a native build, for example `expo-doctor`, `migrations`
 (`drizzle-kit check`) and `bundle-size` (JS bundle size against a committed budget). Tracked in
 [#109](https://github.com/alimek/budget-lens-offline/issues/109).
+
+Current audit exceptions: `node-forge` (GHSA-86w9-cpqp-85rv) in Expo CLI code signing and `braces`
+(GHSA-vfj7-8cjw-p6xm) in Metro's Node.js file watcher. Both expire 2026-11-19 and are tracked in
+[#162](https://github.com/alimek/budget-lens-offline/issues/162). Dependency-path and production
+source-map evidence is recorded in [mobile development](mobile-development.md#dependency-compatibility-and-temporary-audit-exceptions).
+Neither package is part of the mobile runtime; no runtime dependency is exempted.

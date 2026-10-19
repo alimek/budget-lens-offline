@@ -1,6 +1,8 @@
 # 0006 – App stack (Expo SDK 58)
 
-Status: Accepted, not implemented yet. Sources: #1 "Decyzje" (state, data reads, UI) and the #10 research
+Status: Accepted; partly implemented by the #73 `apps/mobile` scaffold (Expo SDK 58 development client,
+Expo Router, Expo UI + Uniwind, Zustand provider, i18n); Drizzle `useLiveQuery` reads (#75) and TanStack Query are not implemented yet (see the
+[architecture stack table](../architecture.md#app-stack-stage-1)). Sources: #1 "Decyzje" (state, data reads, UI) and the #10 research
 (closed) with its correction comment (SDK version, development builds); Expo Router: [#1 decisions
 comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427).
 

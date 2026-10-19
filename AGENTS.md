@@ -64,7 +64,7 @@ screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-lo
   fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the PR
   template's Screenshots section. A manual screenshot from a development build alone is not enough.
 - Run the app only on the dedicated `BudgetLens-*` simulators/emulators, never on personal or shared devices.
-- Metro runs on the repo's fixed port; the number will be defined in #15.
+- Metro runs on the repo's fixed port **8073** – [docs/mobile-development.md](docs/mobile-development.md).
 - Docs rule: every PR that changes domain behaviour or architecture updates `docs/`; the Reviewer checks this.
 
 ## Docs
@@ -72,7 +72,7 @@ screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-lo
 - [docs/conventions.md](docs/conventions.md) – detailed conventions and workflow rules
 - [docs/agents.md](docs/agents.md) – agent triggers, the `scripts/agents/` sync scripts and the weekly routine review
 - [docs/glossary.md](docs/glossary.md) – domain glossary
-- [docs/architecture.md](docs/architecture.md) – current state, layout, packages, planned app stack
+- [docs/architecture.md](docs/architecture.md) – current state, layout, packages, app stack (implemented and planned)
 - [docs/domain/](docs/domain/) – one file per domain area
 - [docs/features/](docs/features/) – short PRDs, one per MVP epic
 - [docs/testing.md](docs/testing.md) – testing strategy and rules

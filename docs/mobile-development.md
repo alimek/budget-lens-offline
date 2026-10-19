@@ -1,0 +1,120 @@
+# Mobile development
+
+The #73 scaffold lives in `apps/mobile`. Use Node from `.nvmrc`, pnpm 12.14.0, Xcode with an iOS
+simulator runtime, CocoaPods, and the Android SDK/JDK required by Expo SDK 58. Install dependencies
+from the repository root with `pnpm install`. Native projects are generated locally and ignored by Git.
+
+## Development builds
+
+Use development builds, not Expo Go. Select only a dedicated `BudgetLens-*` simulator/emulator;
+never let Expo auto-select a personal/shared device. The smoke config names `BudgetLens-CI` (iOS)
+and `BudgetLens-Android` (Android). Those devices must exist before running tests.
+
+```sh
+EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --port 8073
+EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo run:android --device <BudgetLens-emulator-serial> --port 8073
+pnpm --filter @budget-lens/mobile start
+```
+
+Metro uses the repository's fixed port **8073**, checked free with `lsof -nP -iTCP -sTCP:LISTEN`
+and [recorded in #15](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6276858226).
+The `start`, `ios`, and `android` scripts pass it explicitly and, like `export`, set `EXPO_NO_TELEMETRY=1`. Do not accept an automatic port change
+or attach to another project's server if 8073 is occupied. The iOS smoke target passes the server URL
+as a launch argument; Android uses an explicit development-client VIEW intent to the same port after `adb -s <BudgetLens-emulator-serial> reverse
+tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
+prompt required to connect the development client to Metro. All application data stays local; this
+scaffold opens no database or Budget Lens service.
+
+## Checks and smoke evidence
+
+CI on GitHub runs only the fast checks; native builds, `expo prebuild` and e2e run **locally on the Mac Studio**
+on the `BudgetLens-*` devices ([ci.md](ci.md#native-builds-and-e2e-local)). With Metro running on 8073 and the
+development build installed on `BudgetLens-CI` / `BudgetLens-Android`:
+
+```sh
+pnpm check
+EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo export --platform ios --platform android
+pnpm --filter @budget-lens/mobile e2e:ios
+pnpm --filter @budget-lens/mobile e2e:android
+```
+
+The e2e scripts disable telemetry. Tests use no agent steps, model provider or secrets. The Savings
+action targets the native button
+inside `screen-home`: Expo UI on Android exposes `overview-open-savings` on a wrapper.
+Results, screenshots, traces and video are written under `apps/mobile/.e2e/<platform>/` (ignored); review the
+report before attaching evidence to a PR. UI PRs attach the iOS and Android screenshots (device named) and the
+e2e command in the Screenshots section of the [PR template](../.github/pull_request_template.md). A passing
+bundle export does not prove that a native build starts. The broader e2e setup remains in #15; the fast mobile
+CI gates (no native build) remain in #109.
+
+## Test IDs
+
+Use stable `kebab-case` IDs: `<area>-<element>[-<variant>]`. Never put translated labels or personal
+data in an ID. Screen roots use `screen-<name>` with `collapsable={false}`. Overview uses `screen-home`
+for the #15 smoke contract; other roots are `screen-month`, `screen-forecast`, `screen-items`,
+`screen-settings`, and `screen-savings`. Native triggers use `tab-overview`, `tab-month`,
+`tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`.
+
+## Scope
+
+The scaffold has bundled English/Polish strings, device-language initialization, light/dark system
+navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
+from locale resources. Native controls live in `src/ui/native`; #119 owns shared design tokens and
+components. DB boot, recovery, persistence, language preferences and onboarding are separate work.
+
+## Native permissions and network
+
+The app is offline-first, so `app.json` keeps the native defaults minimal. Verify changes with
+`EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo prebuild --clean --no-install` and check the
+generated (ignored) `android/` and `ios/` projects; for Android also check the Gradle merged manifest
+(`./gradlew :app:processReleaseMainManifest`).
+
+- **Android:** `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and
+  `WRITE_EXTERNAL_STORAGE` (Expo adds them by default). The release manifest keeps only:
+  - `INTERNET`: needed for NBP rates (#8) and for the development client to reach Metro;
+  - `VIBRATE`: an Expo default, a normal (no-prompt) permission for haptics;
+  - `<package>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`: an app-private signature permission that AndroidX adds.
+
+  Debug builds only also get `SYSTEM_ALERT_WINDOW` (from the generated `src/debug` manifest, for the React
+  Native dev overlay), `ACCESS_LOCAL_NETWORK`, `ACCESS_NETWORK_STATE` and `CHANGE_WIFI_MULTICAST_STATE` (React
+  Native and the development launcher, to find and connect to Metro), and cleartext traffic to Metro. None of
+  these are in release builds.
+- **iOS:** App Transport Security sets `NSAllowsArbitraryLoads: false` and `NSAllowsLocalNetworking: true`.
+  Local networking stays because the development client loads the bundle from Metro over plain HTTP on the
+  local network; it only allows local addresses (for example `localhost`, `*.local`), not internet hosts,
+  so every remote request must use HTTPS.
+
+## Dependency compatibility and temporary audit exceptions
+
+React and React DOM use **19.3.0**, exactly as pinned by SDK 58's `expo/bundledNativeModules.json`,
+per the [#73 decision](https://github.com/alimek/budget-lens-offline/issues/73#issuecomment-6276834077).
+Verify from `apps/mobile` with `npx expo install --check`. TypeScript remains 7.0.2 per ADR 0002;
+only TypeScript is excluded from Expo's older compiler recommendation via `expo.install.exclude`.
+All runtime package compatibility checks, including React, remain enabled.
+
+The two temporary `audit.ignore` entries expire **2026-11-19** and are tracked by
+[#162](https://github.com/alimek/budget-lens-offline/issues/162). Evidence from
+`pnpm --filter @budget-lens/mobile why node-forge braces --depth 3`:
+
+- `node-forge@1.4.0` (GHSA-86w9-cpqp-85rv): direct consumers are `@expo/cli` and
+  `@expo/code-signing-certificates` (itself used only by that CLI). The import is in Expo's
+  Node.js iOS code-signing helper, `build/src/run/ios/codeSigning/Security.js`.
+- `braces@3.0.3` (GHSA-vfj7-8cjw-p6xm): `micromatch` → `metro-file-map` → `metro` / `@expo/metro`.
+  Metro's `src/watchers/common.js` uses micromatch for Node.js file watching.
+
+These toolchain packages are installed transitively under Expo/React Native, so manifest
+`dependencies` vs `devDependencies` alone is not sufficient proof of runtime reachability.
+`expo export --platform ios --platform android --source-maps` was checked on both platforms:
+no `node-forge`, `braces`, `micromatch`, `metro-file-map`, code-signing certificates or Expo CLI
+`build/src` modules occur in the production source maps. Expo's `build/metro-require/require.js`
+bootstrap does occur; it does not import those vulnerable modules. No runtime dependency has
+an exception. Recheck after upgrades and remove both ignores once upstream patches are available.
+
+pnpm added exact `minimumReleaseAgeExclude` entries for newly published stable Expo/Uniwind/i18n
+packages during installation; no global release-age policy was changed.
+
+Uniwind regenerates `src/uniwind-types.d.ts`; Biome excludes that exact generated file so exporting
+or starting Metro cannot make the format check fail.
+
+Android 17 video retrieval currently fails in agent-device, so its target records screenshots and
+traces instead; iOS retains video. The six assertions run on both platforms.
