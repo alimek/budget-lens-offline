@@ -28,7 +28,7 @@ const EXCEPTIONS = [
     name: /^lightningcss(-[a-z0-9-]+)?$/,
     license: "MPL-2.0",
     reason:
-      "file-level copyleft only; dev-only transitive dependency of Vite (Vitest), never modified or shipped in the app",
+      "file-level copyleft only; build-time dependency of Vite (Vitest) and Uniwind, never modified or shipped in the app",
   },
 ];
 

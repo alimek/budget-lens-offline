@@ -3,7 +3,7 @@
 ## Current state
 
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
-issue by issue. `apps/mobile` (Expo) and `packages/db` (Drizzle schema) are **planned, not created yet**.
+issue by issue. `apps/mobile` now contains the Expo development-client scaffold (#73). `packages/db` (Drizzle schema) is planned.
 What exists today in `packages/core`:
 - money in integer minor units: the `MinorUnits` type, exact operations, parsing and native `Intl.NumberFormat`
   currency formatting for `pl` and `en`, always showing full amounts (#2/#131, see [domain/money.md](domain/money.md) and
@@ -17,7 +17,7 @@ What exists today in `packages/core`:
 ## Repository layout
 
 ```
-apps/                    # applications; apps/mobile (Expo) will be added in Stage 1
+apps/mobile/             # Expo development client, Router, i18n, provider-scoped Zustand
 packages/core/           # pure TypeScript domain logic, tested with Vitest
   src/index.ts           # public API – everything exported from here
   test/                  # legacy characterization tests (#3): fixtures, legacy reference, snapshots, LEGACY.md
@@ -28,7 +28,7 @@ docs/                    # architecture, conventions, glossary, domain, decision
 ## Overview
 
 ```
-apps/mobile  (planned, Stage 1)   Expo app: UI, navigation, state, platform integrations
+apps/mobile  (scaffold, Stage 1)   Expo app: UI, navigation, state, platform integrations
    │ depends on
    ├── packages/db   (planned)    Drizzle schema + migrations for expo-sqlite (SQLCipher)
    └── packages/core (exists)     pure TypeScript domain logic
@@ -59,7 +59,7 @@ Planned content, one issue each: forecast (#6), NBP exchange-rate client with an
 offline cache (#8).
 Legacy behaviour is pinned by characterization tests first (#3).
 
-## Planned app stack (Stage 1)
+## App stack (Stage 1)
 
 Decided, not implemented yet (see [decisions/](decisions/); sources: #1 "Decyzje", the [#1 decisions
 comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427) and the #10
@@ -94,3 +94,20 @@ Not decided yet; do not treat these as part of the stack:
 
 pnpm workspaces + Turborepo, TypeScript 7 (`tsc`), Vitest, Biome, Fallow, Lefthook, GitHub Actions. See
 [README.md](../README.md) for commands and CI details, and [decisions/](decisions/) for the reasoning.
+
+## Mobile scaffold (#73)
+
+`apps/mobile` uses a custom entry for the English/Polish plural-rules polyfill and Expo Router.
+Bundled i18n initializes synchronously from the device locale before navigation. The root contains
+`I18nProvider` → `AppStoreProvider` → Router `ThemeProvider` → Stack. The Zustand vanilla store is
+created once per provider with an injectable clock; it currently holds only the selected month.
+No SQLite data is copied into Zustand. Boot guards, DB injection and migrations belong to #75;
+onboarding and recovery belong to #59/#60. No database is opened by this scaffold.
+
+The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
+Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,
+using a small Expo UI native-button adapter. Other screens are translated placeholders. Typed routes
+remain off. Uniwind handles custom layout; shared tokens/components remain in #119.
+Expo UI imports are restricted by Biome to `src/ui/native/`.
+
+Development commands and test IDs: [mobile development](mobile-development.md).

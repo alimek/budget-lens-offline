@@ -22,5 +22,6 @@
     "re-export-cycle": "error",
     "package-cycle": "error",
     "stale-suppressions": "error"
-  }
+  },
+  "entry": ["apps/mobile/e2e.config.ts", "apps/mobile/e2e/**/*.e2e.ts"]
 }

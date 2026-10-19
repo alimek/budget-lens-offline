@@ -21,6 +21,9 @@
       "dependsOn": ["^typecheck"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "cache": false
     }
   }
 }

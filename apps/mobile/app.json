@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Budget Lens",
+    "slug": "budget-lens",
+    "scheme": "budget-lens",
+    "version": "0.0.0",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.budgetlens.offline",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.budgetlens.offline"
+    },
+    "plugins": ["expo-router", "expo-localization"]
+  }
+}

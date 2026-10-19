@@ -93,7 +93,7 @@
                       "@supabase/**",
                       "supabase"
                     ],
-                    "message": "packages/core must stay pure TypeScript – no dependencies on React Native/Expo/Next/Supabase."
+                    "message": "packages/core must stay pure TypeScript \u2013 no dependencies on React Native/Expo/Next/Supabase."
                   }
                 ]
               }
@@ -108,6 +108,26 @@
         "rules": {
           "suspicious": {
             "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/mobile/src/**", "!apps/mobile/src/ui/native/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@expo/ui", "@expo/ui/**"],
+                    "message": "Keep Expo UI imports inside src/ui/native adapters."
+                  }
+                ]
+              }
+            }
           }
         }
       }

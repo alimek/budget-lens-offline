@@ -7,3 +7,10 @@ coverage/
 .fallow/
 .env*
 !.env.example
+
+# Expo development builds and local test artifacts
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/.e2e/
+apps/mobile/.devices/

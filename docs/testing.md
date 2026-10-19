@@ -146,3 +146,11 @@ line):
 Follow-ups:
 - Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,
   recurrence): #122.
+
+## Scaffold smoke tests (#73)
+
+`apps/mobile/e2e/scaffold.e2e.ts` checks the home screen, the four other tabs and the Savings push
+with deterministic `getByTestId` locators. It uses no model or credentials. Each test has explicit AAA
+sections. The config names dedicated BudgetLens devices and records screenshots/video from development
+builds. Fallow lists the config and test glob as real runner entry points (it has no e2e plugin).
+See [mobile development](mobile-development.md) for commands and the testID convention.

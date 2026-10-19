@@ -8,7 +8,7 @@ testing guidelines are in [docs/](docs/).
 ## Structure
 
 ```
-apps/            # applications (the Expo app will be added in a separate step)
+apps/mobile/     # Expo development client (iOS/Android), Router, Uniwind, PL/EN
 packages/core/   # pure TypeScript domain logic (no RN/Expo/Next/Supabase)
 ```
 
@@ -94,3 +94,5 @@ Shared setup (pnpm from `packageManager` with store caching, Node.js from `.nvmr
 3. Add the status checks `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title` and `pr-body`
    (they appear in the search after the workflow has run at least once).
 4. Save the rule.
+
+Mobile setup and verification: [docs/mobile-development.md](docs/mobile-development.md).

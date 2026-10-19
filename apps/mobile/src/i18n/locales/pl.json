@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "tabs": {
+      "overview": "Przegląd",
+      "month": "Miesiąc",
+      "forecast": "Prognoza",
+      "items": "Pozycje",
+      "settings": "Ustawienia"
+    },
+    "savings": "Oszczędności"
+  },
+  "scaffold": {
+    "message": "Twój budżet pozostaje na tym urządzeniu.",
+    "selectedMonth": "Wybrany miesiąc: {{month}}"
+  }
+}

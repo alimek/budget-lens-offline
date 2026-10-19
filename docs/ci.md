@@ -91,8 +91,8 @@ alternative is allowed; `AND` needs every part allowed. GPL, AGPL, LGPL, any oth
 license fail.
 
 Reviewed exceptions are listed in `EXCEPTIONS` in the script: a package name pattern, the exact license and a
-reason. Current exception: `lightningcss` (and its platform binaries), MPL-2.0, a dev-only transitive dependency of
-Vite (Vitest), never modified or shipped in the app.
+reason. Current exception: `lightningcss` (and its platform binaries), MPL-2.0, a build-time dependency of
+Vite (Vitest) and Uniwind, never modified or shipped in the app.
 
 ## Planned gates (when `apps/mobile` exists)
 
