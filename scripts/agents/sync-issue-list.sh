@@ -76,7 +76,8 @@ mkdir -p "$state_dir"
 
 label_list=$(mktemp)
 known_labels=$(mktemp)
-tmp=$(mktemp)
+# The queue temp file lives in the state dir, so the final mv is an atomic rename on the same filesystem.
+tmp=$(mktemp "$state_dir/.issues.XXXXXX")
 cleanup() { rm -f "$label_list" "$known_labels" "$tmp"; }
 trap cleanup EXIT
 printf '%s\n' "$labels" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' > "$label_list"
@@ -93,7 +94,8 @@ unchanged=0
 failed=0
 while IFS= read -r label; do
   [ -n "$label" ] || continue
-  slug=${label//:/-}
+  # Keep the file name inside the state dir: anything outside [A-Za-z0-9._-] (":" and "/" included) becomes "-".
+  slug=$(printf '%s' "$label" | tr -c 'A-Za-z0-9._-' '-')
   target="$state_dir/issues-$slug.tsv"
   : > "$tmp"
   if ! gh issue list --repo "$repo" --state open --label "$label" --limit 500 \
@@ -106,12 +108,13 @@ while IFS= read -r label; do
   fi
 
   count=$(wc -l < "$tmp" | tr -d '[:space:]')
+  [ "$count" -lt 500 ] || printf 'warning: %s has 500+ open issues, the queue is truncated at 500\n' "$label" >&2
   if [ -f "$target" ] && cmp -s "$tmp" "$target"; then
     unchanged=$((unchanged + 1))
     printf '%s: %s - unchanged (%s open issues)\n' "$label" "$target" "$count"
   else
+    chmod 644 "$tmp"
     mv "$tmp" "$target"
-    chmod 644 "$target"
     updated=$((updated + 1))
     printf '%s: %s - updated (%s open issues)\n' "$label" "$target" "$count"
   fi

@@ -40,7 +40,7 @@
 
 set -euo pipefail
 
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 repo="${BL_REPO:-alimek/budget-lens-offline}"
 labels_file="${BL_LABELS_FILE:-$script_dir/labels.tsv}"
 dry_run=0
@@ -115,6 +115,7 @@ fi
 gh api "repos/$repo/labels" --paginate \
   --jq '.[] | [.name, .color, (.description // "")] | @tsv' > "$current_file"
 created=0
+deleted=0
 updated=0
 unchanged=0
 failed=0
@@ -165,8 +166,12 @@ extra_count=$(wc -l < "$extra_file" | tr -d '[:space:]')
 while IFS= read -r name; do
   [ -n "$name" ] || continue
   if [ "$prune" -eq 1 ]; then
-    log "delete label $name (not in $(basename "$labels_file"))"
-    run gh label delete "$name" --repo "$repo" --yes || true
+    if [ "$dry_run" -eq 1 ]; then
+      log "would delete $name (not in $(basename "$labels_file"))"
+    elif run gh label delete "$name" --repo "$repo" --yes; then
+      printf 'deleted label %s (not in %s)\n' "$name" "$(basename "$labels_file")"
+      deleted=$((deleted + 1))
+    fi
   else
     printf 'unmanaged label on GitHub: %s (pass --prune to delete it)\n' "$name"
   fi
@@ -174,7 +179,11 @@ done < "$extra_file"
 
 printf 'labels: %d created, %d updated, %d unchanged' "$created" "$updated" "$unchanged"
 if [ "$prune" -eq 1 ]; then
-  printf ', %d deleted' "$extra_count"
+  if [ "$dry_run" -eq 1 ]; then
+    printf ', %d deleted (%d would be deleted)' "$deleted" "$extra_count"
+  else
+    printf ', %d deleted' "$deleted"
+  fi
 else
   printf ', %d unmanaged' "$extra_count"
 fi
