@@ -76,6 +76,9 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   (and [AGENTS.md](../AGENTS.md) if needed). Reviewers check this.
 - Issue status labels: `status:in-progress`, `status:in-review`, `status:blocked`; the GitHub Project board
   mirrors them.
+- **Labels are config:** the label set lives in `.github/labels.tsv`; change a label in a PR, and
+  `scripts/github/sync-labels.sh` applies it. Scripts, token scopes and the scheduling rules (pinned reviewed
+  checkout, owner consent): [github-automation.md](github-automation.md).
 - **Machine-agnostic repo:** no host-, user- or operator-specific data and no references to a specific agent or bot
   setup (see the hard rule in [AGENTS.md](../AGENTS.md)); `pnpm lint` runs `scripts/check-machine-agnostic.mjs`.
 - PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).

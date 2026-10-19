@@ -74,14 +74,6 @@ const ALWAYS_EXCLUDED = [
   ":(exclude)pnpm-lock.yaml",
 ];
 
-// Temporary: PR #169 (issue #147) owns these files and is making them portable; drop the entries when it lands.
-const PENDING = [
-  ":(exclude)scripts/agents/**",
-  ":(exclude)scripts/github/**",
-  ":(exclude)docs/agents.md",
-  ":(exclude)docs/github-automation.md",
-];
-
 /** Samples whose match result differs from `expected`, as readable failure lines. */
 function mismatches({ label, pattern }, samples, expected) {
   const regex = new RegExp(pattern, "i");
@@ -115,7 +107,6 @@ function grep(pattern, extraExcludes) {
         "--",
         ".",
         ...ALWAYS_EXCLUDED,
-        ...PENDING,
         ...extraExcludes,
       ],
       { encoding: "utf8" },
