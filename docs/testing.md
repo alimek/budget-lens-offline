@@ -33,18 +33,21 @@
 - **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and
   Android emulators. `screen.getByTestId()` finds elements by their React Native `testID`. Tests without agent steps
   (`agent.act()`, `agent.assert()`) need no model; agent steps and `e2e explore` use the configured model.
-  Per #15 the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention,
-  model configuration and CI plan are defined in #15.
+  Per #15, the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention
+  and model configuration are defined in #15.
+  - **E2E does not run in CI** (#166): the Developer or Tester runs it locally on the Mac Studio
+    ([ci.md](ci.md#native-builds-and-e2e-local)).
   - **Telemetry must be disabled.** The `e2e` CLI sends anonymous usage telemetry by default
     ([e2e telemetry docs](https://e2e.tester.army/docs/telemetry)). Set `E2E_TELEMETRY_DISABLED=1` in every
-    environment, local and CI, like `TURBO_TELEMETRY_DISABLED` in `.github/workflows/ci.yml` ([#15 e2e decisions
+    environment, like `TURBO_TELEMETRY_DISABLED` in `.github/workflows/ci.yml` ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
-  - The model provider API key comes from the local environment on the local dev machine (later GitHub Actions
-    secrets if CI needs it) and never appears on GitHub ([#15 e2e decisions
+  - The model provider API key comes from the local environment on the local dev machine and never appears on
+    GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
-  - UI PRs include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
-    development build.
+  - **UI PRs** include e2e evidence: **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a video
+    is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
+    Screenshots section of the PR template. A manual screenshot from a development build alone is not enough.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
   - Metro runs on the repo's **fixed port**; the number is not chosen yet and will be defined with `apps/mobile`
     in #15.

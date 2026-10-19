@@ -60,8 +60,11 @@ Tool telemetry is disabled through environment variables, locally and in CI:
 - PR to `main` with an English description ending in `Closes #<n>`. Stacked PRs are allowed (base on the parent
   branch and say so in the description).
 - The **Reviewer squash-merges** the PR after approval and fully green CI (with an English commit message).
-- **UI PRs** must include e2e evidence with **screenshots or a video**, from an `e2e` test run or `e2e explore` on a
-  development build (see [testing.md](testing.md)).
+- **UI PRs** must include e2e evidence: **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a
+  video is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio,
+  in the Screenshots section of the PR template (see [testing.md](testing.md)). A manual screenshot from a
+  development build alone is not enough. Native builds and E2E do not run in CI (see
+  [ci.md](ci.md#native-builds-and-e2e-local)).
 - Run the app only on the dedicated **`BudgetLens-*` simulators/emulators**, never on personal or shared devices.
 - Metro runs on the repo's **fixed port**. The port number is not chosen yet; it will be defined together with
   `apps/mobile` in #15.

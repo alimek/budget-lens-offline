@@ -12,8 +12,8 @@ status check. Making checks required in the `main` ruleset is the repository own
 - `.github/workflows/pr.yml` checks the PR metadata on `opened`, `edited`, `reopened` and `synchronize`:
   `pr-title`, `pr-body`. A separate workflow, so editing the title or body re-runs only these jobs. They do not
   run on push to `main` (there is no PR there).
-- `.github/workflows/macos.yml` runs on every pull request and on every push to `main` on the GitHub-hosted
-  `macos-26` runner: `macos-typecheck`, `macos-vitest`, `ios-build`. See [macOS jobs](#macos-jobs).
+- Every job runs on the GitHub-hosted `ubuntu-latest` runner. CI keeps only fast checks; native builds and E2E tests
+  do not run in GitHub Actions. See [Native builds and E2E (local)](#native-builds-and-e2e-local).
 - Shared setup: `.github/actions/setup` (pnpm from `packageManager` with the pnpm store cache, Node.js from `.nvmrc`,
   `pnpm install --frozen-lockfile`). `typecheck` and `test` also restore the local Turborepo cache
   (`.turbo/cache`, via `actions/cache`). `.nvmrc` is a Turborepo `globalDependencies` entry, so a Node.js bump
@@ -96,31 +96,23 @@ Reviewed exceptions are listed in `EXCEPTIONS` in the script: a package name pat
 reason. Current exception: `lightningcss` (and its platform binaries), MPL-2.0, a dev-only transitive dependency of
 Vite (Vitest), never modified or shipped in the app.
 
-## macOS jobs
+## Native builds and E2E (local)
 
-Typecheck, unit tests and the iOS simulator build also run on macOS, so every PR gets an iOS build (#148). The jobs
-use the standard GitHub-hosted runner `macos-26` (Apple silicon, Xcode 26.x by default), which is free for public
-repositories. These jobs are **not required status checks** yet; making them required is part of #149 and needs the
-repository owner's confirmation.
+Owner decision (#166, 2026-10-19): CI on GitHub runs only the fast checks above, all on `ubuntu-latest`. No workflow
+builds the app natively (no macOS/iOS or Android runner, no `expo prebuild`, `xcodebuild`, Gradle or simulator) and
+no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow from #148.
 
-| Job | What it does |
-| --- | --- |
-| `macos-typecheck` | `pnpm turbo run typecheck` |
-| `macos-vitest` | `pnpm turbo run test` |
-| `ios-build` | Prints `xcodebuild -version`. When `apps/mobile` exists: `expo prebuild --platform ios --clean` (incl. `pod install`) and `xcodebuild … -sdk iphonesimulator -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO build` (no simulator has to boot, nothing is signed). Until the app scaffold lands (#109) it only reports a notice. |
-
-The jobs use the same `.github/actions/setup` as the Linux jobs (pnpm from `packageManager` with the pnpm store
-cache, Node.js from `.nvmrc`). Like every workflow here they have `permissions: contents: read`, no secrets, no
-`pull_request_target`, and `actions/checkout` with `persist-credentials: false`. Fork PRs run them like the other
-jobs: the runner is a fresh GitHub-hosted VM per job, so no personal machine executes untrusted code.
-
-The runner image is pinned to `macos-26` rather than `macos-latest`, so a new macOS or default Xcode version arrives
-in a reviewed PR that bumps the label. Hosted macOS runners can queue for a few minutes at busy times; the jobs are
-not required, so they never block a merge. To pause them, disable the `macOS and iOS` workflow in the Actions tab
-(`gh workflow disable macos.yml`).
+- Native builds (iOS and Android development builds) and E2E tests run **locally on the Mac Studio**, done by the
+  Developer or the Tester, only on the dedicated **`BudgetLens-*` simulators/emulators**.
+- The evidence on the PR is **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a video is
+  also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
+  **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a
+  development build alone is not enough. It is required for every PR
+  that changes UI; the Reviewer checks it. `pr-body` does not check it (it only checks `Closes #N`), so non-UI PRs
+  can leave the section out.
 
 ## Planned gates (when `apps/mobile` exists)
 
-`expo-doctor`, `expo-export` (matrix `ios` / `android`), `migrations` (`drizzle-kit check`), `e2e-android`
-(TesterArmy smoke tests, #15) and `bundle-size` (JS bundle size against a committed budget). They are added
-together with the app scaffold and tracked in [#109](https://github.com/alimek/budget-lens-offline/issues/109).
+Only fast checks that run on `ubuntu-latest` without a native build, for example `expo-doctor`, `migrations`
+(`drizzle-kit check`) and `bundle-size` (JS bundle size against a committed budget). Tracked in
+[#109](https://github.com/alimek/budget-lens-offline/issues/109).
