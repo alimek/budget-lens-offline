@@ -30,6 +30,8 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+        with:
+          isolated-store: "true"
       - name: Typecheck (TypeScript 7)
         run: pnpm turbo run typecheck
 
@@ -44,6 +46,8 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+        with:
+          isolated-store: "true"
       - name: Test (Vitest)
         run: pnpm turbo run test
 
@@ -92,6 +96,8 @@ jobs:
 
       - if: steps.app.outputs.exists == 'true'
         uses: ./.github/actions/setup
+        with:
+          isolated-store: "true"
 
       - name: Expo prebuild (iOS)
         if: steps.app.outputs.exists == 'true'

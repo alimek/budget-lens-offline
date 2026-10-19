@@ -121,7 +121,9 @@ Jobs (`.github/workflows/macos.yml`):
 | `ios-build` | Picks a `BudgetLens-*` simulator (fails if there is none). When `apps/mobile` exists: `expo prebuild --platform ios --clean` (incl. `pod install`) and `xcodebuild … -sdk iphonesimulator -destination "platform=iOS Simulator,id=<BudgetLens UDID>" CODE_SIGNING_ALLOWED=NO build`. Until the app scaffold lands (#109) it only selects the simulator and reports a notice. |
 
 The jobs use the same `.github/actions/setup` as the hosted jobs (pnpm from `packageManager`, installed per job in
-`$RUNNER_TEMP`; Node.js from `.nvmrc` via `actions/setup-node` into the runner's tool cache).
+`$RUNNER_TEMP`; Node.js from `.nvmrc` via `actions/setup-node` into the runner's tool cache). They pass
+`isolated-store: "true"`, so each job uses its own pnpm store in `$RUNNER_TEMP/pnpm-store` and skips the pnpm store
+cache; the shared `~/Library/pnpm/store` of the `aliclaw` user is never read or written.
 
 ### Security rules (mandatory)
 
@@ -135,7 +137,7 @@ The repository is public, so a self-hosted runner must never execute untrusted c
 - **No `pull_request_target`** in workflows that check out PR code, and none on the self-hosted runner.
 - **No secrets** in self-hosted jobs; `permissions: contents: read`; `actions/checkout` with
   `persist-credentials: false`.
-- The runner and its jobs stay inside `~/actions-runner` (plus Xcode/CocoaPods/pnpm caches of the `aliclaw` user) and
+- The runner and its jobs stay inside `~/actions-runner` (plus the Xcode and CocoaPods caches of the `aliclaw` user) and
   use only `BudgetLens-*` simulators. They must not touch `~/agents`, `~/agent-development` or other projects.
 
 ### Operating the runner
