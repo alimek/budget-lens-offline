@@ -104,8 +104,10 @@ no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow 
 
 - Native builds (iOS and Android development builds) and E2E tests run **locally on the Mac Studio**, done by the
   Developer or the Tester, only on the dedicated **`BudgetLens-*` simulators/emulators**.
-- The evidence on the PR is **attached screenshots** (iOS and Android, naming the simulator/emulator used), in the
-  **Screenshots** section of the [PR template](../.github/pull_request_template.md). It is required for every PR
+- The evidence on the PR is **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a video is
+  also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
+  **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a
+  development build alone is not enough. It is required for every PR
   that changes UI; the Reviewer checks it. `pr-body` does not check it (it only checks `Closes #N`), so non-UI PRs
   can leave the section out.
 

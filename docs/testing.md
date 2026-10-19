@@ -33,7 +33,7 @@
 - **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and
   Android emulators. `screen.getByTestId()` finds elements by their React Native `testID`. Tests without agent steps
   (`agent.act()`, `agent.assert()`) need no model; agent steps and `e2e explore` use the configured model.
-  Per #15 the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention
+  Per #15, the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention
   and model configuration are defined in #15.
   - **E2E does not run in CI** (#166): the Developer or Tester runs it locally on the Mac Studio
     ([ci.md](ci.md#native-builds-and-e2e-local)).
@@ -45,8 +45,9 @@
     GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
-  - UI PRs include **screenshots** (iOS and Android, naming the simulator/emulator) from a local development build,
-    an `e2e` test run or `e2e explore`, in the Screenshots section of the PR template.
+  - **UI PRs** include e2e evidence: **screenshots** (iOS + Android, `BudgetLens-*` simulator/emulator named; a video
+    is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on the Mac Studio, in the
+    Screenshots section of the PR template. A manual screenshot from a development build alone is not enough.
   - Only the dedicated **`BudgetLens-*` simulators/emulators** are used, never personal or shared devices.
   - Metro runs on the repo's **fixed port**; the number is not chosen yet and will be defined with `apps/mobile`
     in #15.

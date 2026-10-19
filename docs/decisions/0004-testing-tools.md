@@ -15,6 +15,8 @@ verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offli
 - **Property-based tests** with fast-check for business invariants of money and recurrence (#18).
 - **No percentage coverage thresholds** in any configuration or CI job; coverage is reported for information only.
 
-**Consequences.** Guidelines are in [../testing.md](../testing.md). UI PRs must include screenshots (iOS and
-Android, simulator named) from a local development build. Model API keys are secrets: they come from the local environment (later GitHub
-Actions secrets if CI needs them) and never appear on GitHub – see [../conventions.md](../conventions.md#secrets).
+**Consequences.** Guidelines are in [../testing.md](../testing.md). UI PRs must include e2e evidence:
+screenshots (iOS + Android, `BudgetLens-*` simulator/emulator named; a video is also fine) from a TesterArmy `e2e`
+run or `e2e explore` on a local development build on the Mac Studio. A manual screenshot from a development build
+alone is not enough. Model API keys are secrets: they come from the local environment (later GitHub Actions secrets
+if CI needs them) and never appear on GitHub – see [../conventions.md](../conventions.md#secrets).
