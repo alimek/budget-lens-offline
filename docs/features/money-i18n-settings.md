@@ -59,7 +59,9 @@ that blurs amounts.
 
 ## Success criteria
 
-- Round-trip parse/format property tests pass for every supported currency ([#122](https://github.com/alimek/budget-lens-offline/issues/122)).
+- Round-trip parse/format property tests pass for every supported currency with minor digits ([#122](https://github.com/alimek/budget-lens-offline/issues/122)).
+  For CLP, ISK, JPY and KRW, English amounts with one thousands group (`JP¥1,000`) need an owner decision on
+  `parseMoney` first ([#164](https://github.com/alimek/budget-lens-offline/issues/164)).
 - Switching language changes every visible string without a restart.
 
 ## Dependencies
