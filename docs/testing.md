@@ -132,6 +132,9 @@ line):
   validation (`it.each` tables).
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
   stored data) and orphaned overrides.
+- `src/forecast.test.ts` and the `convertViaPln` block of `src/money.test.ts` (#6): rolling balances, payment filtering, warning boundaries,
+  overrides and currency conversion; the forecast characterization compares rolling totals and warning severities
+  with legacy at legacy thresholds.
 - `src/month-closing.test.ts` (#84): close totals after overrides, payment status, balance carry-forward,
   foreign-currency snapshots and conversion, immutability and transition validation. Ported carry-forward and balance updates are compared
   with legacy in `test/month-closing.characterization.test.ts`.

@@ -67,6 +67,7 @@ only (never forks, no secrets); how to stop or disable it is in [docs/ci.md](doc
 - [docs/glossary.md](docs/glossary.md) – domain glossary
 - [docs/architecture.md](docs/architecture.md) – current state, layout, packages, planned app stack
 - [docs/domain/](docs/domain/) – one file per domain area
+- [docs/features/](docs/features/) – short PRDs, one per MVP epic
 - [docs/testing.md](docs/testing.md) – testing strategy and rules
 - [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the

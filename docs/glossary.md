@@ -14,7 +14,7 @@ Domain terms used across the code and docs. Details are in [domain/](domain/).
 | Payment status | Whether an expense was paid / an income received for `(itemType, itemId, month)`; missing means unsettled. | [month-closing](domain/month-closing.md) |
 | Forecast | Month-by-month projection of the balance (rolling balance, total funds, warnings). | [forecast](domain/forecast.md) |
 | Month closing | Closing the active month: record its totals and open the next month with opening balance = closing balance. | [month-closing](domain/month-closing.md) |
-| Base currency | The currency all budget amounts are kept in (`Settings.baseCurrency`, the legacy `default_currency`, typed `CurrencyCode`). | [settings](domain/settings.md) |
+| Base currency | The currency of balances, totals and thresholds; items may use their own supported currency (`Settings.baseCurrency`, the legacy `default_currency`, typed `CurrencyCode`). | [settings](domain/settings.md) |
 | Supported currency | A `CurrencyCode`: PLN or a currency of NBP table A except XDR, i.e. the codes of the exponent table in `packages/core/src/currency.ts`. | [money](domain/money.md) |
 | Settings | The single local model of user preferences: language, base and tracked currencies, warning thresholds, forecast horizon. | [settings](domain/settings.md) |
 | Settings-driven thresholds | Warning thresholds (low balance, large expense) come from user `Settings`, never constants. | [settings](domain/settings.md) |

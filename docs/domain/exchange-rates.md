@@ -1,7 +1,8 @@
 # Exchange rates (NBP)
 
 Status: the NBP client/cache is **not implemented yet** (#8). Exact minor-unit conversion (`convertMinor`) and
-caller-supplied rates in closing snapshots are implemented in #84; see [month-closing.md](month-closing.md).
+caller-supplied rates in closing snapshots are implemented in #84. Forecast uses the shared conversion through
+`convertViaPln` (#6); see [month-closing.md](month-closing.md).
 
 ## Legacy behaviour (`lib/exchange-rates/refresh.ts`)
 
@@ -32,11 +33,31 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 - An injected `RateStore` cache (`get`, `set`, `getAll`); in-memory implementation in core for tests, SQLite in the app.
 - `getRate(currency, { now, maxAgeHours })` – fresh cached rate, otherwise try to refresh; without network return the
   last rate with `stale: true` and its `effectiveDate` (weekends/holidays have no new table).
-- `convertMinor(amount, rate, source, target)` is implemented in core money arithmetic (#84). Rates are target
-  major units per source major unit, with exact decimal multiplication, exponent scaling and one final rounding.
-  For a non-PLN base, the caller computes/selects the cross-rate; core closing does not assume NBP's PLN quote is
-  already a base-currency rate.
+- Convert with the implemented `convertViaPln(amount, from, to, rateLookup)` (#6), described below.
 - Currencies come from `Settings.trackedCurrencies` ([settings.md](settings.md)).
+
+## Exact conversion and forecast (#6)
+
+`convertViaPln` receives a lookup of positive decimal strings in PLN per major unit (up to 12 decimal places).
+It selects the legs and delegates to `convertMinorExact` in `money.ts`, the shared arithmetic used by
+`convertMinor(amount, rate, source, target)` from #84. That implementation computes
+`amountMinor × midFrom × 10^toExponent / (midTo × 10^fromExponent)` as one BigInt fraction and rounds once,
+half away from zero, checking the safe-integer range. No intermediate PLN amount or numeric cross-rate is rounded.
+PLN has implicit rate 1; identity needs no lookup. Missing/invalid rates and overflow throw `RangeError`;
+the forecast reports typed error codes instead. `multiplyByRate` alone does not account for currency exponents.
+Closing receives rates in target major units per source major unit; it does not assume a PLN quote is already
+in base currency. See [money.md](money.md) for the shared conversion APIs.
+
+The final [#124 owner decisions](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263755326)
+supersede the early research: table A only, current rates only, fetch once a day on app open, freshness based on
+24 hours since the last successful fetch. Manual rates are PLN-quoted and win when newer; the forecast uses the
+newer effective date and prefers manual on a tie. Forecast validates candidate calendar dates before selection; the cache validates source metadata. Both conversion
+legs may have different dates; the forecast reports the actual legs with their supplied stale flags. The UI can
+show the older effective date and flag either stale leg.
+
+Forecast consumes current candidates as inputs; it does not fetch NBP or implement `RateStore`. Refresh must include
+base currency, item currencies and savings currencies. Open/future months use the same current selection; closed
+months must use #84 snapshots (with rate metadata extended by #141). See [forecast.md](forecast.md) for the contract and integration boundaries.
 
 ## Owner decision: item currencies and frozen history
 
