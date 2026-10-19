@@ -1,6 +1,6 @@
 # PRD: Money, localization (PL/EN) & settings (E2)
 
-Epic: [#24](https://github.com/alimek/budget-lens-offline/issues/24) · Status: approved ([#37](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263102054), [#37 review](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263678423), [#38](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750), [#39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126), [#39 review](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)) · MVP
+Epic: [#24](https://github.com/alimek/budget-lens-offline/issues/24) · Status: approved ([#37](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263102054), [#37 review](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263678423), [#38](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750), [#38 fraction digits](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6276353228), [#39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126), [#39 review](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)) · MVP
 
 ## Problem
 
@@ -45,7 +45,8 @@ that blurs amounts.
   (pl / en-GB), with the currency's **ISO 4217 minor-unit exponent** as fraction digits, never trimmed
   (2 for PLN/EUR/USD, 0 for JPY, ISK, KRW and CLP; [money.md](../domain/money.md),
   [ADR 0012](../decisions/0012-native-intl-money-formatting.md), [#36 follow-up (3)](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263793410)), and capitalized month titles.
-  This replaces "2 fraction digits everywhere" in the [#38 owner review](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750). Ambiguous input like `1.234` is
+  Owner decision ([#38, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6276353228)): this supersedes "2 fraction digits everywhere" from the
+  [#38 owner review](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750). Ambiguous input like `1.234` is
   rejected with a clear message ([owner review #38](https://github.com/alimek/budget-lens-offline/issues/38#issuecomment-6263678750)).
 - i18n uses i18next + react-i18next + i18next-cli, JSON v4 plurals, namespaces per feature, translations in the repo,
   and the system language with an in-app override ([owner review #37](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263678423)).
