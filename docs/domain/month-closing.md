@@ -46,11 +46,13 @@ overrides are minor units of that item's currency. `baseCurrency` comes from the
 `rates` maps each used foreign currency to a finite **positive** number: base-currency major units per one
 source-currency major unit, selected by the caller for the month being closed. Rates have the same decimal-number
 representation as `multiplyByRate`; arithmetic uses their decimal form with BigInt, not floating-point products.
-For a non-PLN base, the caller supplies already selected cross-rates. Core never fetches NBP data, selects a cached
-or manual quote, or reads the clock.
+For a non-PLN base, closing (#84) still takes a caller-chosen numeric cross-rate. That is a known gap against the
+cross-rate rule of [settings.md](settings.md) (via PLN, decimal strings, one rounding, no pre-computed cross-rate),
+which the forecast already follows. Core never fetches NBP data, selects a cached or manual quote, or reads the clock.
 
-The numeric `rate` is provisional until #141, which will add a decimal-string rate, effective date and source
-(`nbp` or `manual`). #141 remains open; #85 must coordinate its persisted rate shape with that contract.
+The numeric `rate` is provisional until [#141](https://github.com/alimek/budget-lens-offline/issues/141), which moves
+closing onto `convertViaPln` with decimal-string `mid` rates and adds their effective date and source (`nbp` or
+`manual`) to the snapshot. #141 remains open; #85 must coordinate its persisted rate shape with that contract.
 
 Each frozen occurrence stores `{ itemType, itemId, month, amount, currency, rate, baseAmount, settled }`:
 `amount` is the effective original-currency amount after overrides; `baseAmount` is its converted integer amount
