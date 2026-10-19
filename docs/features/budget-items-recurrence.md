@@ -48,7 +48,7 @@ and never rewrites history.
   - "Fix everywhere" only when no closed month uses the version.
   - New items start no earlier than the active month.
   - The edit form defaults to "From this month on" when the item has closed history.
-- The base-value hint uses the current stored rate (no rate history), fetched once a day on app open.
+- The base-value hint uses the current stored rate (no rate history), fetched on app open when a newer NBP table may exist.
 
 ## Success criteria
 

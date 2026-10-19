@@ -1,4 +1,5 @@
 import { type CurrencyCode, isCurrencyCode } from "./currency";
+import { selectCurrentRates } from "./exchange-rates";
 import {
   addMinorUnits,
   convertViaPln,
@@ -91,22 +92,6 @@ export type ForecastResult =
 
 const paymentKey = (itemType: ForecastItem["itemType"], itemId: string, month: YearMonth): string =>
   JSON.stringify([itemType, itemId, month]);
-
-/** Latest effective date wins; manual wins a tie, consistent with #39. Inputs contain current candidates only. */
-function currentRates(rates: readonly ForecastRate[]): Map<CurrencyCode, ForecastRate> {
-  const selected = new Map<CurrencyCode, ForecastRate>();
-  for (const rate of rates) {
-    const previous = selected.get(rate.currency);
-    if (
-      previous === undefined ||
-      rate.effectiveDate > previous.effectiveDate ||
-      (rate.effectiveDate === previous.effectiveDate && rate.source === "manual")
-    ) {
-      selected.set(rate.currency, rate);
-    }
-  }
-  return selected;
-}
 
 function warningsFor(row: ForecastMonth, index: number, settings: Settings): ForecastWarning[] {
   const warnings: ForecastWarning[] = [];
@@ -221,7 +206,7 @@ export function forecast(input: ForecastInput): ForecastResult {
   const { items, overrides, paymentStatuses, currentBalance, totalSavings, fromMonth, settings } =
     input;
   const months = input.months ?? settings.forecastHorizonMonths;
-  const rates = currentRates(input.rates);
+  const rates = selectCurrentRates(input.rates);
   const used = new Map<CurrencyCode, ForecastRate>();
   const paid = new Set(
     paymentStatuses
