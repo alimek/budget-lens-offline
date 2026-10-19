@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>HOME</key>
+		<string>/Users/aliclaw</string>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.aliclaw.bl-sync-labels</string>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-c</string>
+		<string>date -u +"--- %Y-%m-%dT%H:%M:%SZ"; { git fetch --quiet origin main &amp;&amp; git checkout --quiet --detach origin/main; } || echo "warning: could not refresh checkout to origin/main; running $(git rev-parse --short HEAD)" &gt;&amp;2; echo "checkout $(git rev-parse --short HEAD)"; exec scripts/agents/sync-labels.sh</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/aliclaw/bl-logs/sync-labels.err.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/aliclaw/bl-logs/sync-labels.log</string>
+	<key>StartInterval</key>
+	<integer>3600</integer>
+	<key>WorkingDirectory</key>
+	<string>/Users/aliclaw/projects/budget-lens-offline-sync</string>
+</dict>
+</plist>

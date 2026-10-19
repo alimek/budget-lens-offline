@@ -40,12 +40,53 @@ Both are idempotent: the second run in a row changes nothing and exits 0.
   per open issue carrying that label (`number`, `updatedAt`, `labels`, `title`, `url`), sorted by issue number. The
   file is replaced only when its content changed, so its mtime answers "is there new work?" without an LLM, and an
   empty file means there is none.
-- Sample cron and launchd entries are in the header of each script (`sync-issue-list.sh` points at the plist sample
-  in `sync-labels.sh`). Suggested cadence: labels hourly, queues every 15 minutes, logs in `~/bl-logs/`.
+- Sample cron entries are in the header of each script. Suggested cadence: labels hourly, queues every 15 minutes,
+  logs in `~/bl-logs/`.
 
 ```sh
 scripts/agents/sync-labels.sh --dry-run                       # what would change, nothing written
 scripts/agents/sync-issue-list.sh --state-dir /tmp/bl-state   # queues into a scratch dir
+```
+
+### launchd jobs on the Mac Studio
+
+The installed jobs are committed in `scripts/agents/launchd/`:
+
+| Job | Runs | Every | Logs |
+| --- | --- | --- | --- |
+| `com.aliclaw.bl-sync-labels` | `sync-labels.sh` (no `--prune`) | 1 hour | `~/bl-logs/sync-labels.log`, `sync-labels.err.log` |
+| `com.aliclaw.bl-sync-issue-list` | `sync-issue-list.sh` | 15 minutes | `~/bl-logs/sync-issue-list.log`, `sync-issue-list.err.log` |
+
+Both run from a dedicated detached worktree, `/Users/aliclaw/projects/budget-lens-offline-sync`, so they never touch
+the main clone's checkout. Before each run the labels job fetches `origin/main` and moves that worktree to it, so a
+merged `labels.tsv` change is applied by the next hourly run; the queue job runs whatever the worktree has checked
+out. Both set `PATH` with `/opt/homebrew/bin` first, so launchd finds `gh`, and use the `gh` login of the `aliclaw`
+user.
+
+Install (once, on the Mac Studio, as `aliclaw`):
+
+```sh
+git -C ~/projects/budget-lens-offline fetch origin
+git -C ~/projects/budget-lens-offline worktree add --detach ~/projects/budget-lens-offline-sync origin/main
+mkdir -p ~/bl-logs
+cd ~/projects/budget-lens-offline-sync
+scripts/agents/sync-labels.sh --dry-run   # review what the first run will change
+for job in bl-sync-labels bl-sync-issue-list; do
+  cp scripts/agents/launchd/com.aliclaw.$job.plist ~/Library/LaunchAgents/
+  plutil -lint ~/Library/LaunchAgents/com.aliclaw.$job.plist
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.aliclaw.$job.plist
+done
+```
+
+Check and uninstall:
+
+```sh
+launchctl print gui/$(id -u)/com.aliclaw.bl-sync-labels | grep 'last exit code'
+launchctl kickstart gui/$(id -u)/com.aliclaw.bl-sync-issue-list   # run now
+for job in bl-sync-labels bl-sync-issue-list; do
+  launchctl bootout gui/$(id -u)/com.aliclaw.$job
+  rm ~/Library/LaunchAgents/com.aliclaw.$job.plist
+done
 ```
 
 ## Standing routines and the weekly review
@@ -71,10 +112,6 @@ The first review was done on 2026-10-19 ([PR #161 comment](https://github.com/al
 | --- | --- | --- | --- |
 | 2026-10-19 | All 4 orchestrator routines (`BL weekly report`, `BL team heartbeat`, `BL daily dev-review retro`, `BL new PR handoff`) | Keep all unchanged. Reviewed by the orchestrator, decided by Grzegorz Mandziak. The weekly review now runs in the orchestrator's Monday report. | [PR #161 comment](https://github.com/alimek/budget-lens-offline/pull/161#issuecomment-6276904169) |
 
-## Known label legacy
+## Label descriptions
 
-`scripts/agents/labels.tsv` mirrors the live label set verbatim, so a sync run today changes nothing. Two known
-legacy items need the repository owner before they are changed, because editing them edits labels:
-
-- `stage:0` … `stage:4` still carry Polish descriptions, against the English-only rule.
-- `agent:marketing`, `agent:research` and `agent:tester` have no description, unlike `agent:design`.
+All label descriptions in `labels.tsv` are in English, including the `stage:*` labels and every `agent:*` label.

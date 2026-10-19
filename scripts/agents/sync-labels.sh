@@ -19,21 +19,8 @@
 #   15 * * * *  cd /Users/aliclaw/projects/budget-lens-offline && mkdir -p "$HOME/bl-logs" && \
 #     scripts/agents/sync-labels.sh >> "$HOME/bl-logs/sync-labels.log" 2>&1
 #
-# Equivalent launchd job in ~/Library/LaunchAgents/chat.budgetlens.sync-labels.plist (run it with
-# `launchctl load ~/Library/LaunchAgents/chat.budgetlens.sync-labels.plist`):
-#   <?xml version="1.0" encoding="UTF-8"?>
-#   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-#   <plist version="1.0"><dict>
-#     <key>Label</key><string>chat.budgetlens.sync-labels</string>
-#     <key>ProgramArguments</key><array>
-#       <string>/Users/aliclaw/projects/budget-lens-offline/scripts/agents/sync-labels.sh</string>
-#     </array>
-#     <key>StartCalendarInterval</key><dict>
-#       <key>Minute</key><integer>15</integer>
-#     </dict>
-#     <key>StandardOutPath</key><string>/Users/aliclaw/bl-logs/sync-labels.log</string>
-#     <key>StandardErrorPath</key><string>/Users/aliclaw/bl-logs/sync-labels.log</string>
-#   </dict></plist>
+# launchd: the installed job is scripts/agents/launchd/com.aliclaw.bl-sync-labels.plist (install and uninstall
+# commands in docs/agents.md).
 #
 # Part of #147 (save usage limits): label sync is a plain shell job, so no agent session burns tokens on it.
 # See docs/agents.md.

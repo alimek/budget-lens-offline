@@ -24,8 +24,8 @@
 #   */15 * * * *  cd /Users/aliclaw/projects/budget-lens-offline && mkdir -p "$HOME/bl-logs" && \
 #     scripts/agents/sync-issue-list.sh >> "$HOME/bl-logs/sync-issue-list.log" 2>&1
 #
-# For the launchd equivalent, copy the plist sample in sync-labels.sh and change the label, the program argument
-# and the log path.
+# launchd: the installed job is scripts/agents/launchd/com.aliclaw.bl-sync-issue-list.plist (install and uninstall
+# commands in docs/agents.md).
 #
 # Part of #147 (save usage limits). See docs/agents.md.
 
