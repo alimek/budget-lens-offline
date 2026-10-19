@@ -1,5 +1,17 @@
+export { convertMinor } from "./convert-minor";
 export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
+export type {
+  ForecastError,
+  ForecastInput,
+  ForecastItem,
+  ForecastMonth,
+  ForecastRate,
+  ForecastResult,
+  ForecastWarning,
+  PaymentStatus,
+} from "./forecast";
+export { forecast } from "./forecast";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,

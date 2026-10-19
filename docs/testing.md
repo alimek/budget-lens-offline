@@ -123,6 +123,9 @@ line):
   validation (`it.each` tables).
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
   stored data) and orphaned overrides.
+- `src/forecast.test.ts` and `src/convert-minor.test.ts` (#6): rolling balances, payment filtering, warning boundaries,
+  overrides and currency conversion; the forecast characterization compares rolling totals and warning severities
+  with legacy at legacy thresholds.
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data and the
   `CurrencyCode` fields and `baseCurrency` rename (#126), with explicit AAA sections.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported

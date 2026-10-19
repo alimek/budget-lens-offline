@@ -32,7 +32,7 @@ currency fields as `CurrencyCode` (#126) and rejects other codes with `unsupport
     currencies have the same exponent (e.g. EUR → PLN, both 2). When the exponents differ, the result must also be
     scaled by `10^(targetExponent − sourceExponent)`: `multiplyByRate(10000 /* ¥10 000 */, 0.024574)` gives `246`,
     i.e. 2,46 zł, while the correct value is 24 574 groszy = 245,74 zł (100× more). This scaling is not done by
-    `multiplyByRate`; it is handled by `convertMinor` (#39), planned with #8/#92. Until then, do not use
+    `multiplyByRate`; it is handled by `convertMinor` (implemented in #6, see [exchange-rates.md](exchange-rates.md)). Do not use
     `multiplyByRate` alone to convert between currencies with different exponents (JPY, ISK, KRW, CLP).
 
 ### Parsing (`packages/core/src/money-parse.ts`)

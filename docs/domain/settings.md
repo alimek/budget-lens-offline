@@ -11,7 +11,7 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `language` | `"system" \| "pl" \| "en"` | `"system"` | UI language; `"system"` follows the device language (resolved by the app's i18n layer, not by core) |
-| `baseCurrency` | `CurrencyCode` | `"PLN"` | Currency all budget amounts are kept in |
+| `baseCurrency` | `CurrencyCode` | `"PLN"` | Currency of balances, totals and thresholds |
 | `trackedCurrencies` | `readonly CurrencyCode[]` | `["USD", "EUR", "GBP"]` | Currencies whose exchange rates are tracked ([exchange-rates.md](exchange-rates.md)) |
 | `lowBalanceThreshold` | `MinorUnits` | `500_000` (5000 PLN) | Low-balance warning: forecast balance below this amount ([forecast.md](forecast.md)) |
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
@@ -19,8 +19,8 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 
 Thresholds are in minor units of `baseCurrency`. Changing the currency does not convert them. A threshold of 0
 does not turn a warning off: `lowBalanceThreshold: 0` warns only for a balance below 0, and
-`largeExpenseThreshold: 0` warns for every month with a negative net change. Whether a warning can be disabled is
-decided with the forecast warnings in #6.
+`largeExpenseThreshold: 0` warns for every month with a negative net change. Disabling warnings is
+not supported: #6 keeps zero thresholds active.
 
 The maximum horizon is `MAX_FORECAST_HORIZON_MONTHS` (120 months, 10 years), so a corrupted stored value cannot make
 the forecast build an unbounded number of months.
@@ -34,10 +34,10 @@ codes with manually entered rates are out of scope
 ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752),
 which narrows the earlier "any base currency" decision).
 
-**Open question (cross-rates, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
-([exchange-rates.md](exchange-rates.md)), so converting tracked currencies into a non-PLN base needs cross-rates.
-How to compute them, and what happens to the thresholds when the base currency changes (converted or kept as typed),
-go with that decision. Until then, Settings stores the thresholds as typed and does not convert them.
+**Currency decisions (#39/#124):** base currency is chosen in onboarding and locked after confirmation (#139).
+Items may have their own supported currency (#138); forecast converts each occurrence with injected current rates
+and one rounding through PLN (#6). Thresholds stay in base-currency minor units; no base-change conversion flow.
+See [forecast.md](forecast.md) and [exchange-rates.md](exchange-rates.md).
 
 `DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
@@ -45,8 +45,7 @@ web app defaulted to Polish (the offline app follows the device language, epic #
 
 ## Renaming `defaultCurrency` to `baseCurrency` (#39, #126)
 
-The legacy setting is called `default_currency`, which suggests an item can pick another one; it cannot – it **is**
-the base currency of the budget
+The legacy setting is called `default_currency`; the offline model calls it the base currency of the budget
 ([#39 research, open question 1](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6254390483),
 default "yes"). So the field is `baseCurrency`, the validation error code is `base-currency-tracked`, and the schema
 of #35 must use a `base_currency` column (the #35 research comment still says `default_currency`). The rename and the `CurrencyCode` typing landed in one change so Settings was not
