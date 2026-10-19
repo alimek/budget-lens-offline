@@ -33,8 +33,8 @@
 - **E2E (app):** the `e2e` package (SDK, runner and CLI) with the `@e2e-dev/mobile` engine on iOS simulators and
   Android emulators. `screen.getByTestId()` finds elements by their React Native `testID`. Tests without agent steps
   (`agent.act()`, `agent.assert()`) need no model; agent steps and `e2e explore` use the configured model.
-  Per #15 the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention,
-  model configuration are defined in #15.
+  Per #15 the first tests use `getByTestId` locators only, with no agent steps. The setup, `testID` convention
+  and model configuration are defined in #15.
   - **E2E does not run in CI** (#166): the Developer or Tester runs it locally on the Mac Studio
     ([ci.md](ci.md#native-builds-and-e2e-local)).
   - **Telemetry must be disabled.** The `e2e` CLI sends anonymous usage telemetry by default
