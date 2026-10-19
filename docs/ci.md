@@ -122,9 +122,9 @@ Jobs (`.github/workflows/macos.yml`):
 
 The jobs use the same `.github/actions/setup` as the hosted jobs (pnpm from `packageManager`, installed per job in
 `$RUNNER_TEMP`; Node.js from `.nvmrc` via `actions/setup-node` into the runner's tool cache). They pass
-`isolated-store: "true"`, so each job uses its own pnpm store in `$RUNNER_TEMP/pnpm-store` and skips the pnpm store
-cache. System tools (Xcode, Homebrew in `/opt/homebrew`, CocoaPods) are shared read-only; the daemon's `PATH` is
-`/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin`.
+`isolated-store: "true"`, so each job uses its own pnpm store in `$RUNNER_TEMP/pnpm-store` and its own pnpm metadata
+cache in `$RUNNER_TEMP/pnpm-cache`, and skips the pnpm store cache. System tools (Xcode, Homebrew in `/opt/homebrew`,
+CocoaPods) are shared read-only; the daemon's `PATH` is `/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin`.
 
 ### Isolation
 
