@@ -19,10 +19,10 @@ currency fields as `CurrencyCode` (#126) and rejects other codes with `unsupport
   non-integers, `NaN`, `±Infinity` and values outside the safe integer range; normalizes `-0` to `0`.
 - `isMinorUnits(value)` – type guard (`Number.isSafeInteger`).
 - `sumMinorUnits(amounts)` – sums without mutating the input; validates every amount and checks the safe range
-  after **each** addition, so an intermediate overflow/underflow throws `RangeError` instead of returning a wrong
+  after **each** addition, so an intermediate overflow/underflow throws `MoneyOverflowError` instead of returning a wrong
   result.
 - `addMinorUnits(a, b)`, `subtractMinorUnits(a, b)`, `negateMinorUnits(amount)` – exact; a result outside the safe
-  range throws `RangeError`.
+  range throws `MoneyOverflowError`.
 - `multiplyByRate(amount, rate)` – multiplies by a rate (e.g. an NBP `mid`, per 1 unit of the currency) and rounds
   to whole minor units **half away from zero** (0.5 → 1, −0.5 → −1). The rate is taken as the decimal it prints
   as (`String(rate)`) and the product is computed with `bigint`, so `100 × 0.285` is exactly 28.5 → 29 (a float
@@ -79,6 +79,9 @@ returns
 
 Parsing remains independent of Intl and unchanged. Never pass plain numbers where `MinorUnits` is expected.
 
+`MoneyOverflowError` is a `RangeError` subclass for arithmetic/conversion results outside the safe-integer range.
+Invalid inputs still throw ordinary `RangeError`, allowing forecast to report overflow without masking unrelated failures.
+
 ### Currency conversion (#84)
 
 `convertMinor(amount, rate, source, target)` converts between supported currencies using their ISO exponents.
@@ -86,6 +89,13 @@ The rate is target major units per source major unit. It shares exact BigInt dec
 `multiplyByRate`, scales before rounding and rounds once, half away from zero, to target minor units.
 It throws `RangeError` for invalid rates/currencies or overflow, like the other money primitives. Closing catches
 conversion failures and returns domain error codes; fetching/choosing rates remains outside money arithmetic.
+
+`convertMinorExact(amount, sourceRate, targetRate, source, target)` accepts decimal-string legs quoted in the same
+currency and uses their exact ratio before exponent scaling. `convertMinor` delegates to this form with denominator
+`"1"`. It shares the single rounding/overflow implementation with `multiplyByRate` in `money.ts`.
+The source rate is non-negative, the target rate positive; decimal exponent notation is also accepted for numeric
+callers. No conversion goes through a floating-point cross-rate. `convertViaPln` (#6) selects PLN-quoted legs and
+calls this function; it performs no arithmetic or rounding itself.
 
 ## Legacy behaviour
 
@@ -106,4 +116,4 @@ These behaviours are pinned in `packages/core/test/format.characterization.test.
 - From #38/#39, not part of #2: `display: "code"`, privacy masking (#79), month and date labels, `allowNegative`
   and the other parser changes proposed in #38, and cross-rate selection from NBP/manual quotes (#8/#92).
   `convertMinor` arithmetic is implemented in #84.
-- Warning messages that use `toLocaleString()` without a locale (#6).
+- Warning translation and display belong to the UI; #6 returns codes and base-currency parameters.

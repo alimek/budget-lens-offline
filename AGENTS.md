@@ -28,6 +28,9 @@ platform-agnostic TypeScript package.
   comments, screenshots or CI logs. Keep them only in the local env or GitHub Actions secrets; CI must never echo
   them; `.env*` is gitignored ([#15 e2e
   decisions](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
+- **Agent work is triggered by a label, never by polling**: Designer, Marketing and Research act only on issues
+  carrying `agent:design`, `agent:marketing` and `agent:research`; mechanical syncs (labels, issue lists) are plain
+  `gh` shell scripts in `scripts/agents/` – [docs/agents.md](docs/agents.md).
 
 Details and the rest of the conventions: [docs/conventions.md](docs/conventions.md).
 
@@ -62,9 +65,11 @@ Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
 ## Docs
 
 - [docs/conventions.md](docs/conventions.md) – detailed conventions and workflow rules
+- [docs/agents.md](docs/agents.md) – agent triggers, the `scripts/agents/` sync scripts and the weekly routine review
 - [docs/glossary.md](docs/glossary.md) – domain glossary
 - [docs/architecture.md](docs/architecture.md) – current state, layout, packages, planned app stack
 - [docs/domain/](docs/domain/) – one file per domain area
+- [docs/features/](docs/features/) – short PRDs, one per MVP epic
 - [docs/testing.md](docs/testing.md) – testing strategy and rules
 - [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
