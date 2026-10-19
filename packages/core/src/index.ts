@@ -3,6 +3,7 @@ export { isCurrencyCode } from "./currency";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,
+  convertMinor,
   isMinorUnits,
   multiplyByRate,
   negateMinorUnits,
@@ -14,6 +15,25 @@ export type { FormatMoneyOptions } from "./money-format";
 export { formatMoney } from "./money-format";
 export type { ParseMoneyError, ParseMoneyOptions, ParseMoneyResult } from "./money-parse";
 export { parseMoney } from "./money-parse";
+export type {
+  ActiveMonth,
+  BudgetMonth,
+  ClosedMonth,
+  ClosedOccurrence,
+  CloseMonthInput,
+  ClosingConversion,
+  ClosingItem,
+  MonthClosing,
+  MonthClosingErrorCode,
+  PaymentStatus,
+} from "./month-closing";
+export {
+  buildClosedOccurrences,
+  closeMonth,
+  createInitialMonth,
+  updateBalance,
+  validateMonthEditable,
+} from "./month-closing";
 export type {
   ItemType,
   OccurrenceOverride,

@@ -43,8 +43,8 @@ done and which issues remain.
 | Forecast | The start month comes from `new Date()` in the device time zone | #6 | Open |
 | Forecast | Balance exactly 0 produces no warning | #6 | Open |
 | Forecast | Warning thresholds 5000 / -10000 are hard-coded instead of coming from settings | #6, #76 | Open |
-| Month closing | `closeMonth` does not store totals of the closed month | #84 | Open |
-| Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #84 | Open |
+| Month closing | `closeMonth` does not store totals of the closed month | #84 | **Fixed in #84:** `closeMonth` stores converted base-currency totals after overrides, frozen original amounts/currencies/rates, and the actual balance change (`src/month-closing.test.ts`); carry-forward and rollover remain compared with legacy (`test/month-closing.characterization.test.ts`) |
+| Month closing | The first month starts with `opening_balance: 0`; its month comes from local time, `started_at` from UTC | #84 | **Fixed in #84:** `createInitialMonth` takes an explicit `YearMonth` and opening balance, without reading time (`src/month-closing.test.ts`); timestamps belong to persistence (#85) |
 | NBP | Network errors propagate unchanged (no offline fallback) | #8 | Open |
 | NBP | Currency list is hard-coded (USD, EUR, GBP, CHF, JPY) | #8 | Open |
 | NBP | `refreshAllExchangeRates` fails as a whole when one currency fails | #8 | Open |

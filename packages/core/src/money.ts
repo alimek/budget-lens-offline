@@ -1,3 +1,5 @@
+import { type CurrencyCode, currencyExponent } from "./currency";
+
 /**
  * Monetary amount expressed in minor currency units (e.g. 1 PLN = 100 minor units).
  * Always a safe integer, which avoids floating-point rounding errors.
@@ -61,13 +63,27 @@ export function negateMinorUnits(amount: MinorUnits): MinorUnits {
  * Throws a `RangeError` for a negative or non-finite rate and when the result leaves the safe integer range.
  */
 export function multiplyByRate(amount: MinorUnits, rate: number): MinorUnits {
+  return multiplyAtScale(amount, rate, 0);
+}
+
+/** Converts between currency minor-unit scales, rounding only once, half away from zero. */
+export function convertMinor(
+  amount: MinorUnits,
+  rate: number,
+  source: CurrencyCode,
+  target: CurrencyCode,
+): MinorUnits {
+  return multiplyAtScale(amount, rate, currencyExponent(target) - currencyExponent(source));
+}
+
+function multiplyAtScale(amount: MinorUnits, rate: number, exponentShift: number): MinorUnits {
   const value = BigInt(toMinorUnits(amount));
   if (!Number.isFinite(rate) || rate < 0) {
     throw new RangeError(`Rate must be a finite, non-negative number, received: ${rate}`);
   }
   const { coefficient, scale } = toDecimal(rate);
-  const product = value * coefficient;
-  const divisor = 10n ** scale;
+  const product = value * coefficient * 10n ** BigInt(Math.max(exponentShift, 0));
+  const divisor = 10n ** (scale + BigInt(Math.max(-exponentShift, 0)));
   let result = product / divisor;
   const remainder = product % divisor;
   const absRemainder = remainder < 0n ? -remainder : remainder;
