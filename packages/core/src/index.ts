@@ -7,6 +7,7 @@ export {
   requiredRateCurrencies,
   selectCurrentRates,
   warsawDate,
+  warsawUtcOffsetHours,
 } from "./exchange-rates";
 export type {
   ForecastError,

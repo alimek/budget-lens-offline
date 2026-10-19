@@ -65,8 +65,13 @@ days before today. Dates are `YYYY-MM-DD` compared as UTC calendar days, without
 host timezone.
 
 **`today` is Warsaw's date.** NBP's `effectiveDate` is a Europe/Warsaw business date, so freshness and the refresh
-gate both compare it with Warsaw's calendar date, not the device's. `warsawDate(instant)` is a pure helper
-(`Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Warsaw" })`, DST included). `refreshNbpRates` derives it from its
+gate both compare it with Warsaw's calendar date, not the device's. `warsawDate(instant)` is a pure helper that
+uses **no `Intl`** (Hermes on iOS has no reliable `formatToParts`; see
+[ADR 0012](../decisions/0012-native-intl-money-formatting.md)). It applies the EU summer-time rule (Directive
+2000/84/EC) with UTC arithmetic: UTC+2 (CEST) from 01:00 UTC on the last Sunday of March until 01:00 UTC on the last
+Sunday of October, UTC+1 (CET) otherwise (`warsawUtcOffsetHours`), then takes the UTC date of the shifted instant.
+Nothing runs at module load, and the result is the same on Hermes, Node and any device time zone. The rule is
+hard-coded: revisit it if the directive changes (e.g. if the EU abolishes seasonal clock changes). `refreshNbpRates` derives it from its
 `now`; the app passes `warsawDate(new Date())` as `getRate`'s `today` (#93). So a device east of Warsaw does not see
 the next weekday (and retry hourly for a table that cannot exist yet) before Warsaw does, and a device far east or
 west never flags the latest table as stale early. Manual rates keep the date the user entered in their own

@@ -16,6 +16,7 @@ import {
   selectCurrentRates,
   toMinorUnits,
   warsawDate,
+  warsawUtcOffsetHours,
 } from "./index";
 
 const NOW = Date.parse("2026-10-19T12:00:00Z");
@@ -474,6 +475,56 @@ describe("Warsaw date", () => {
     ["02:59:59 CEST, just before DST ends", "2026-10-25T00:59:59Z", "2026-10-25"],
     ["the last second of the DST end day (CET)", "2026-10-25T22:59:59Z", "2026-10-25"],
     ["midnight after DST ends (CET)", "2026-10-25T23:00:00Z", "2026-10-26"],
+    ["UTC midnight in winter, 01:00 in Warsaw", "2026-01-16T00:00:00Z", "2026-01-16"],
+    ["the last second of a CET year", "2026-12-31T22:59:59Z", "2026-12-31"],
+    ["Warsaw new year, still the old year in UTC", "2026-12-31T23:00:00Z", "2027-01-01"],
+  ])("returns Warsaw's calendar date at %s", (_case, instant, expected) => {
+    // Act
+    const date = warsawDate(new Date(instant));
+
+    // Assert
+    expect(date).toBe(expected);
+  });
+
+  it.each([
+    ["1 ms before DST starts 2026", "2026-03-29T00:59:59.999Z", 1],
+    ["the DST start instant 2026", "2026-03-29T01:00:00.000Z", 2],
+    ["1 ms after DST starts 2026", "2026-03-29T01:00:00.001Z", 2],
+    ["1 ms before DST ends 2026", "2026-10-25T00:59:59.999Z", 2],
+    ["the DST end instant 2026", "2026-10-25T01:00:00.000Z", 1],
+    ["1 ms after DST ends 2026", "2026-10-25T01:00:00.001Z", 1],
+    ["1 ms before DST starts 2027", "2027-03-28T00:59:59.999Z", 1],
+    ["the DST start instant 2027", "2027-03-28T01:00:00.000Z", 2],
+    ["1 ms after DST starts 2027", "2027-03-28T01:00:00.001Z", 2],
+    ["1 ms before DST ends 2027", "2027-10-31T00:59:59.999Z", 2],
+    ["the DST end instant 2027", "2027-10-31T01:00:00.000Z", 1],
+    ["1 ms after DST ends 2027", "2027-10-31T01:00:00.001Z", 1],
+  ])("uses the EU summer-time rule at %s", (_case, instant, expected) => {
+    // Arrange
+    const at = new Date(instant);
+
+    // Act
+    const offset = warsawUtcOffsetHours(at);
+
+    // Assert
+    expect(offset).toBe(expected);
+  });
+
+  it.each([
+    ["Warsaw midnight on the 2027 DST start day (CET)", "2027-03-27T23:00:00Z", "2027-03-28"],
+    ["Warsaw midnight after the 2027 DST start (CEST)", "2027-03-28T22:00:00Z", "2027-03-29"],
+    [
+      "1 ms before Warsaw midnight after the 2027 DST start",
+      "2027-03-28T21:59:59.999Z",
+      "2027-03-28",
+    ],
+    ["Warsaw midnight on the 2027 DST end day (CEST)", "2027-10-30T22:00:00Z", "2027-10-31"],
+    ["Warsaw midnight after the 2027 DST end (CET)", "2027-10-31T23:00:00Z", "2027-11-01"],
+    [
+      "1 ms before Warsaw midnight after the 2027 DST end",
+      "2027-10-31T22:59:59.999Z",
+      "2027-10-31",
+    ],
   ])("returns Warsaw's calendar date at %s", (_case, instant, expected) => {
     // Act
     const date = warsawDate(new Date(instant));
@@ -483,11 +534,16 @@ describe("Warsaw date", () => {
   });
 
   it("rejects an invalid instant", () => {
+    // Arrange
+    const invalid = new Date(Number.NaN);
+
     // Act
-    const check = () => warsawDate(new Date(Number.NaN));
+    const date = () => warsawDate(invalid);
+    const offset = () => warsawUtcOffsetHours(invalid);
 
     // Assert
-    expect(check).toThrow(RangeError);
+    expect(date).toThrow(RangeError);
+    expect(offset).toThrow(RangeError);
   });
 });
 
@@ -532,8 +588,8 @@ describe("app-open rate refresh", () => {
   ])(
     "does not refetch Friday's table on %s, however long ago it was fetched",
     async (_day, instant) => {
-      const now = Date.parse(instant);
       // Arrange
+      const now = Date.parse(instant);
       const store = createMemoryRateStore();
       await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: now - 7 * 86_400_000 }));
       const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));

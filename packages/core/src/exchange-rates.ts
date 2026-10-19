@@ -53,23 +53,36 @@ export function assertFreshnessThreshold(value: unknown): asserts value is numbe
   if (!isValidRateMaxAgeBusinessDays(value)) throw new RangeError("invalid-rate-freshness");
 }
 
-const WARSAW_DATE = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Europe/Warsaw",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
+/** 01:00 UTC on the last Sunday of `month` (0-based) of `year`: the EU summer-time change instant. */
+function lastSundayAt0100Utc(year: number, month: number): number {
+  const lastDay = new Date(0);
+  lastDay.setUTCFullYear(year, month + 1, 0);
+  lastDay.setUTCHours(1, 0, 0, 0);
+  return lastDay.getTime() - lastDay.getUTCDay() * 86_400_000;
+}
 
 /**
  * The Europe/Warsaw calendar date (`YYYY-MM-DD`) of an instant. NBP's `effectiveDate` is a Warsaw date, so
- * freshness and the refresh gate compare it with Warsaw's today, whatever the device time zone (including DST).
+ * freshness and the refresh gate compare it with Warsaw's today, whatever the device time zone.
+ *
+ * Pure UTC arithmetic, no `Intl` (Hermes on iOS has no reliable `formatToParts`, see
+ * docs/decisions/0012-native-intl-money-formatting.md). Poland follows the EU summer-time rule (Directive
+ * 2000/84/EC): UTC+2 from 01:00 UTC on the last Sunday of March until 01:00 UTC on the last Sunday of October,
+ * UTC+1 otherwise. The rule is hard-coded; revisit it if the directive changes (e.g. the EU drops DST).
  */
 export function warsawDate(instant: Date): string {
-  if (Number.isNaN(instant.getTime())) throw new RangeError("invalid-instant");
-  const parts = new Map(WARSAW_DATE.formatToParts(instant).map((part) => [part.type, part.value]));
-  const date = `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
+  const offsetHours = warsawUtcOffsetHours(instant);
+  const date = new Date(instant.getTime() + offsetHours * 3_600_000).toISOString().slice(0, 10);
   assertRateDate(date);
   return date;
+}
+
+/** Europe/Warsaw's UTC offset at an instant under the EU rule documented on {@link warsawDate}: 2 (CEST) or 1 (CET). */
+export function warsawUtcOffsetHours(instant: Date): 1 | 2 {
+  const time = instant.getTime();
+  if (Number.isNaN(time)) throw new RangeError("invalid-instant");
+  const year = instant.getUTCFullYear();
+  return time >= lastSundayAt0100Utc(year, 2) && time < lastSundayAt0100Utc(year, 9) ? 2 : 1;
 }
 
 export function isRateQuote(value: unknown): value is RateQuote {
