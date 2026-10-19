@@ -45,6 +45,8 @@ describe("occurrencesInRange (properties)", () => {
     // Arrange
     const property = fc.property(scheduledItem, range, (item, { from, months }) => {
       const to = addMonths(from, months);
+      // Without an end month the last possible month is the end of the range, which is asserted anyway.
+      const lastMonth = item.endMonth ?? to;
 
       // Act
       const occurrences = occurrencesInRange(item, from, to);
@@ -54,9 +56,7 @@ describe("occurrencesInRange (properties)", () => {
         expect(monthsBetween(from, occurrence.month)).toBeGreaterThanOrEqual(0);
         expect(monthsBetween(occurrence.month, to)).toBeGreaterThanOrEqual(0);
         expect(monthsBetween(item.anchor, occurrence.month)).toBeGreaterThanOrEqual(0);
-        if (item.endMonth !== undefined) {
-          expect(monthsBetween(occurrence.month, item.endMonth)).toBeGreaterThanOrEqual(0);
-        }
+        expect(monthsBetween(occurrence.month, lastMonth)).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -96,11 +96,8 @@ describe("occurrencesInRange (properties)", () => {
       // Act
       const occurrences = occurrencesInRange(item, from, addMonths(from, months));
 
-      // Assert
+      // Assert: every generated item has a day of month, so an occurrence without a day fails this check too.
       for (const occurrence of occurrences) {
-        if (occurrence.day === undefined) {
-          throw new Error("Invalid test setup: the scheduled item has a day of month");
-        }
         expect(occurrence.day).toBe(Math.min(item.dayOfMonth, daysInMonth(occurrence.month)));
       }
     });

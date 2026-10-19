@@ -104,10 +104,17 @@ rules apply: few properties, business-behaviour names, AAA inside the property. 
 the shrunk counterexample to reproduce it, which is how a CI failure is reproduced too.
 
 The properties we have (#122 completes the set deferred from #18):
-- `src/money.property.test.ts`: `sumMinorUnits` equals the exact integer sum; `toMinorUnits` rejects every amount
-  that is not a whole number of minor units; typing back what `formatMoney` printed (`parseMoney` of its digits, in
-  every supported currency and both languages) gives the same amount; `multiplyByRate` always returns whole minor
-  units at most half a minor unit from the exact product and rounds an exact half away from zero.
+- `src/money.property.test.ts`: amounts are drawn from size bands (below 1 000, 1 000 – 999 999, up to 10^9 and up
+  to 10^12 minor units) so typical, grouped amounts are as common as tiny and huge ones. `sumMinorUnits` equals the
+  exact integer sum; `toMinorUnits` rejects every amount that is not a whole number of minor units; typing back what
+  `formatMoney` printed (`parseMoney` of its digits, both languages) gives the same amount in every currency with
+  minor digits; for currencies without them (CLP, ISK, JPY, KRW) English amounts with exactly one thousands group
+  are skipped, because `parseMoney` reads `JP¥1,000` as a decimal (#2 rule, owner decision in #164);
+  `multiplyByRate` always returns whole minor units at most half a minor unit from the exact product and rounds an
+  exact half away from zero; `convertMinor` only rescales at rate 1 into a currency with as many or more minor
+  digits (and back losslessly), stays within half a target minor unit of the exact value, is odd (negating the
+  amount negates the result) and monotonic in the amount, and agrees with `convertMinorExact` for any quote pair
+  with the same ratio.
 - `src/recurrence.property.test.ts`: occurrences stay inside the requested range, from the anchor up to the end
   month; the list is every month of the item's rhythm, with no gaps and no duplicates; the day of month is clamped
   to the last day of each month.
