@@ -141,7 +141,9 @@ line):
 - `src/settings.test.ts` (#76): `Settings` updates and validation, including malformed stored data and the
   `CurrencyCode` fields and `baseCurrency` rename (#126), with explicit AAA sections.
 - `src/exchange-rates.test.ts` (#8): NBP validation/errors, recorded JPY conversion using existing money arithmetic,
-  current-row replacement, offline lookup, effective-date freshness, manual tie precedence and partial refresh failures.
+  current-row replacement, offline lookup, business-day freshness boundaries (weekends, Monday morning, exactly 2 and
+  3 business days, NBP and manual), the refresh gate, request timeouts, manual tie precedence and partial refresh
+  failures.
 - `test/*.characterization.test.ts` (#3): legacy forecast, recurrence (including the comparison of the ported
   schedules with legacy, #4), occurrence overrides (legacy monthly totals compared with id-based overrides, #5),
   exchange rates, month closing and formatting (including the check that `formatMoney` matches the legacy

@@ -16,7 +16,7 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | `lowBalanceThreshold` | `MinorUnits` | `500_000` (5000 PLN) | Low-balance warning: forecast balance below this amount ([forecast.md](forecast.md)) |
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
-| `rateMaxAgeHours` | positive safe integer | `24` | Effective-date age at which NBP/manual quotes become stale (#8) |
+| `rateMaxAgeBusinessDays` | integer, 1 to 20 | `2` | NBP/manual quotes are stale when at least this many business days (Mon–Fri, no Polish holidays) lie strictly between the effective date and today (#8) |
 
 Thresholds are in minor units of `baseCurrency`. The base currency is chosen in onboarding and locked when
 onboarding is confirmed ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
@@ -45,10 +45,15 @@ Closing receives selected rates and stores converted totals (#84).
 See [forecast.md](forecast.md), [exchange-rates.md](exchange-rates.md) and [month-closing.md](month-closing.md).
 
 NBP and manual rates are PLN per unit of a currency. `selectCurrentRates` (#8) chooses the newer effective date,
-preferring manual on a tie; cross rates go via PLN. Freshness uses effective-date age against `rateMaxAgeHours`
-for both sources (latest #8 decision; see [exchange-rates.md](exchange-rates.md)). The base currency cannot change after onboarding.
+preferring manual on a tie; cross rates go via PLN. Freshness counts business days against `rateMaxAgeBusinessDays`
+for both sources ([Orchestrator decision 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751); see [exchange-rates.md](exchange-rates.md)).
+Business days are Mon–Fri; Polish public holidays are **not** modelled in the MVP (the default of 2 absorbs one
+holiday; follow-up [#165](https://github.com/alimek/budget-lens-offline/issues/165)). `rateMaxAgeBusinessDays`
+replaces the earlier `rateMaxAgeHours` (24): `loadSettings` drops a stored `rateMaxAgeHours` and an invalid or
+missing `rateMaxAgeBusinessDays` falls back to `2`. The upper bound `MAX_RATE_MAX_AGE_BUSINESS_DAYS` (20, four
+working weeks) keeps a corrupted value from hiding stale rates. The base currency cannot change after onboarding.
 
-`DEFAULT_SETTINGS` is frozen. All defaults except `language`, `forecastHorizonMonths` and `rateMaxAgeHours` come from the legacy
+`DEFAULT_SETTINGS` is frozen. All defaults except `language`, `forecastHorizonMonths` and `rateMaxAgeBusinessDays` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
 web app defaulted to Polish (the offline app follows the device language, epic #24).
 
@@ -77,7 +82,7 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
 | `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
-| `invalid-rate-max-age` | `rateMaxAgeHours` | Not a positive safe integer number of hours |
+| `invalid-rate-max-age` | `rateMaxAgeBusinessDays` | Not an integer number of business days from 1 to 20 |
 
 Errors name the field, not the element: one `trackedCurrencies` error covers the whole list, which fits a currency
 picker that shows one message per field. `updateSettings` checks every field at runtime, so a value of the wrong

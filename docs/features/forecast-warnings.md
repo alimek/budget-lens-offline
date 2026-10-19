@@ -34,7 +34,7 @@ opens the savings screen (E7); Savings is not a tab.
 - As a user, I see my projected balance for each of the next 12 months.
 - As a user, I get a warning when a month is projected below my low-balance threshold.
 - As a user with a USD subscription, I see it included in base-currency terms, with the rate date and a stale badge
-  when the quote's effective-date age reaches the Settings threshold (24 h by default).
+  when the quote is older than the Settings threshold (2 business days by default).
 - As a user, I open the app on Overview (the Dashboard, first tab) and see my balance, the next warning, a mini
   forecast and a Savings card.
 
@@ -46,7 +46,7 @@ opens the savings screen (E7); Savings is not a tab.
 - Closed months use snapshotted rates; only open and future months use current rates.
 - The chart uses full amounts (optionally whole units), with no compact axis labels such as "5K" / "5 tys."
   ([ADR 0012](../decisions/0012-native-intl-money-formatting.md)).
-- Rates: rates are fetched **once a day on app open**; both sources become stale when effective-date age reaches `Settings.rateMaxAgeHours` (24 by default), per the [latest #8 decision](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6276832887), which supersedes fetch-age freshness. Offline the last stored rate is used; **only the current rate per currency is stored** (no rate history) ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950), [owner review #35, Q7](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). Manual rates (`1 X = y PLN`) win on a newer or equal effective date; cross rates go via PLN; table A only. At most one current NBP rate plus one current manual rate is kept per
+- Rates: rates are fetched **on app open** when a newer NBP table may exist (at most hourly retries before it is published); both sources become stale when at least `Settings.rateMaxAgeBusinessDays` business days (Mon–Fri, 2 by default, no Polish holidays in the MVP) lie between the effective date and today, per the [Orchestrator decision 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751), which supersedes the 24 h and fetch-age rules. Offline the last stored rate is used; **only the current rate per currency is stored** (no rate history) ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950), [owner review #35, Q7](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). Manual rates (`1 X = y PLN`) win on a newer or equal effective date; cross rates go via PLN; table A only. At most one current NBP rate plus one current manual rate is kept per
   currency (owner-confirmed 2026-10-19, [#92](https://github.com/alimek/budget-lens-offline/issues/92#issuecomment-6276227995)).
 
 ## Success criteria

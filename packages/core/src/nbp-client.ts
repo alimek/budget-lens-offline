@@ -16,19 +16,73 @@ export type NbpFetch = (url: string) => Promise<{
 
 const API = "https://api.nbp.pl/api/exchangerates";
 
+/** Default limit for one NBP request; a hung request becomes `network-error` instead of blocking app open. */
+export const NBP_TIMEOUT_MS = 10_000;
+
+export interface NbpRequestOptions {
+  /** Milliseconds before the request is abandoned and reported as `network-error`. */
+  readonly timeoutMs?: number;
+}
+
+/** Every supported runtime (Hermes, Node) has timers; core keeps `types: []`, so they are typed structurally. */
+const timers = globalThis as unknown as {
+  setTimeout(callback: () => void, ms: number): unknown;
+  clearTimeout(handle: unknown): void;
+};
+
+/** Resolves to `undefined` after `ms`; `fetchFn` has no abort contract, so a timed-out request is only abandoned. */
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
+  let handle: unknown;
+  const timeout = new Promise<undefined>((resolve) => {
+    handle = timers.setTimeout(() => resolve(undefined), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    timers.clearTimeout(handle);
+  }
+}
+
 function object(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined;
 }
 
-async function request(url: string, fetchFn: NbpFetch): Promise<RateResult<unknown>> {
-  let response: Awaited<ReturnType<NbpFetch>>;
+function timeoutOf(options: NbpRequestOptions): number {
+  const timeoutMs = options.timeoutMs ?? NBP_TIMEOUT_MS;
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) throw new RangeError("invalid-timeout");
+  return timeoutMs;
+}
+
+const NETWORK_ERROR: RateResult<never> = { ok: false, error: { code: "network-error" } };
+
+/** A rejected or timed-out body read; parsed JSON is never `undefined`, so `undefined` means the timeout. */
+async function readBody(
+  response: Awaited<ReturnType<NbpFetch>>,
+  timeoutMs: number,
+): Promise<RateResult<unknown>> {
   try {
-    response = await fetchFn(url);
+    const body = await withTimeout(response.json(), timeoutMs);
+    return body === undefined ? NETWORK_ERROR : { ok: true, value: body };
   } catch {
-    return { ok: false, error: { code: "network-error" } };
+    return { ok: false, error: { code: "invalid-response" } };
   }
+}
+
+async function request(
+  url: string,
+  fetchFn: NbpFetch,
+  options: NbpRequestOptions,
+): Promise<RateResult<unknown>> {
+  const timeoutMs = timeoutOf(options);
+  let response: Awaited<ReturnType<NbpFetch>> | undefined;
+  try {
+    response = await withTimeout(fetchFn(url), timeoutMs);
+  } catch {
+    return NETWORK_ERROR;
+  }
+  if (response === undefined) return NETWORK_ERROR;
   if (!response.ok) {
     return {
       ok: false,
@@ -38,11 +92,7 @@ async function request(url: string, fetchFn: NbpFetch): Promise<RateResult<unkno
       },
     };
   }
-  try {
-    return { ok: true, value: await response.json() };
-  } catch {
-    return { ok: false, error: { code: "invalid-response" } };
-  }
+  return readBody(response, timeoutMs);
 }
 
 /** Preserve the API's printed decimal exactly, including small rates printed with an exponent. */
@@ -72,11 +122,12 @@ function quote(
 export async function fetchNbpRate(
   currency: CurrencyCode,
   fetchFn: NbpFetch,
+  options: NbpRequestOptions = {},
 ): Promise<RateResult<RateQuote>> {
   if (!isCurrencyCode(currency) || currency === "PLN") {
     return { ok: false, error: { code: "unsupported-currency" } };
   }
-  const result = await request(`${API}/rates/A/${currency}/?format=json`, fetchFn);
+  const result = await request(`${API}/rates/A/${currency}/?format=json`, fetchFn, options);
   if (!result.ok) return { ok: false, error: { ...result.error, currency } };
   const body = object(result.value);
   const rates = body?.["rates"];
@@ -128,10 +179,11 @@ function tableErrors(
 export async function fetchNbpRates(
   currencies: readonly CurrencyCode[],
   fetchFn: NbpFetch,
+  options: NbpRequestOptions = {},
 ): Promise<ReadonlyMap<CurrencyCode, RateResult<RateQuote>>> {
   const needed = [...new Set(currencies)].filter((currency) => currency !== "PLN");
   if (needed.length === 0) return new Map();
-  const response = await request(`${API}/tables/A/?format=json`, fetchFn);
+  const response = await request(`${API}/tables/A/?format=json`, fetchFn, options);
   if (!response.ok) return tableErrors(needed, response.error);
   const table = parseTable(response.value);
   if (table === undefined) return tableErrors(needed, { code: "invalid-response" });

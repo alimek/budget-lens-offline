@@ -44,11 +44,11 @@ export interface CurrentRate {
 /** Read only: app-open refresh is separate. Old rates remain available without a network connection. */
 export async function getRate(
   currency: CurrencyCode,
-  options: { readonly store: RateStore; readonly now: string; readonly maxAgeHours: number },
+  options: { readonly store: RateStore; readonly now: string; readonly maxAgeBusinessDays: number },
 ): Promise<RateResult<CurrentRate>> {
-  const { store, now, maxAgeHours } = options;
+  const { store, now, maxAgeBusinessDays } = options;
   // Validate options even for PLN or a missing quote.
-  isRateStale(now, now, maxAgeHours);
+  isRateStale(now, now, maxAgeBusinessDays);
   if (!isCurrencyCode(currency)) return { ok: false, error: { code: "unsupported-currency" } };
   if (currency === "PLN") {
     return {
@@ -62,14 +62,14 @@ export async function getRate(
   } catch {
     return { ok: false, error: { code: "storage-error", currency } };
   }
-  if (
-    !Array.isArray(rates) ||
-    rates.some((rate) => !isStoredRate(rate) || rate.currency !== currency)
-  ) {
-    return { ok: false, error: { code: "invalid-rate", currency } };
+  if (!Array.isArray(rates)) return { ok: false, error: { code: "invalid-rate", currency } };
+  // A malformed row of one source must not hide a valid row of the other source.
+  const valid = rates.filter((rate) => isStoredRate(rate) && rate.currency === currency);
+  const selected = selectCurrentRates(valid).get(currency);
+  if (selected === undefined) {
+    const code = valid.length < rates.length ? "invalid-rate" : "missing-rate";
+    return { ok: false, error: { code, currency } };
   }
-  const selected = selectCurrentRates(rates).get(currency);
-  if (selected === undefined) return { ok: false, error: { code: "missing-rate", currency } };
   return {
     ok: true,
     value: {
@@ -77,7 +77,7 @@ export async function getRate(
       mid: selected.mid,
       effectiveDate: selected.effectiveDate,
       source: selected.source,
-      stale: isRateStale(selected.effectiveDate, now, maxAgeHours),
+      stale: isRateStale(selected.effectiveDate, now, maxAgeBusinessDays),
     },
   };
 }

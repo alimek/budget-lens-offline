@@ -31,9 +31,11 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 
 - `fetchNbpRate(currency, fetchFn)` – table A, response validation, network and 404 errors; `fetch` is injected.
 - An injected `RateStore` cache (`get`, `set`, `getAll`); in-memory implementation in core for tests, SQLite in the app.
-- `getRate(currency, { store, now, maxAgeHours })` only reads storage. `now` is today's local `YYYY-MM-DD`, supplied
-  by the app, and `maxAgeHours` comes from `Settings.rateMaxAgeHours` (default 24). It returns `mid`, `effectiveDate`,
-  `source` and `stale`, or an error code such as `missing-rate`. It never fetches, including when offline/stale.
+- `getRate(currency, { store, now, maxAgeBusinessDays })` only reads storage. `now` is today's local `YYYY-MM-DD`,
+  supplied by the app, and `maxAgeBusinessDays` comes from `Settings.rateMaxAgeBusinessDays` (default 2). It returns
+  `mid`, `effectiveDate`, `source` and `stale`, or an error code such as `missing-rate`. It never fetches, including
+  when offline/stale. A malformed stored row is skipped, so a valid row of the other source is still used;
+  `invalid-rate` is returned only when no valid row remains.
 - `convertMinor(amount, rate, source, target)` is implemented in core money arithmetic (#84). Rates are target
   major units per source major unit, with exact decimal multiplication, exponent scaling and one final rounding.
   For a non-PLN base, the caller computes/selects the cross-rate; core closing does not assume NBP's PLN quote is
@@ -54,19 +56,43 @@ validated candidates and preserves their metadata. This follows the
 [orchestrator decision on #8](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6276832887):
 for NBP use the table date; for manual use the date entered by the user.
 
-**Freshness follows that latest decision**, superseding the earlier successful-fetch-age rule: both NBP and manual
-quotes are stale when `today - effectiveDate >= Settings.rateMaxAgeHours`. Calendar dates are compared at midnight
-without reading the clock or depending on the host timezone. A Friday quote can therefore be stale on Sunday even
-after a successful Sunday fetch. Manual rates are also `1 X = y PLN`; `fetchedAt` never decides precedence or staleness.
+**Freshness is measured in business days** ([Orchestrator decision 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751), superseding the 24 h
+effective-date rule and the earlier successful-fetch-age rule). `businessDaysBetween(effectiveDate, today)` counts the
+Mon–Fri calendar days strictly between the two dates (both excluded). Both NBP and manual quotes are stale when that
+count is at least `Settings.rateMaxAgeBusinessDays` (default 2), i.e. when the effective date is older than 2 business
+days before today. Dates are `YYYY-MM-DD` compared as UTC calendar days, without reading the clock or depending on the
+host timezone.
 
-`refreshNbpRates(currencies, { store, fetchFn, now })` is an explicit app-open operation, separate from lookup.
-Here `now` is injected epoch milliseconds. It skips each current NBP row fetched less than 24 hours ago and gets
-the due currencies with one `fetchNbpRates` table-A request. `fetchNbpRate` remains available for a single latest
+**Polish public holidays are not modelled in the MVP**: every Mon–Fri is a business day. The default of 2 absorbs one
+holiday; two adjacent holidays can flag the latest NBP rate as stale. Follow-up:
+[#165](https://github.com/alimek/budget-lens-offline/issues/165).
+
+| effectiveDate | today | Mon–Fri strictly between | Default result |
+| --- | --- | --- | --- |
+| Fri | Sat, Sun, Mon (also Mon 07:00, before Monday's table) | 0 | fresh |
+| Thu | Mon | 1 | fresh |
+| Mon | Wed (exactly 2 business days old, boundary) | 1 | fresh |
+| Wed | Mon (3 business days old) | 2 | stale |
+| Wed | Sat | 2 | stale |
+
+Manual rates are also `1 X = y PLN`; `fetchedAt` never decides precedence or staleness.
+
+`refreshNbpRates(currencies, { store, fetchFn, now, today, timeoutMs? })` is an explicit app-open operation,
+separate from lookup. Here `now` is injected epoch milliseconds and `today` the app's local `YYYY-MM-DD`. A currency
+is **due** when a business day (Mon–Fri) lies after its cached NBP `effectiveDate`, up to and including `today`
+(a newer table may exist), and the row was not fetched within the last hour. So Friday's table is not
+refetched at the weekend; a fetch on a weekday morning before NBP publishes (around midday) is retried at most hourly
+and picks up the new table the same day, instead of after a fixed 24 h gate. Due currencies are fetched with one
+`fetchNbpRates` table-A request. `fetchNbpRate` remains available for a single latest
 quote; neither function requests history or the `/today/` endpoint. They use HTTPS and validate the response per
 the [NBP API contract](https://api.nbp.pl/en.html). Quotes keep decimal `mid` strings without per-100 scaling;
 small exponent-form JSON numbers are expanded without rounding. Missing/malformed quotes and failed writes are
 reported per currency, preserving other successes and all old stored rows on failure. Only a successful write
 advances that currency's `fetchedAt`; manual rows are untouched. The app lifecycle/TanStack integration remains #93.
+
+Every NBP request (response and body) is bounded by `timeoutMs` (default `NBP_TIMEOUT_MS`, 10 s); a hung request
+is abandoned and reported as `network-error`, so app open is never blocked. `NbpFetch` has no abort contract, so the
+underlying request is not cancelled.
 
 Transport errors are codes (`network-error`, `not-found`, `http-error`, `invalid-response`), never UI copy.
 Lookup reports `storage-error` or `invalid-rate` for unreadable/corrupt storage. No default global fetch, store,
@@ -87,8 +113,8 @@ Closing receives rates in target major units per source major unit; it does not 
 in base currency. See [money.md](money.md) for the shared conversion APIs.
 
 The final [#124 owner decisions](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263755326)
-supersede the early research: table A only, current rates only, fetch once a day on app open, freshness based on
-the effective-date age threshold from Settings (latest #8 decision above). Manual rates are PLN-quoted; the forecast uses the
+supersede the early research: table A only, current rates only, fetch on app open (gated by the newest possible
+table date, see above), freshness in business days against the Settings threshold (latest #8 decision above). Manual rates are PLN-quoted; the forecast uses the
 newer effective date and prefers manual on a tie. Forecast validates candidate calendar dates before selection; the cache validates source metadata. Both conversion
 legs may have different dates; the forecast reports the actual legs with their supplied stale flags. The UI can
 show the older effective date and flag either stale leg.

@@ -4,6 +4,7 @@ import {
   DEFAULT_SETTINGS,
   loadSettings,
   MAX_FORECAST_HORIZON_MONTHS,
+  MAX_RATE_MAX_AGE_BUSINESS_DAYS,
   toMinorUnits,
   updateSettings,
 } from "./index";
@@ -22,7 +23,7 @@ describe("updateSettings", () => {
       language: "en",
       trackedCurrencies: ["EUR"],
       lowBalanceThreshold: toMinorUnits(0),
-      rateMaxAgeHours: 48,
+      rateMaxAgeBusinessDays: 3,
     });
 
     // Assert
@@ -33,7 +34,7 @@ describe("updateSettings", () => {
         language: "en",
         trackedCurrencies: ["EUR"],
         lowBalanceThreshold: 0,
-        rateMaxAgeHours: 48,
+        rateMaxAgeBusinessDays: 3,
       },
     });
     expect(current).toEqual(DEFAULT_SETTINGS);
@@ -127,11 +128,11 @@ describe("updateSettings", () => {
 });
 
 describe("loadSettings", () => {
-  it.each([0, -1, 1.5, "24", null])(
+  it.each([0, -1, 1.5, MAX_RATE_MAX_AGE_BUSINESS_DAYS + 1, "2", null])(
     "rejects an invalid rate freshness threshold and defaults stored data: %s",
-    (rateMaxAgeHours) => {
+    (rateMaxAgeBusinessDays) => {
       // Arrange
-      const changes = untrusted({ rateMaxAgeHours });
+      const changes = untrusted({ rateMaxAgeBusinessDays });
 
       // Act
       const updated = updateSettings(DEFAULT_SETTINGS, changes);
@@ -140,11 +141,24 @@ describe("loadSettings", () => {
       // Assert
       expect(updated).toEqual({
         ok: false,
-        errors: [{ field: "rateMaxAgeHours", code: "invalid-rate-max-age" }],
+        errors: [{ field: "rateMaxAgeBusinessDays", code: "invalid-rate-max-age" }],
       });
-      expect(loaded.rateMaxAgeHours).toBe(24);
+      expect(loaded.rateMaxAgeBusinessDays).toBe(2);
     },
   );
+
+  it("drops the legacy hour-based threshold and defaults to 2 business days", () => {
+    // Arrange
+    const stored = { language: "pl", rateMaxAgeHours: 48 };
+
+    // Act
+    const loaded = loadSettings(stored);
+
+    // Assert
+    expect(loaded).toEqual({ ...DEFAULT_SETTINGS, language: "pl" });
+    expect(loaded.rateMaxAgeBusinessDays).toBe(2);
+    expect(loaded).not.toHaveProperty("rateMaxAgeHours");
+  });
 
   it.each([
     { trackedCurrencies: ["USD", "EUR"], expected: ["EUR"] },

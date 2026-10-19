@@ -28,9 +28,16 @@ export interface Settings {
   readonly largeExpenseThreshold: MinorUnits;
   /** Number of months the forecast projects, including the start month: 1 to {@link MAX_FORECAST_HORIZON_MONTHS}. */
   readonly forecastHorizonMonths: number;
-  /** A quote is stale when its effective-date age reaches this many hours. */
-  readonly rateMaxAgeHours: number;
+  /**
+   * A quote (NBP or manual) is stale when at least this many business days (Mon–Fri, no holidays) lie strictly
+   * between its effective date and today: 1 to {@link MAX_RATE_MAX_AGE_BUSINESS_DAYS}. Polish public holidays are
+   * not modelled (MVP). Replaces the earlier `rateMaxAgeHours` (#8).
+   */
+  readonly rateMaxAgeBusinessDays: number;
 }
+
+/** Upper bound of `rateMaxAgeBusinessDays` (four working weeks), so a corrupted value cannot hide stale rates forever. */
+export const MAX_RATE_MAX_AGE_BUSINESS_DAYS = 20;
 
 /** Upper bound of `forecastHorizonMonths` (10 years), so a corrupted value cannot make the forecast hang. */
 export const MAX_FORECAST_HORIZON_MONTHS = 120;
@@ -43,7 +50,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   lowBalanceThreshold: toMinorUnits(500_000),
   largeExpenseThreshold: toMinorUnits(1_000_000),
   forecastHorizonMonths: 13,
-  rateMaxAgeHours: 24,
+  rateMaxAgeBusinessDays: 2,
 });
 
 export type SettingsErrorCode =
@@ -130,10 +137,11 @@ const FIELD_CHECKS = {
   largeExpenseThreshold: ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold),
   forecastHorizonMonths: ({ forecastHorizonMonths }) =>
     isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
-  rateMaxAgeHours: ({ rateMaxAgeHours }) =>
-    typeof rateMaxAgeHours === "number" &&
-    Number.isSafeInteger(rateMaxAgeHours) &&
-    rateMaxAgeHours > 0
+  rateMaxAgeBusinessDays: ({ rateMaxAgeBusinessDays }) =>
+    typeof rateMaxAgeBusinessDays === "number" &&
+    Number.isSafeInteger(rateMaxAgeBusinessDays) &&
+    rateMaxAgeBusinessDays >= 1 &&
+    rateMaxAgeBusinessDays <= MAX_RATE_MAX_AGE_BUSINESS_DAYS
       ? undefined
       : "invalid-rate-max-age",
 } satisfies Record<keyof Settings, Check>;
@@ -206,6 +214,6 @@ function freezeSettings(next: Settings): Settings {
     lowBalanceThreshold: next.lowBalanceThreshold,
     largeExpenseThreshold: next.largeExpenseThreshold,
     forecastHorizonMonths: next.forecastHorizonMonths,
-    rateMaxAgeHours: next.rateMaxAgeHours,
+    rateMaxAgeBusinessDays: next.rateMaxAgeBusinessDays,
   });
 }

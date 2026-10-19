@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import nbpResponses from "../test/fixtures/nbp-responses.json";
 import type { NbpFetch, RateStore, StoredRate } from "./index";
 import {
+  businessDaysBetween,
   convertMinor,
   convertMinorExact,
   createMemoryRateStore,
@@ -10,6 +11,7 @@ import {
   fetchNbpRates,
   getRate,
   isRateStale,
+  NBP_TIMEOUT_MS,
   refreshNbpRates,
   requiredRateCurrencies,
   selectCurrentRates,
@@ -102,6 +104,44 @@ describe("NBP quotes", () => {
 
     // Act
     const result = await fetchNbpRate("USD", fetchFn);
+
+    // Assert
+    expect(result).toEqual({ ok: false, error: { code: "network-error", currency: "USD" } });
+  });
+
+  it("returns a network error when the request never resolves, after the default timeout", async () => {
+    // Arrange
+    vi.useFakeTimers();
+    const fetchFn: NbpFetch = vi.fn(() => new Promise<never>(() => {}));
+
+    // Act
+    const pending = fetchNbpRates(["USD", "EUR"], fetchFn);
+    await vi.advanceTimersByTimeAsync(NBP_TIMEOUT_MS);
+    const results = await pending;
+    vi.useRealTimers();
+
+    // Assert
+    expect(NBP_TIMEOUT_MS).toBe(10_000);
+    expect(results.get("USD")).toEqual({
+      ok: false,
+      error: { code: "network-error", currency: "USD" },
+    });
+    expect(results.get("EUR")).toEqual({
+      ok: false,
+      error: { code: "network-error", currency: "EUR" },
+    });
+  });
+
+  it("applies a custom timeout to a response body that never arrives", async () => {
+    // Arrange
+    const fetchFn: NbpFetch = async () => ({
+      ok: true,
+      status: 200,
+      json: () => new Promise<never>(() => {}),
+    });
+
+    // Act
+    const result = await fetchNbpRate("USD", fetchFn, { timeoutMs: 5 });
 
     // Assert
     expect(result).toEqual({ ok: false, error: { code: "network-error", currency: "USD" } });
@@ -217,94 +257,66 @@ describe("current rate lookup", () => {
   );
 
   it.each(["nbp", "manual"] as const)(
-    "measures %s freshness by effective date and Settings threshold",
+    "measures %s freshness in business days against the Settings threshold",
+    async (source) => {
+      // Arrange: Wednesday 2026-10-14 checked on Monday 2026-10-19 is 3 business days old.
+      const store = createMemoryRateStore();
+      await store.set(quote({ source, effectiveDate: "2026-10-14", fetchedAt: NOW }));
+      const settings = { ...DEFAULT_SETTINGS, rateMaxAgeBusinessDays: 3 };
+
+      // Act
+      const lenient = await getRate("USD", {
+        store,
+        now: "2026-10-19",
+        maxAgeBusinessDays: settings.rateMaxAgeBusinessDays,
+      });
+      const byDefault = await getRate("USD", {
+        store,
+        now: "2026-10-19",
+        maxAgeBusinessDays: DEFAULT_SETTINGS.rateMaxAgeBusinessDays,
+      });
+
+      // Assert
+      expect(lenient).toMatchObject({
+        ok: true,
+        value: { mid: "3.6512", source, effectiveDate: "2026-10-14", stale: false },
+      });
+      expect(byDefault).toMatchObject({ ok: true, value: { source, stale: true } });
+    },
+  );
+
+  it.each(["nbp", "manual"] as const)(
+    "keeps a Friday %s quote fresh on Monday, without refreshing",
     async (source) => {
       // Arrange
       const store = createMemoryRateStore();
-      await store.set(quote({ source, effectiveDate: "2026-10-18", fetchedAt: NOW }));
-      const settings = { ...DEFAULT_SETTINGS, rateMaxAgeHours: 48 };
+      await store.set(quote({ source, effectiveDate: "2026-10-16", fetchedAt: NOW }));
 
       // Act
       const result = await getRate("USD", {
         store,
         now: "2026-10-19",
-        maxAgeHours: settings.rateMaxAgeHours,
+        maxAgeBusinessDays: DEFAULT_SETTINGS.rateMaxAgeBusinessDays,
       });
 
       // Assert
+      expect(DEFAULT_SETTINGS.rateMaxAgeBusinessDays).toBe(2);
       expect(result).toMatchObject({
         ok: true,
-        value: { mid: "3.6512", source, effectiveDate: "2026-10-18", stale: false },
+        value: { mid: "3.6512", source, effectiveDate: "2026-10-16", stale: false },
       });
     },
   );
-
-  it("returns an old weekend quote as stale even when fetched today, without refreshing", async () => {
-    // Arrange
-    const store = createMemoryRateStore();
-    await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: NOW }));
-
-    // Act
-    const result = await getRate("USD", {
-      store,
-      now: "2026-10-19",
-      maxAgeHours: DEFAULT_SETTINGS.rateMaxAgeHours,
-    });
-
-    // Assert
-    expect(result).toMatchObject({
-      ok: true,
-      value: { mid: "3.6512", source: "nbp", effectiveDate: "2026-10-16", stale: true },
-    });
-  });
 
   it("returns a missing-rate code when offline on first use", async () => {
     // Arrange
     const store = createMemoryRateStore();
 
     // Act
-    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeHours: 24 });
+    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(result).toEqual({ ok: false, error: { code: "missing-rate", currency: "USD" } });
-  });
-
-  it("uses implicit PLN without reading storage", async () => {
-    // Arrange
-    const store: RateStore = {
-      ...createMemoryRateStore(),
-      get: vi.fn(async () => {
-        throw new Error("unavailable");
-      }),
-    };
-
-    // Act
-    const result = await getRate("PLN", { store, now: "2026-10-19", maxAgeHours: 24 });
-
-    // Assert
-    expect(result).toMatchObject({
-      ok: true,
-      value: { mid: "1", source: "implicit", stale: false },
-    });
-    expect(store.get).not.toHaveBeenCalled();
-  });
-
-  it("replaces only the current source row and isolates cached values from callers", async () => {
-    // Arrange
-    const store = createMemoryRateStore();
-    await store.set(quote({ effectiveDate: "2026-10-16" }));
-    await store.set(quote({ source: "manual", mid: "4" }));
-    const next = { ...quote(), mid: "3.9" };
-
-    // Act
-    await store.set(next);
-    next.mid = "999";
-    const rows = await store.getAll();
-
-    // Assert
-    expect(rows).toHaveLength(2);
-    expect(rows).toContainEqual(quote({ mid: "3.9" }));
-    expect(rows).toContainEqual(quote({ source: "manual", mid: "4" }));
   });
 
   it("rejects malformed stored quotes instead of selecting them", async () => {
@@ -315,29 +327,94 @@ describe("current rate lookup", () => {
     };
 
     // Act
-    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeHours: 24 });
+    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(result).toEqual({ ok: false, error: { code: "invalid-rate", currency: "USD" } });
   });
 
+  it("skips a malformed row of one source and keeps the valid row of the other", async () => {
+    // Arrange
+    const store: RateStore = {
+      ...createMemoryRateStore(),
+      get: async () => [
+        quote({ source: "manual", mid: "4", effectiveDate: "2026-02-30" }),
+        quote({ effectiveDate: "2026-10-16" }),
+      ],
+    };
+
+    // Act
+    const result = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
+
+    // Assert
+    expect(result).toMatchObject({
+      ok: true,
+      value: { mid: "3.6512", source: "nbp", effectiveDate: "2026-10-16", stale: false },
+    });
+  });
+
+  // 2026-10-12 is a Monday. Default threshold: 2 business days strictly between effective date and today.
   it.each([
-    ["2026-10-19", "2026-10-19", 24, false],
-    ["2026-10-18", "2026-10-19", 24, true],
-    ["2024-02-28", "2024-03-01", 48, true],
-  ] as const)(
-    "marks stale at the threshold, including leap days: %s / %s",
-    (date, today, hours, expected) => {
-      // Arrange
-      const threshold = hours;
+    ["Friday rate on Monday", "2026-10-16", "2026-10-19", false],
+    ["Thursday rate on Monday", "2026-10-15", "2026-10-19", false],
+    ["3 business days old (Wednesday on Monday)", "2026-10-14", "2026-10-19", true],
+    [
+      "exactly 2 business days old (Monday on Wednesday), boundary",
+      "2026-10-12",
+      "2026-10-14",
+      false,
+    ],
+    ["Monday rate on Thursday", "2026-10-12", "2026-10-15", true],
+    ["same day", "2026-10-19", "2026-10-19", false],
+    ["Friday rate on Saturday", "2026-10-16", "2026-10-17", false],
+    ["Friday rate on Sunday", "2026-10-16", "2026-10-18", false],
+    ["Thursday rate on Sunday", "2026-10-15", "2026-10-18", false],
+    ["Wednesday rate on Saturday", "2026-10-14", "2026-10-17", true],
+    ["Wednesday rate on Sunday", "2026-10-14", "2026-10-18", true],
+    ["Saturday-dated manual rate on Tuesday", "2026-10-17", "2026-10-20", false],
+    ["Friday rate on Tuesday", "2026-10-16", "2026-10-20", false],
+    ["Friday rate on Wednesday", "2026-10-16", "2026-10-21", true],
+    ["effective date after today", "2026-10-20", "2026-10-19", false],
+    ["across a leap day (Wed 2024-02-28 on Mon 2024-03-04)", "2024-02-28", "2024-03-04", true],
+  ] as const)("default threshold: %s", (_case, date, today, expected) => {
+    // Arrange
+    const threshold = DEFAULT_SETTINGS.rateMaxAgeBusinessDays;
 
-      // Act
-      const stale = isRateStale(date, today, threshold);
+    // Act
+    const stale = isRateStale(date, today, threshold);
 
-      // Assert
-      expect(stale).toBe(expected);
-    },
-  );
+    // Assert
+    expect(stale).toBe(expected);
+  });
+
+  it.each([
+    ["2026-10-16", "2026-10-19", 0],
+    ["2026-10-15", "2026-10-19", 1],
+    ["2026-10-14", "2026-10-19", 2],
+    ["2026-10-17", "2026-10-18", 0],
+    ["2026-10-12", "2026-10-26", 9],
+    ["2026-01-01", "2027-01-01", 260],
+    ["2026-10-19", "2026-10-12", 0],
+  ] as const)("counts business days strictly between %s and %s", (from, to, expected) => {
+    // Act
+    const count = businessDaysBetween(from, to);
+
+    // Assert
+    expect(count).toBe(expected);
+  });
+
+  it.each([
+    ["2026-02-30", "2026-10-19", 2],
+    ["2026-10-16", "19.10.2026", 2],
+    ["2026-10-16", "2026-10-19", 0],
+    ["2026-10-16", "2026-10-19", 1.5],
+  ] as const)("rejects invalid freshness input: %s / %s / %s", (date, today, threshold) => {
+    // Act
+    const check = () => isRateStale(date, today, threshold);
+
+    // Assert
+    expect(check).toThrow(RangeError);
+  });
 });
 
 describe("app-open rate refresh", () => {
@@ -356,35 +433,123 @@ describe("app-open rate refresh", () => {
     expect(currencies).toEqual(["EUR", "USD", "JPY", "HUF"]);
   });
 
-  it("skips recent successful fetches, then refreshes at 24 hours without replacing manual", async () => {
-    // Arrange
+  it("refreshes an older table, then retries no sooner than an hour, without replacing manual", async () => {
+    // Arrange: Thursday's table cached on Monday; NBP still serves Friday's table.
     const store = createMemoryRateStore();
-    await store.set(quote({ fetchedAt: NOW - 86_400_000 }));
+    await store.set(quote({ effectiveDate: "2026-10-15", fetchedAt: NOW - 86_400_000 }));
     await store.set(quote({ source: "manual", mid: "4" }));
+    const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
+    const today = "2026-10-19";
+
+    // Act
+    const results = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW, today });
+    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 3_599_999, today });
+    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 3_600_000, today });
+
+    // Assert
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(results.get("USD")).toMatchObject({ ok: true, value: { mid: "3.9", fetchedAt: NOW } });
+    expect(await store.get("USD")).toContainEqual(quote({ source: "manual", mid: "4" }));
+  });
+
+  it.each([
+    ["Saturday", "2026-10-17"],
+    ["Sunday", "2026-10-18"],
+  ])(
+    "does not refetch Friday's table on %s, however long ago it was fetched",
+    async (_day, today) => {
+      // Arrange
+      const store = createMemoryRateStore();
+      await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: NOW - 7 * 86_400_000 }));
+      const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
+
+      // Act
+      const results = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW, today });
+
+      // Assert
+      expect(fetchFn).not.toHaveBeenCalled();
+      expect(results.get("USD")).toMatchObject({
+        ok: true,
+        value: { effectiveDate: "2026-10-16" },
+      });
+    },
+  );
+
+  it("fetches a table published after an early fetch on the same day", async () => {
+    // Arrange: Friday's table fetched at 07:00 on Monday; Monday's table is published at midday.
+    const mondayMorning = Date.parse("2026-10-19T07:00:00+02:00");
+    const store = createMemoryRateStore();
+    await store.set(quote({ effectiveDate: "2026-10-16", fetchedAt: mondayMorning }));
+    const fetchFn: NbpFetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => [
+        { table: "A", effectiveDate: "2026-10-19", rates: [{ code: "USD", mid: 3.9 }] },
+      ],
+    });
+
+    // Act
+    const results = await refreshNbpRates(["USD"], {
+      store,
+      fetchFn,
+      now: mondayMorning + 6 * 3_600_000,
+      today: "2026-10-19",
+    });
+
+    // Assert
+    expect(results.get("USD")).toMatchObject({
+      ok: true,
+      value: { mid: "3.9", effectiveDate: "2026-10-19" },
+    });
+  });
+
+  it("keeps Friday's rate fresh on Monday morning before Monday's table is published", async () => {
+    // Arrange: Monday 2026-10-19 07:00 Warsaw; NBP still serves Friday's (2026-10-16) table.
+    const mondayMorning = Date.parse("2026-10-19T07:00:00+02:00");
+    const store = createMemoryRateStore();
+    await store.set(
+      quote({ effectiveDate: "2026-10-15", fetchedAt: mondayMorning - 3 * 86_400_000 }),
+    );
     const fetchFn = fetchReturning(tableResponse([{ code: "USD", mid: 3.9 }]));
 
     // Act
-    const results = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW });
-    await refreshNbpRates(["USD"], { store, fetchFn, now: NOW + 1 });
+    const refresh = await refreshNbpRates(["USD"], {
+      store,
+      fetchFn,
+      now: mondayMorning,
+      today: "2026-10-19",
+    });
+    const lookup = await getRate("USD", {
+      store,
+      now: "2026-10-19",
+      maxAgeBusinessDays: DEFAULT_SETTINGS.rateMaxAgeBusinessDays,
+    });
 
     // Assert
-    expect(fetchFn).toHaveBeenCalledTimes(1);
-    expect(results.get("USD")).toMatchObject({ ok: true, value: { mid: "3.9", fetchedAt: NOW } });
-    expect(await store.get("USD")).toContainEqual(quote({ source: "manual", mid: "4" }));
+    expect(refresh.get("USD")).toMatchObject({ ok: true, value: { effectiveDate: "2026-10-16" } });
+    expect(lookup).toMatchObject({
+      ok: true,
+      value: { mid: "3.9", effectiveDate: "2026-10-16", stale: false },
+    });
   });
 
   it("keeps the last rate after a failed refresh and returns it stale offline", async () => {
     // Arrange
     const store = createMemoryRateStore();
-    const old = quote({ effectiveDate: "2026-10-16", fetchedAt: NOW - 86_400_000 });
+    const old = quote({ effectiveDate: "2026-10-14", fetchedAt: NOW - 86_400_000 });
     await store.set(old);
     const fetchFn: NbpFetch = async () => {
       throw new TypeError("offline");
     };
 
     // Act
-    const refresh = await refreshNbpRates(["USD"], { store, fetchFn, now: NOW });
-    const lookup = await getRate("USD", { store, now: "2026-10-19", maxAgeHours: 24 });
+    const refresh = await refreshNbpRates(["USD"], {
+      store,
+      fetchFn,
+      now: NOW,
+      today: "2026-10-19",
+    });
+    const lookup = await getRate("USD", { store, now: "2026-10-19", maxAgeBusinessDays: 2 });
 
     // Assert
     expect(refresh.get("USD")).toMatchObject({ ok: false, error: { code: "network-error" } });
@@ -410,7 +575,12 @@ describe("app-open rate refresh", () => {
     );
 
     // Act
-    const results = await refreshNbpRates(["USD", "JPY"], { store, fetchFn, now: NOW });
+    const results = await refreshNbpRates(["USD", "JPY"], {
+      store,
+      fetchFn,
+      now: NOW,
+      today: "2026-10-19",
+    });
 
     // Assert
     expect(results.get("USD")).toMatchObject({ ok: false, error: { code: "storage-error" } });

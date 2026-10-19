@@ -103,15 +103,69 @@ export function requiredRateCurrencies(
   ].filter((currency) => currency !== "PLN");
 }
 
-/** Pure calendar-date age; the caller passes today's local YYYY-MM-DD, never a system clock. */
-export function isRateStale(effectiveDate: string, today: string, maxAgeHours: number): boolean {
+const DAY_MS = 86_400_000;
+
+/** Days since 1970-01-01 (a Thursday) for a validated YYYY-MM-DD, at UTC midnight so the host timezone never matters. */
+function toDayNumber(date: string): number {
+  return Date.parse(date) / DAY_MS;
+}
+
+/** Mon–Fri days in the day-number range [from, to). */
+function countBusinessDays(from: number, to: number): number {
+  if (to <= from) return 0;
+  const length = to - from;
+  let count = Math.floor(length / 7) * 5;
+  for (let day = from + length - (length % 7); day < to; day += 1) {
+    // 1970-01-01 is a Thursday: weekday 0 = Sunday … 6 = Saturday.
+    const weekday = (((day + 4) % 7) + 7) % 7;
+    if (weekday !== 0 && weekday !== 6) count += 1;
+  }
+  return count;
+}
+
+/**
+ * Number of business days (Mon–Fri) strictly between two `YYYY-MM-DD` calendar dates, both ends excluded.
+ * Holidays are not modelled (MVP). Returns 0 when `to` is not after `from`. Pure: no clock, no host timezone.
+ */
+export function businessDaysBetween(from: string, to: string): number {
+  if (!isRateDate(from) || !isRateDate(to)) throw new RangeError("invalid-rate-date");
+  return countBusinessDays(toDayNumber(from) + 1, toDayNumber(to));
+}
+
+function isBusinessDay(day: number): boolean {
+  return countBusinessDays(day, day + 1) === 1;
+}
+
+/**
+ * True when a business day (Mon–Fri, no holidays) lies after `effectiveDate`, up to and including `today`, i.e. a
+ * newer NBP table may have been published since. Used by the app-open refresh gate.
+ */
+export function isNewerTableDue(effectiveDate: string, today: string): boolean {
+  if (!isRateDate(effectiveDate) || !isRateDate(today)) throw new RangeError("invalid-rate-date");
+  const todayNumber = toDayNumber(today);
+  return (
+    businessDaysBetween(effectiveDate, today) > 0 ||
+    (todayNumber > toDayNumber(effectiveDate) && isBusinessDay(todayNumber))
+  );
+}
+
+/**
+ * A quote is stale when at least `maxAgeBusinessDays` business days (Mon–Fri, no holidays) lie strictly between
+ * its effective date and today, i.e. when the effective date is older than `maxAgeBusinessDays` business days
+ * before today. Applies to NBP and manual quotes alike; the caller passes today's local YYYY-MM-DD, never a clock.
+ */
+export function isRateStale(
+  effectiveDate: string,
+  today: string,
+  maxAgeBusinessDays: number,
+): boolean {
   if (
     !isRateDate(effectiveDate) ||
     !isRateDate(today) ||
-    !Number.isSafeInteger(maxAgeHours) ||
-    maxAgeHours <= 0
+    !Number.isSafeInteger(maxAgeBusinessDays) ||
+    maxAgeBusinessDays <= 0
   ) {
     throw new RangeError("invalid-rate-freshness");
   }
-  return Date.parse(today) - Date.parse(effectiveDate) >= maxAgeHours * 3_600_000;
+  return businessDaysBetween(effectiveDate, today) >= maxAgeBusinessDays;
 }

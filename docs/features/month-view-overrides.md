@@ -38,8 +38,8 @@ base currency.
 
 - Overrides are keyed by `(item_id, month)` (never by name; one `items` table with `kind`) and are stored in the
   item's currency. Payment status is its own table ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
-- Open months convert at the current stored rate; a stale badge appears when effective-date age reaches the
-  Settings threshold (24 h by default, per the latest #8 decision)
+- Open months convert at the current stored rate; a stale badge appears when the effective date is older than the
+  Settings threshold (2 business days by default, per the [#8 decision](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751))
   ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)).
 - Totals equal the sum of resolved occurrences converted to the base currency, each row rounded before summing.
 - Past (closed) months are read-only and show snapshotted rates.

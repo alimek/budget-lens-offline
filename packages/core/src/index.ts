@@ -1,7 +1,12 @@
 export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
 export type { RateError, RateQuote, RateResult, RateSource, StoredRate } from "./exchange-rates";
-export { isRateStale, requiredRateCurrencies, selectCurrentRates } from "./exchange-rates";
+export {
+  businessDaysBetween,
+  isRateStale,
+  requiredRateCurrencies,
+  selectCurrentRates,
+} from "./exchange-rates";
 export type {
   ForecastError,
   ForecastInput,
@@ -49,8 +54,8 @@ export {
   updateBalance,
   validateMonthEditable,
 } from "./month-closing";
-export type { NbpFetch } from "./nbp-client";
-export { fetchNbpRate, fetchNbpRates } from "./nbp-client";
+export type { NbpFetch, NbpRequestOptions } from "./nbp-client";
+export { fetchNbpRate, fetchNbpRates, NBP_TIMEOUT_MS } from "./nbp-client";
 export type {
   ItemType,
   OccurrenceOverride,
@@ -95,6 +100,7 @@ export {
   DEFAULT_SETTINGS,
   loadSettings,
   MAX_FORECAST_HORIZON_MONTHS,
+  MAX_RATE_MAX_AGE_BUSINESS_DAYS,
   updateSettings,
 } from "./settings";
 export type { YearMonth } from "./year-month";
