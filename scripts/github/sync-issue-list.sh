@@ -1,42 +1,41 @@
 #!/usr/bin/env bash
-# Materialise the per-agent work queues from GitHub, so an agent reads a file instead of polling with an LLM.
+# Export per-label issue queues from GitHub: one local file per label with the open issues that carry it.
 #
-# For every agent label the script writes <state-dir>/issues-<label>.tsv with the open issues that carry that label
-# (one row per issue, sorted by issue number). This is the gate from #147: Designer, Marketing and Research act only
-# when an issue carries their label, so an empty queue means "nothing to do, do not start a session".
+# For every label in --labels the script writes <state-dir>/issues-<label>.tsv with the open issues that carry that
+# label (one row per issue, sorted by issue number). An empty file means no open issue carries the label.
 #
 # Read-only against GitHub - the script never writes issues or labels. It writes only local files, atomically, and
-# only when the content actually changed, so the file mtime answers "is there new work?" without an LLM.
+# only when the content actually changed, so the file mtime answers "did the queue change?" without calling the API.
 #
 # Usage:
-#   scripts/agents/sync-issue-list.sh [--state-dir DIR] [--repo OWNER/REPO] [--labels a,b]
+#   scripts/github/sync-issue-list.sh --labels a,b [--state-dir DIR] [--repo OWNER/REPO]
 #
 # Environment:
-#   BL_REPO              default repository (default: alimek/budget-lens-offline)
-#   BL_AGENT_STATE_DIR   default output directory (default: $HOME/bl-agent-state)
-#   BL_AGENT_LABELS      default comma-separated labels (default: the agent:* labels)
+#   GH_TOKEN          read-only fine-grained token used for every gh call (required, see Auth)
+#   BL_REPO           default repository (default: alimek/budget-lens-offline)
+#   BL_QUEUE_DIR      default output directory (default: ${XDG_STATE_HOME:-$HOME/.local/state}/budget-lens)
+#   BL_QUEUE_LABELS   default comma-separated labels (no default; --labels or BL_QUEUE_LABELS is required)
 #
 # Queue columns (tab-separated): number, updatedAt, labels (comma-separated), title, url.
-# Exit codes: 0 success, 1 usage error, 2 a gh call failed.
-# Requires: gh (authenticated, read access is enough), bash, sort, cmp, mktemp.
+# Exit codes: 0 success, 1 usage or missing-token error, 2 a gh call failed.
+# Requires: gh, bash, sort, cmp, mktemp.
 #
-# Scheduling on the Mac Studio - every 15 minutes, logs to ~/bl-logs (created by the entry):
-#   */15 * * * *  cd /Users/aliclaw/projects/budget-lens-offline && mkdir -p "$HOME/bl-logs" && \
-#     scripts/agents/sync-issue-list.sh >> "$HOME/bl-logs/sync-issue-list.log" 2>&1
+# Auth: GH_TOKEN must hold a read-only fine-grained token scoped to this repository only, with Issues: read and
+# Metadata: read. If GH_TOKEN is unset the script fails closed; it never falls back to a gh login.
 #
-# launchd: the installed job is scripts/agents/launchd/com.aliclaw.bl-sync-issue-list.plist (install and uninstall
-# commands in docs/agents.md).
-#
-# Part of #147 (save usage limits). See docs/agents.md.
+# Scheduling: any scheduler (cron, a systemd timer, a CI schedule) can run this. Run it from a pinned,
+# reviewed commit, not a moving branch, and never git fetch or check out from the job itself. Installing,
+# updating or re-enabling a scheduled job for this repo needs the repo owner's explicit consent.
+# See docs/github-automation.md.
 
 set -euo pipefail
 
 repo="${BL_REPO:-alimek/budget-lens-offline}"
-state_dir="${BL_AGENT_STATE_DIR:-$HOME/bl-agent-state}"
-labels="${BL_AGENT_LABELS:-agent:design,agent:developer,agent:marketing,agent:research,agent:tester}"
+state_dir="${BL_QUEUE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/budget-lens}"
+labels="${BL_QUEUE_LABELS:-}"
 
 usage() {
-  sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
+  awk 'NR > 1 && /^# Auth:/ { exit } NR > 1' "$0" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
@@ -63,8 +62,12 @@ while [ $# -gt 0 ]; do
 done
 
 command -v gh >/dev/null 2>&1 || { echo "gh is not installed" >&2; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "gh is not authenticated" >&2; exit 1; }
-[ -n "$labels" ] || { echo "no labels to sync" >&2; exit 1; }
+if [ -z "${GH_TOKEN:-}" ]; then
+  echo "error: GH_TOKEN is not set. Export a read-only fine-grained token scoped to this repository (Issues: read," >&2
+  echo "Metadata: read); see docs/github-automation.md. Not falling back to the gh login." >&2
+  exit 1
+fi
+[ -n "$labels" ] || { echo "no labels to sync: pass --labels a,b or set BL_QUEUE_LABELS" >&2; exit 1; }
 
 case $repo in
   */*/* | */) echo "repo must be OWNER/REPO: $repo" >&2; exit 1 ;;

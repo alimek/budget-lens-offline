@@ -1,13 +1,13 @@
 # Canonical label set for alimek/budget-lens-offline. One label per line: name<TAB>color<TAB>description.
 # Color is six lowercase hex digits without #. An empty description is allowed.
-# Source of truth for scripts/agents/sync-labels.sh. Update this file in the PR that changes a label.
+# Source of truth for scripts/github/sync-labels.sh. Update this file in the PR that changes a label.
 accessibility	f143ab	Barrier affecting people with disabilities
-agent:design	5319e7	Assigned to BL Designer
-agent:developer	1d76db	Handled by the Budget Lens Developer bot
-agent:marketing	5319e7	Assigned to BL Marketing (website and marketing work)
-agent:research	5319e7	Assigned to BL Research (market research)
-agent:tester	5319e7	Assigned to BL Tester (QA and testing, incl. local e2e)
-area:workflow	0052cc	Team process and agent workflow
+agent:design	5319e7	Work item for the design track
+agent:developer	1d76db	Work item for the development track
+agent:marketing	5319e7	Work item for the website and marketing track
+agent:research	5319e7	Work item for the market research track
+agent:tester	5319e7	Work item for the QA and testing track (incl. local e2e)
+area:workflow	0052cc	Team process and repository workflow
 blocker	000000	Blocking review comment; merge is blocked until resolved
 bug	d73a4a	Something isn't working
 documentation	0075ca	Improvements or additions to documentation
@@ -29,7 +29,7 @@ good first issue	7057ff	Good for newcomers
 help wanted	008672	Extra attention is needed
 invalid	e4e669	This doesn't seem right
 mvp	1d76db	In scope for the first release
-needs:human	b60205	Touches Drizzle migrations, SQLCipher/encryption key or store releases; only Grzegorz merges
+needs:human	b60205	Touches Drizzle migrations, SQLCipher/encryption key or store releases; only the repo owner merges
 phase:dev	dff3e4	Delivery phase D: development
 phase:research	e4e2f7	Delivery phase R: research
 phase:ui	fde8e1	Delivery phase U: UI/design
@@ -47,7 +47,7 @@ stage:4	0b3c49	Stage 4
 status:approved	0e8a16	Approved by the owner; ready to be broken down/planned
 status:blocked	e11d21	Blocked - needs human input
 status:done	6f42c1	Verified and complete
-status:in-progress	0e8a16	Developer bot is working on it
+status:in-progress	0e8a16	Work in progress
 status:in-review	5319e7	PR opened, awaiting review
 status:postponed	bfd4f2	Deliberately deferred (e.g. shared wallet)
 status:proposed	ededed	Proposed; awaiting owner decision

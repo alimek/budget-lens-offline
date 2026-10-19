@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
 # Reconcile the repository's GitHub labels with the canonical label set in labels.tsv.
 #
-# Mechanical sync with no LLM: the file is the source of truth, GitHub is the target. The script is idempotent -
-# running it twice changes nothing on the second run. It only creates and edits labels; it deletes labels that are
-# missing from labels.tsv when --prune is passed.
+# The file is the source of truth, GitHub is the target. The script is idempotent - running it twice changes nothing
+# on the second run. It only creates and edits labels; it deletes labels that are missing from labels.tsv only when
+# --prune is passed.
 #
 # Usage:
-#   scripts/agents/sync-labels.sh [--dry-run] [--prune] [--repo OWNER/REPO] [--labels-file PATH]
+#   scripts/github/sync-labels.sh [--dry-run] [--prune] [--repo OWNER/REPO] [--labels-file PATH]
 #
 # Environment:
+#   GH_TOKEN              fine-grained token used for every gh call (required, see Auth)
 #   BL_REPO               default repository (default: alimek/budget-lens-offline)
 #   BL_LABELS_FILE        default canonical label file (default: labels.tsv next to this script)
 #
-# Exit codes: 0 success (also when nothing changed), 1 usage or validation error, 2 a gh call failed.
-# Requires: gh (authenticated with the repo:scope to write labels), bash, awk, sort, mktemp.
+# Exit codes: 0 success (also when nothing changed), 1 usage, validation or missing-token error, 2 a gh call failed.
+# Requires: gh, bash, awk, sort, mktemp.
 #
-# Scheduling on the Mac Studio - hourly, logs to ~/bl-logs (created by the entry):
-#   15 * * * *  cd /Users/aliclaw/projects/budget-lens-offline && mkdir -p "$HOME/bl-logs" && \
-#     scripts/agents/sync-labels.sh >> "$HOME/bl-logs/sync-labels.log" 2>&1
+# Auth: GH_TOKEN must hold a fine-grained token scoped to this repository only, with Issues: read and write and
+# Metadata: read (--dry-run needs the same token, it reads the labels). If GH_TOKEN is unset the script fails closed;
+# it never falls back to a gh login. Where the token comes from (a secret store, a CI secret) is up to the caller.
 #
-# launchd: the installed job is scripts/agents/launchd/com.aliclaw.bl-sync-labels.plist (install and uninstall
-# commands in docs/agents.md).
-#
-# Part of #147 (save usage limits): label sync is a plain shell job, so no agent session burns tokens on it.
-# See docs/agents.md.
+# Scheduling: any scheduler (cron, a systemd timer, a CI schedule) can run this, without --prune. Run it from a pinned,
+# reviewed commit, not a moving branch, and never git fetch or check out from the job itself. Installing,
+# updating or re-enabling a scheduled job for this repo needs the repo owner's explicit consent.
+# See docs/github-automation.md.
 
 set -euo pipefail
 
@@ -34,7 +34,7 @@ dry_run=0
 prune=0
 
 usage() {
-  sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+  awk 'NR > 1 && /^# Auth:/ { exit } NR > 1' "$0" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
@@ -58,7 +58,11 @@ while [ $# -gt 0 ]; do
 done
 
 command -v gh >/dev/null 2>&1 || { echo "gh is not installed" >&2; exit 1; }
-gh auth status >/dev/null 2>&1 || { echo "gh is not authenticated" >&2; exit 1; }
+if [ -z "${GH_TOKEN:-}" ]; then
+  echo "error: GH_TOKEN is not set. Export a fine-grained token scoped to this repository (Issues: read and write," >&2
+  echo "Metadata: read); see docs/github-automation.md. Not falling back to the gh login." >&2
+  exit 1
+fi
 [ -f "$labels_file" ] || { echo "labels file not found: $labels_file" >&2; exit 1; }
 
 case $repo in
