@@ -28,6 +28,8 @@ export interface Settings {
   readonly largeExpenseThreshold: MinorUnits;
   /** Number of months the forecast projects, including the start month: 1 to {@link MAX_FORECAST_HORIZON_MONTHS}. */
   readonly forecastHorizonMonths: number;
+  /** A quote is stale when its effective-date age reaches this many hours. */
+  readonly rateMaxAgeHours: number;
 }
 
 /** Upper bound of `forecastHorizonMonths` (10 years), so a corrupted value cannot make the forecast hang. */
@@ -41,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   lowBalanceThreshold: toMinorUnits(500_000),
   largeExpenseThreshold: toMinorUnits(1_000_000),
   forecastHorizonMonths: 13,
+  rateMaxAgeHours: 24,
 });
 
 export type SettingsErrorCode =
@@ -51,7 +54,8 @@ export type SettingsErrorCode =
   | "base-currency-tracked"
   | "invalid-threshold"
   | "negative-threshold"
-  | "invalid-forecast-horizon";
+  | "invalid-forecast-horizon"
+  | "invalid-rate-max-age";
 
 /** A validation problem with one field; the UI translates `code`, so no message is returned. */
 export interface SettingsError {
@@ -126,6 +130,12 @@ const FIELD_CHECKS = {
   largeExpenseThreshold: ({ largeExpenseThreshold }) => thresholdError(largeExpenseThreshold),
   forecastHorizonMonths: ({ forecastHorizonMonths }) =>
     isForecastHorizon(forecastHorizonMonths) ? undefined : "invalid-forecast-horizon",
+  rateMaxAgeHours: ({ rateMaxAgeHours }) =>
+    typeof rateMaxAgeHours === "number" &&
+    Number.isSafeInteger(rateMaxAgeHours) &&
+    rateMaxAgeHours > 0
+      ? undefined
+      : "invalid-rate-max-age",
 } satisfies Record<keyof Settings, Check>;
 
 function validate(settings: UntrustedSettings): SettingsError[] {
@@ -196,5 +206,6 @@ function freezeSettings(next: Settings): Settings {
     lowBalanceThreshold: next.lowBalanceThreshold,
     largeExpenseThreshold: next.largeExpenseThreshold,
     forecastHorizonMonths: next.forecastHorizonMonths,
+    rateMaxAgeHours: next.rateMaxAgeHours,
   });
 }

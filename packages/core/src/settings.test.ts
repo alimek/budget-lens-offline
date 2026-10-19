@@ -22,6 +22,7 @@ describe("updateSettings", () => {
       language: "en",
       trackedCurrencies: ["EUR"],
       lowBalanceThreshold: toMinorUnits(0),
+      rateMaxAgeHours: 48,
     });
 
     // Assert
@@ -32,6 +33,7 @@ describe("updateSettings", () => {
         language: "en",
         trackedCurrencies: ["EUR"],
         lowBalanceThreshold: 0,
+        rateMaxAgeHours: 48,
       },
     });
     expect(current).toEqual(DEFAULT_SETTINGS);
@@ -125,6 +127,25 @@ describe("updateSettings", () => {
 });
 
 describe("loadSettings", () => {
+  it.each([0, -1, 1.5, "24", null])(
+    "rejects an invalid rate freshness threshold and defaults stored data: %s",
+    (rateMaxAgeHours) => {
+      // Arrange
+      const changes = untrusted({ rateMaxAgeHours });
+
+      // Act
+      const updated = updateSettings(DEFAULT_SETTINGS, changes);
+      const loaded = loadSettings(changes);
+
+      // Assert
+      expect(updated).toEqual({
+        ok: false,
+        errors: [{ field: "rateMaxAgeHours", code: "invalid-rate-max-age" }],
+      });
+      expect(loaded.rateMaxAgeHours).toBe(24);
+    },
+  );
+
   it.each([
     { trackedCurrencies: ["USD", "EUR"], expected: ["EUR"] },
     { trackedCurrencies: ["USD"], expected: [] },

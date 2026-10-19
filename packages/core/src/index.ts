@@ -1,5 +1,7 @@
 export type { CurrencyCode } from "./currency";
 export { isCurrencyCode } from "./currency";
+export type { RateError, RateQuote, RateResult, RateSource, StoredRate } from "./exchange-rates";
+export { isRateStale, requiredRateCurrencies, selectCurrentRates } from "./exchange-rates";
 export type { MinorUnits } from "./money";
 export {
   addMinorUnits,
@@ -34,6 +36,8 @@ export {
   updateBalance,
   validateMonthEditable,
 } from "./month-closing";
+export type { NbpFetch } from "./nbp-client";
+export { fetchNbpRate, fetchNbpRates } from "./nbp-client";
 export type {
   ItemType,
   OccurrenceOverride,
@@ -50,6 +54,9 @@ export {
   validateOverride,
   validateStoredOverride,
 } from "./occurrence-overrides";
+export { refreshNbpRates } from "./rate-refresh";
+export type { CurrentRate, RateStore } from "./rate-store";
+export { createMemoryRateStore, getRate } from "./rate-store";
 export type {
   Occurrence,
   OneTimeSchedule,

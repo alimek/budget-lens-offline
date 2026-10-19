@@ -16,6 +16,7 @@ horizon. No warning threshold or base currency is a constant anywhere else in `p
 | `lowBalanceThreshold` | `MinorUnits` | `500_000` (5000 PLN) | Low-balance warning: forecast balance below this amount ([forecast.md](forecast.md)) |
 | `largeExpenseThreshold` | `MinorUnits` | `1_000_000` (10000 PLN) | Large-outflow warning: a month's net change lower than minus this amount ([forecast.md](forecast.md)) |
 | `forecastHorizonMonths` | integer, 1 to 120 | `13` | Months the forecast projects, including the start month |
+| `rateMaxAgeHours` | positive safe integer | `24` | Effective-date age at which NBP/manual quotes become stale (#8) |
 
 Thresholds are in minor units of `baseCurrency`. The base currency is chosen in onboarding and locked when
 onboarding is confirmed ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)).
@@ -37,12 +38,12 @@ codes with manually entered rates are out of scope
 ([owner decision](https://github.com/alimek/budget-lens-offline/pull/117#issuecomment-6254596752),
 which narrows the earlier "any base currency" decision).
 
-**Open question (cross-rate selection, to be decided before #8 and #6):** NBP rates are PLN per unit of a currency
-([exchange-rates.md](exchange-rates.md)), so converting tracked currencies into a non-PLN base needs cross-rates.
-How to select/compute cross-rates goes with that decision. The base currency cannot change after onboarding.
+NBP and manual rates are PLN per unit of a currency. `selectCurrentRates` (#8) chooses the newer effective date,
+preferring manual on a tie; cross rates go via PLN. Freshness uses effective-date age against `rateMaxAgeHours`
+for both sources (latest #8 decision; see [exchange-rates.md](exchange-rates.md)). The base currency cannot change after onboarding.
 Settings stores thresholds as typed; closing receives selected rates and stores converted totals (#84).
 
-`DEFAULT_SETTINGS` is frozen. All defaults except `language` and `forecastHorizonMonths` come from the legacy
+`DEFAULT_SETTINGS` is frozen. All defaults except `language`, `forecastHorizonMonths` and `rateMaxAgeHours` come from the legacy
 `user_settings` table; the legacy horizon was hardcoded in `use-forecast.ts` (current month + 12) and the legacy
 web app defaulted to Polish (the offline app follows the device language, epic #24).
 
@@ -72,6 +73,7 @@ invalid field. Errors are codes for the UI to translate, never messages:
 | `invalid-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Not a safe integer number of minor units (a fraction, a string, `null`…) |
 | `negative-threshold` | `lowBalanceThreshold`, `largeExpenseThreshold` | Below 0 (0 is allowed) |
 | `invalid-forecast-horizon` | `forecastHorizonMonths` | Not an integer from 1 to 120 |
+| `invalid-rate-max-age` | `rateMaxAgeHours` | Not a positive safe integer number of hours |
 
 Errors name the field, not the element: one `trackedCurrencies` error covers the whole list, which fits a currency
 picker that shows one message per field. `updateSettings` checks every field at runtime, so a value of the wrong

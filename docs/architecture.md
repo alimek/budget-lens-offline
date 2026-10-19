@@ -11,6 +11,7 @@ What exists today in `packages/core`:
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
 - occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
 - the `Settings` model (#76);
+- injected NBP table-A client, current-rate store contract, shared rate selection and app-open refresh (#8);
 - month closing, balance updates and per-occurrence payment status (#84, see [domain/month-closing.md](domain/month-closing.md));
 - characterization tests of the legacy implementation (#3).
 
@@ -55,8 +56,8 @@ nothing app- or platform-specific.
   `test/**/*.test.ts` holds the legacy characterization tests (#3). Tests are typechecked as a separate project
   with Node.js types (`test/tsconfig.json`); see [testing.md](testing.md#tools).
 
-Planned content, one issue each: forecast (#6), NBP exchange-rate client with an injected
-offline cache (#8).
+Planned content: forecast (#6). NBP uses an injected fetch and `RateStore` (#8); SQLite storage (#92) and app
+lifecycle refresh integration (#93) remain in Stage 1.
 Legacy behaviour is pinned by characterization tests first (#3).
 
 ## Planned app stack (Stage 1)
