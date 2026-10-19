@@ -121,10 +121,12 @@ function coreMonth(row: LegacyMonthRow): ActiveMonth {
 
 describe("ported month transitions compared with legacy", () => {
   it.each([10, 12])("keeps balance carry-forward and calendar rollover for month %i", (month) => {
+    // Arrange
     const row = activeMonth({ month });
     const current = coreMonth(row);
     const legacy = legacyCloseMonth(row).nextMonthInsert;
 
+    // Act
     const result = closeMonth([current], {
       baseCurrency: "PLN",
       rates: {},
@@ -135,6 +137,7 @@ describe("ported month transitions compared with legacy", () => {
       paymentStatuses: [],
     });
 
+    // Assert
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.next).toMatchObject({
@@ -146,11 +149,14 @@ describe("ported month transitions compared with legacy", () => {
   });
 
   it("keeps actual net change relative to opening balance", () => {
+    // Arrange
     const row = activeMonth();
     const legacy = legacyUpdateMonthBalance(row, 11000);
 
+    // Act
     const result = updateBalance(coreMonth(row), toMinorUnits(1_100_000));
 
+    // Assert
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.netChange).toBe(toMinorUnits(Math.round(legacy.net_change * 100)));

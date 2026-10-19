@@ -16,7 +16,8 @@ belong to #85; payment-status storage belongs to #83.
   `netChange = closingBalance - openingBalance`. Opening balance and planned totals stay unchanged.
 - `closeMonth(months, input)` takes the **complete** month collection and an input containing
   `{ currentMonth, closingBalance, items, overrides, paymentStatuses, baseCurrency, rates }`. It validates exactly
-  one active month and avoids overwriting an existing next month.
+  one active month, strictly after every closed month; duplicate or earlier active months return
+  `month-sequence-conflict`. Null/non-object month entries return `invalid-month`.
   `currentMonth` is the caller's calendar month; closing a future month is rejected. Older active months can close
   one by one to fill a gap, without skipping months.
 - All transitions return `{ ok: true, value }` or `{ ok: false, error }`. Closing returns
@@ -30,6 +31,9 @@ The caller's actual closing balance wins; core does not infer it from the planne
 
 The next month is the immediate calendar successor (December → January), with opening and closing balances equal
 to the closed month's closing balance. Its income, expense and net-change totals start at zero.
+Persistence (#85) must preserve this continuity: an existing active month's opening balance equals the previous
+closed month's closing balance. Core guarantees it when creating the next month; it does not revalidate loaded
+opening balances against history.
 
 ## Item currencies and closing rates
 
@@ -45,11 +49,14 @@ representation as `multiplyByRate`; arithmetic uses their decimal form with BigI
 For a non-PLN base, the caller supplies already selected cross-rates. Core never fetches NBP data, selects a cached
 or manual quote, or reads the clock.
 
+The numeric `rate` is provisional until #141, which will add a decimal-string rate, effective date and source
+(`nbp` or `manual`). #141 remains open; #85 must coordinate its persisted rate shape with that contract.
+
 Each frozen occurrence stores `{ itemType, itemId, month, amount, currency, rate, baseAmount, settled }`:
 `amount` is the effective original-currency amount after overrides; `baseAmount` is its converted integer amount
 in the closed month's `baseCurrency`. For the base currency, rate is exactly 1 and amount is unchanged; no rate
-input is needed. Unused rates are ignored. Every effective foreign occurrence, even a zero-amount one, requires a
-rate; skipped and inactive occurrences do not. Missing rates return `missing-exchange-rate` without throwing.
+input is needed. Only own properties of `rates` are accepted; inherited quotes count as missing. Unused rates are
+ignored. Every effective foreign occurrence, even a zero-amount one, requires a rate; skipped and inactive occurrences do not. Missing rates return `missing-exchange-rate` without throwing.
 
 `convertMinor(amount, rate, source, target)` shares the exact decimal arithmetic of `multiplyByRate`, accounts for
 both currency exponents, and rounds **once**, half away from zero, to target minor units. For example,
@@ -101,9 +108,9 @@ Codes only, never UI messages:
 | `month-closed` | A balance write targets a closed month. |
 | `no-active-month` | There is no active month to close (including a repeated close). |
 | `multiple-active-months` | More than one active month exists. |
-| `invalid-month` | The supplied month is not `YYYY-MM`. |
+| `invalid-month` | The supplied month is not `YYYY-MM`, or the collection contains a null/non-object entry. |
 | `future-month` | The active month is after the supplied current calendar month. |
-| `next-month-exists` | Creating the successor would overwrite an existing month. |
+| `month-sequence-conflict` | The active month is already closed, or is not later than every closed month. |
 | `month-out-of-range` | `9999-12` has no successor in the supported `YearMonth` range. |
 | `invalid-currency` | Base currency or an effective occurrence currency is unsupported. |
 | `missing-exchange-rate` | An effective foreign-currency occurrence has no supplied rate. |

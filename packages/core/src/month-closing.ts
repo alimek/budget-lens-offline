@@ -71,7 +71,7 @@ export type MonthClosingErrorCode =
   | "multiple-active-months"
   | "invalid-month"
   | "future-month"
-  | "next-month-exists"
+  | "month-sequence-conflict"
   | "month-out-of-range"
   | "invalid-currency"
   | "missing-exchange-rate"
@@ -146,7 +146,10 @@ function convertOccurrenceAmount(
   conversion: ClosingConversion,
 ): Result<Pick<ClosedOccurrence, "rate" | "baseAmount">> {
   if (!isCurrencyCode(currency)) return failure("invalid-currency");
-  const rate = currency === conversion.baseCurrency ? 1 : conversion.rates[currency];
+  const foreignRate = Object.hasOwn(conversion.rates, currency)
+    ? conversion.rates[currency]
+    : undefined;
+  const rate = currency === conversion.baseCurrency ? 1 : foreignRate;
   if (rate === undefined) return failure("missing-exchange-rate");
   if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
     return failure("invalid-exchange-rate");
@@ -231,6 +234,9 @@ export function closeMonth(
   months: readonly BudgetMonth[],
   input: CloseMonthInput,
 ): Result<MonthClosing> {
+  if (months.some((month) => month === null || typeof month !== "object")) {
+    return failure("invalid-month");
+  }
   const active = months.filter((month) => month.status === "active");
   const [month] = active;
   if (month === undefined) return failure("no-active-month");
@@ -241,7 +247,9 @@ export function closeMonth(
   if (month.month > input.currentMonth) return failure("future-month");
   if (month.month === "9999-12") return failure("month-out-of-range");
   const nextMonth = addMonths(month.month, 1);
-  if (months.some((existing) => existing.month === nextMonth)) return failure("next-month-exists");
+  if (months.some((existing) => existing.status === "closed" && existing.month >= month.month)) {
+    return failure("month-sequence-conflict");
+  }
 
   const resolved = resolveOccurrences(input.items, input.overrides, month.month);
   if (resolved.invalidItems.length > 0 || resolved.rejectedOverrides.length > 0) {
