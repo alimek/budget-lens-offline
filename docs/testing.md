@@ -101,14 +101,16 @@ invariants that must hold for every input, not just a few examples: money arithm
 (#122), recurrence (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping, #4). The same
 rules apply: few properties, business-behaviour names, AAA inside the property. Keep the generated ranges realistic
 (for example amounts whose sums stay safe integers) and do not fix a seed; on failure fast-check prints the seed and
-the shrunk counterexample to reproduce it.
+the shrunk counterexample to reproduce it, which is how a CI failure is reproduced too.
 
-**Deferred from #18, tracked in [#122](https://github.com/alimek/budget-lens-offline/issues/122).** Only the money
-arithmetic properties exist today (`src/money.property.test.ts`). Still to add:
-- money parse/format round-trip (`parseMoney(formatMoney(x))`) and `multiplyByRate` rounding (half away from zero),
-  now that the parsing and formatting code from #2 is in `packages/core`;
-- recurrence properties (occurrence counts, interval and anchor invariants, end dates, day-of-month clamping),
-  tracked in [#122](https://github.com/alimek/budget-lens-offline/issues/122) (#4 lands without them).
+The properties we have (#122 completes the set deferred from #18):
+- `src/money.property.test.ts`: `sumMinorUnits` equals the exact integer sum; `toMinorUnits` rejects every amount
+  that is not a whole number of minor units; typing back what `formatMoney` printed (`parseMoney` of its digits, in
+  every supported currency and both languages) gives the same amount; `multiplyByRate` always returns whole minor
+  units at most half a minor unit from the exact product and rounds an exact half away from zero.
+- `src/recurrence.property.test.ts`: occurrences stay inside the requested range, from the anchor up to the end
+  month; the list is every month of the item's rhythm, with no gaps and no duplicates; the day of month is clamped
+  to the last day of each month.
 
 ## Characterization tests
 
@@ -127,7 +129,7 @@ line):
 - `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and native full-amount currency formatting,
   with explicit AAA sections. Formatting expectations use the current runtime's Intl output, accepting platform
   differences in symbols, spacing and grouping (#131); whole-unit rounding is checked separately.
-- `src/money.property.test.ts`: property-based money arithmetic (see above).
+- `src/money.property.test.ts` and `src/recurrence.property.test.ts` (#122): the properties listed above.
 - `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
   validation (`it.each` tables).
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
@@ -142,7 +144,3 @@ line):
   exchange rates, month closing and formatting (including the check that `formatMoney` matches the legacy
   `formatCurrency` away from rounding halves). They use explicit AAA sections and the frozen-clock exception
   from rule 5.
-
-Follow-ups:
-- Property-based tests deferred from #18 (money parse/format round-trip and `multiplyByRate` rounding,
-  recurrence): #122.
