@@ -16,7 +16,9 @@ names from env vars; the defaults follow the recommended `BudgetLens-*` naming c
 | `E2E_ANDROID_AVD` | Android emulator (AVD) name | `BudgetLens-Android` |
 
 Create the devices (or point the env vars at your own dedicated ones) before running tests, for
-example `E2E_IOS_SIMULATOR=My-iPhone pnpm --filter @budget-lens/mobile e2e:ios`.
+example `E2E_IOS_SIMULATOR=My-iPhone pnpm --filter @budget-lens/mobile e2e:ios`. The iOS default was
+`BudgetLens-CI` before #171; an existing simulator with that name keeps working with
+`E2E_IOS_SIMULATOR=BudgetLens-CI`.
 
 ```sh
 EXPO_NO_TELEMETRY=1 pnpm --filter @budget-lens/mobile exec expo run:ios --device <BudgetLens-simulator-UDID> --port 8073
