@@ -44,8 +44,9 @@ which narrows the earlier "any base currency" decision).
 ([owner review 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)). NBP
 quotes 1 unit of a currency in PLN ([exchange-rates.md](exchange-rates.md)), so a non-PLN base gets no NBP quote of
 its own: every conversion goes through PLN, the implicit hub with `mid_PLN = 1`, as
-`toMinor = roundHalfAwayFromZero(amountMinor × midFrom × 10^(expTo − expFrom) / midTo)`. Both legs stay in one
-exact decimal calculation with **one** rounding step, half away from zero. Rounding an intermediate PLN amount or a
+`toMinor = roundHalfAwayFromZero(amountMinor × midFrom × 10^(expTo − expFrom) / midTo)`, where `midX` is the PLN
+value of 1 unit of X and `expX` its ISO 4217 exponent ([money.md](money.md)). Both legs stay in one exact decimal
+calculation with **one** rounding step, half away from zero. Rounding an intermediate PLN amount or a
 pre-computed cross-rate is not allowed: double rounding can be off by a minor unit. The supported currencies above
 are PLN plus NBP table A only, so both legs always come from that one table. Choosing which quote to use is not part
 of the money arithmetic: a manual `1 X = y PLN` quote wins when it is newer than NBP, otherwise the current NBP `mid`
