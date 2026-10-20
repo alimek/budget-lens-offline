@@ -1,22 +1,15 @@
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text } from "react-native";
+import { Screen } from "@/ui/components/screen";
+import { Text } from "@/ui/components/text";
 import { useAppStore } from "../../../state/app-store";
 
-export default function Screen() {
+export default function MonthScreen() {
   const { t } = useTranslation();
   const selectedMonth = useAppStore((state) => state.selectedMonth);
   return (
-    <ScrollView
-      testID="screen-month"
-      collapsable={false}
-      contentInsetAdjustmentBehavior="automatic"
-      className="flex-1 bg-white dark:bg-black"
-      contentContainerClassName="gap-4 p-6"
-    >
-      <Text className="text-black dark:text-white">{t("scaffold.message")}</Text>
-      <Text className="text-black dark:text-white">
-        {t("scaffold.selectedMonth", { month: selectedMonth })}
-      </Text>
-    </ScrollView>
+    <Screen testID="screen-month">
+      <Text>{t("scaffold.message")}</Text>
+      <Text variant="subheadline">{t("scaffold.selectedMonth", { month: selectedMonth })}</Text>
+    </Screen>
   );
 }

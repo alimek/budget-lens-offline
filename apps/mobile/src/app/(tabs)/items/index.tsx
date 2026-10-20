@@ -1,17 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text } from "react-native";
+import { Screen } from "@/ui/components/screen";
+import { Text } from "@/ui/components/text";
 
-export default function Screen() {
+export default function ItemsScreen() {
   const { t } = useTranslation();
   return (
-    <ScrollView
-      testID="screen-items"
-      collapsable={false}
-      contentInsetAdjustmentBehavior="automatic"
-      className="flex-1 bg-white dark:bg-black"
-      contentContainerClassName="gap-4 p-6"
-    >
-      <Text className="text-black dark:text-white">{t("scaffold.message")}</Text>
-    </ScrollView>
+    <Screen testID="screen-items">
+      <Text>{t("scaffold.message")}</Text>
+    </Screen>
   );
 }

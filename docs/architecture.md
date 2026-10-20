@@ -72,7 +72,7 @@ implemented and what is still planned:
 | --- | --- | --- |
 | Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) | Implemented (#73): Expo SDK 58 development client |
 | Navigation | Expo Router | Implemented (#73) |
-| UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73): Expo UI in `src/ui/native`, Uniwind layout; shared tokens/components in #119 |
+| UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73, #119): Expo UI wrappers in `src/ui/native`, Indigo tokens in `global.css` + `src/ui/theme.ts`, React Native Reusables components in `src/ui/components` ([design system](design-system.md)) |
 | Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Planned (#75) |
 | Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) | Planned (#75) |
 | App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
@@ -109,8 +109,8 @@ onboarding and recovery belong to #59/#60. No database is opened by this scaffol
 
 The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
 Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,
-using a small Expo UI native-button adapter. Other screens are translated placeholders. Typed routes
-remain off. Uniwind handles custom layout; shared tokens/components remain in #119.
-Expo UI imports are restricted by Biome to `src/ui/native/`.
+from the Overview card's native secondary button. Other screens are translated placeholders built from the
+design system components. Typed routes remain off. Tokens, typography and shared components are described in
+[design system](design-system.md) (#119). Expo UI imports are restricted by Biome to `src/ui/native/`.
 
 Development commands and test IDs: [mobile development](mobile-development.md).

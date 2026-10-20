@@ -12,5 +12,35 @@
   "scaffold": {
     "message": "Your budget stays on this device.",
     "selectedMonth": "Selected month: {{month}}"
+  },
+  "dev": {
+    "designSystem": {
+      "title": "Design system",
+      "open": "Open design system",
+      "colors": "Colours",
+      "colorsLight": "Light",
+      "colorsDark": "Dark",
+      "typography": "Typography",
+      "amounts": "Amounts",
+      "components": "Components",
+      "sample": "Projected closing balance",
+      "cardTitle": "October 2026",
+      "cardDescription": "Opening balance, income and expenses",
+      "income": "Income",
+      "expenses": "Expenses",
+      "balance": "Projected closing balance",
+      "changedThisMonth": "Changed this month",
+      "primaryAction": "Add item",
+      "secondaryAction": "Close month",
+      "privacyMode": "Privacy mode",
+      "onlyThisMonth": "Only this month",
+      "fromThisMonth": "From this month",
+      "groceries": "Groceries",
+      "eatingOut": "Eating out"
+    }
+  },
+  "budget": {
+    "used": "{{percent}}% used",
+    "overBudget": "Over budget: {{percent}}% used"
   }
 }

@@ -12,5 +12,35 @@
   "scaffold": {
     "message": "Twój budżet pozostaje na tym urządzeniu.",
     "selectedMonth": "Wybrany miesiąc: {{month}}"
+  },
+  "dev": {
+    "designSystem": {
+      "title": "System projektowy",
+      "open": "Otwórz system projektowy",
+      "colors": "Kolory",
+      "colorsLight": "Jasny",
+      "colorsDark": "Ciemny",
+      "typography": "Typografia",
+      "amounts": "Kwoty",
+      "components": "Komponenty",
+      "sample": "Prognozowane saldo końcowe",
+      "cardTitle": "Październik 2026",
+      "cardDescription": "Saldo początkowe, przychody i wydatki",
+      "income": "Przychody",
+      "expenses": "Wydatki",
+      "balance": "Prognozowane saldo końcowe",
+      "changedThisMonth": "Zmieniono w tym miesiącu",
+      "primaryAction": "Dodaj pozycję",
+      "secondaryAction": "Zamknij miesiąc",
+      "privacyMode": "Tryb prywatności",
+      "onlyThisMonth": "Tylko ten miesiąc",
+      "fromThisMonth": "Od tego miesiąca",
+      "groceries": "Zakupy spożywcze",
+      "eatingOut": "Jedzenie na mieście"
+    }
+  },
+  "budget": {
+    "used": "Wykorzystano {{percent}}%",
+    "overBudget": "Przekroczony budżet: wykorzystano {{percent}}%"
   }
 }
