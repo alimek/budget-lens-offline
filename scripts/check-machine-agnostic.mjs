@@ -65,7 +65,7 @@ const PATTERNS = [
 const LABEL = {
   label: "agent label",
   pattern: "agent:[a-z]",
-  hits: ["`agent:tester`"],
+  hits: ["`agent:developer`"],
   misses: ["`agent.act()`", "agent-device"],
 };
 
