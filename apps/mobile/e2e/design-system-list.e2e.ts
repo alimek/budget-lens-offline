@@ -94,3 +94,21 @@ test("opens the edit sheet from a swipe action", async (fixtures) => {
   await settle();
   await app.screenshot("list-edit-sheet");
 });
+
+test("keeps the open Android row background unchanged", {
+  platforms: ["android"],
+}, async (fixtures) => {
+  // Arrange
+  const { screen } = fixtures;
+  await openListExample(fixtures);
+  const rent = screen.getByTestId("ds-row-rent");
+
+  // Act
+  await swipeRowLeft(screen, rent);
+
+  // Assert
+  await expect(rent).toHaveScreenshot("android-rent-open", {
+    threshold: 0,
+    maxDiffPixels: 0,
+  });
+});
