@@ -12,13 +12,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/
 import { Screen } from "@/ui/components/screen";
 import { Separator } from "@/ui/components/separator";
 import { Text } from "@/ui/components/text";
+import { type ColorScheme, type ColorToken, colors } from "@/ui/lib/theme";
 import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
 import { AppDatePicker } from "@/ui/native/date-picker";
 import { AppPicker } from "@/ui/native/picker";
 import { SegmentedControl } from "@/ui/native/segmented-control";
 import { AppTextField } from "@/ui/native/text-field";
 import { AppToggle } from "@/ui/native/toggle";
-import { type ColorScheme, type ColorToken, colors } from "@/ui/theme";
 import type { TypeVariant } from "@/ui/typography";
 import { useStackedRows } from "@/ui/use-stacked-rows";
 

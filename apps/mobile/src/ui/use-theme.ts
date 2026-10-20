@@ -1,5 +1,5 @@
 import { type ColorValue, DynamicColorIOS, Platform, useColorScheme } from "react-native";
-import { type ColorToken, colors, resolveColorScheme, type ThemeColors } from "./theme";
+import { type ColorToken, colors, resolveColorScheme, type ThemeColors } from "./lib/theme";
 
 /** Token colours for the current system appearance, for native props that take colours. */
 export function useThemeColors(): ThemeColors {

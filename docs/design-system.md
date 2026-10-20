@@ -15,10 +15,10 @@ then a custom component.
   `primary-foreground`, `muted-foreground`, `destructive`, `border`, `input`, `ring`, …) plus `income` and `expense`,
   and the radii `sm` 6, `md` 8, `lg` 12 for custom elements. Use them as classes: `bg-background`, `bg-card`,
   `text-muted-foreground`, `text-income`, `rounded-lg`.
-- `apps/mobile/src/ui/theme.ts`: the same values as a typed object for native props that take colours (tab tint,
+- `apps/mobile/src/ui/lib/theme.ts`: the same values as a typed object for native props that take colours (tab tint,
   Expo UI tints, navigation theme). `useThemeColors()` returns the set for the system appearance;
   `useDynamicColor(token)` returns a `DynamicColorIOS` on iOS.
-- `src/ui/theme.test.ts` fails when `global.css` and `theme.ts` drift apart (run by `pnpm test` in CI).
+- `src/ui/lib/theme.test.ts` fails when `global.css` and `theme.ts` drift apart (run by `pnpm test` in CI).
 - No font tokens: the platform system font (SF Pro / Roboto) is used everywhere. Never set `fontFamily` or a
   `font-sans` / `font-mono` class.
 

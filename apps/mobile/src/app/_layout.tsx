@@ -1,13 +1,15 @@
 import "../../global.css";
+import { PortalHost } from "@rn-primitives/portal";
 import { DarkTheme, DefaultTheme, Stack, type Theme, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Updates from "expo-updates";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { StatusBar, useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { I18nProvider } from "../i18n";
 import { AppStoreProvider } from "../state/app-store";
-import { colors, resolveColorScheme } from "../ui/theme";
+import { NAV_THEME, resolveColorScheme } from "../ui/lib/theme";
 import { checkForUpdateInBackground } from "../updates/update-check";
 
 void SplashScreen.preventAutoHideAsync();
@@ -15,18 +17,7 @@ void SplashScreen.preventAutoHideAsync();
 function useNavigationTheme(): Theme {
   const scheme = resolveColorScheme(useColorScheme());
   const base = scheme === "dark" ? DarkTheme : DefaultTheme;
-  const tokens = colors[scheme];
-  return {
-    ...base,
-    colors: {
-      primary: tokens.primary,
-      background: tokens.background,
-      card: tokens.card,
-      text: tokens.foreground,
-      border: tokens.border,
-      notification: tokens.destructive,
-    },
-  };
+  return { ...base, colors: NAV_THEME[scheme] };
 }
 
 function RootStack() {
@@ -64,13 +55,19 @@ export default function RootLayout() {
     );
   }, []);
   return (
-    <I18nProvider>
-      <AppStoreProvider>
-        <ThemeProvider value={theme}>
-          <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
-          <RootStack />
-        </ThemeProvider>
-      </AppStoreProvider>
-    </I18nProvider>
+    // Gesture handler root: TransactionRow swipe actions on Android (react-native-gesture-handler + Reanimated).
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <I18nProvider>
+        <AppStoreProvider>
+          <ThemeProvider value={theme}>
+            <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
+            <RootStack />
+            {/* React Native Reusables portal target (its standard root setup, checked by \`doctor\`). The overlay
+                wrappers are native and do not render into it. */}
+            <PortalHost />
+          </ThemeProvider>
+        </AppStoreProvider>
+      </I18nProvider>
+    </GestureHandlerRootView>
   );
 }

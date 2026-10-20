@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import css from "../../global.css?raw";
-import { type ColorScheme, colors, radii } from "./theme";
+import css from "../../../global.css?raw";
+import { type ColorScheme, colors, NAV_THEME, radii } from "./theme";
 
 function cssColors(scheme: ColorScheme): Record<string, string> {
   const block = new RegExp(`@variant ${scheme} \\{([^}]*)\\}`).exec(css)?.[1] ?? "";
@@ -46,4 +46,25 @@ describe("design tokens", () => {
     // Assert
     expect(actual).toEqual(expected);
   });
+
+  it.each(["light", "dark"] as const)(
+    "builds the %s navigation theme from the tokens",
+    (scheme) => {
+      // Arrange
+      const tokens = colors[scheme];
+
+      // Act
+      const navigation = NAV_THEME[scheme];
+
+      // Assert
+      expect(navigation).toEqual({
+        primary: tokens.primary,
+        background: tokens.background,
+        card: tokens.card,
+        text: tokens.foreground,
+        border: tokens.border,
+        notification: tokens.destructive,
+      });
+    },
+  );
 });
