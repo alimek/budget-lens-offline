@@ -40,6 +40,13 @@ export function I18nProvider({
   );
   const language = resolveLanguage(preference, deviceLanguageCode);
   const [i18n] = useState(() => createI18n(language));
+  // The language i18next renders with, so `useLanguage()` never runs ahead of `t()`.
+  const [activeLanguage, setActiveLanguage] = useState<Language>(language);
+  useEffect(() => {
+    const onChange = (lng: string) => setActiveLanguage(lng === "pl" ? "pl" : "en");
+    i18n.on("languageChanged", onChange);
+    return () => i18n.off("languageChanged", onChange);
+  }, [i18n]);
   useEffect(() => {
     if (i18n.language !== language) void i18n.changeLanguage(language);
   }, [i18n, language]);
@@ -53,8 +60,8 @@ export function I18nProvider({
     [i18n, deviceLanguageCode, preferenceStore],
   );
   const value = useMemo(
-    () => ({ language, preference, setLanguagePreference }),
-    [language, preference, setLanguagePreference],
+    () => ({ language: activeLanguage, preference, setLanguagePreference }),
+    [activeLanguage, preference, setLanguagePreference],
   );
   return (
     <AppLanguageContext.Provider value={value}>
