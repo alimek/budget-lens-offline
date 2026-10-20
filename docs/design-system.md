@@ -49,6 +49,12 @@ for totals), tabular figures and right alignment.
 | `SegmentedControl` | `src/ui/native/segmented-control.*` | SwiftUI segmented `Picker`; M3 `SegmentedButton` row |
 | `BudgetProgress` | `src/ui/components/budget-progress.tsx` | label, bar and status text; `progressbar` role named by the label with `accessibilityValue` (0–100, status text). Over budget the bar and the status turn `expense` and the text says so (`budget.overBudget`), so it is never shown by colour alone (`budgetProgress()` in `src/ui/progress.ts`) |
 | `ProgressIndicator` | `src/ui/native/progress-indicator.*` | SwiftUI `ProgressView`; M3 `LinearProgressIndicator`; decorative, used by `BudgetProgress` |
+| `AppTextField` | `src/ui/native/text-field.*` | SwiftUI `TextField` / `SecureField` (rounded border) under a visible label; M3 `OutlinedTextField` with a floating label. `kind`: `text`, `decimal` (decimal keypad) or `secure`. The label is the accessible name (on iOS the visible label is hidden from VoiceOver and set on the field; on Android TalkBack reads the Compose label with the field). `error` shows below the field in `expense` (`<testID>-error`) and is the iOS hint / the M3 supporting text. The native field owns the text while typing (`useSyncedText`), so a late re-render never drops keystrokes. `validateAmountInput()` (`src/ui/amount-input.ts`) maps `parseMoney` errors to `amountInput.*` messages |
+| `AppPicker` | `src/ui/native/picker.*` | SwiftUI menu `Picker` under a visible label (VoiceOver: label, value, pop-up button); M3 `ExposedDropdownMenuBox` with a read-only outlined field. Options get `<testID>-<value>` |
+| `AppDatePicker` | `src/ui/native/date-picker.*` | Date only, on a `CalendarDate` (`YYYY-MM-DD`, `src/ui/calendar-date.ts`). SwiftUI compact `DatePicker` under a visible label; on Android a read-only outlined field (a button named by the label, value = formatted date) that opens the M3 `DatePickerDialog` (`common.ok` / `common.cancel`). Conversions use local midnight on iOS and UTC midnight on Android, as each platform expects |
+| `GroupedList`, `ListSection` | `src/ui/native/list.*` | SwiftUI `List` (`insetGrouped`) with `Section` headers (header trait, test ID on the header); M3 `LazyColumn` with `primary` section headers. The list scrolls itself, so it fills a screen instead of sitting in `Screen` |
+| `TransactionRow` | `src/ui/native/list.*` | Title, optional meta (due date), signed `AmountText`-style amount in `income` / `expense`, and the paid status. iOS: a `checkmark.circle.fill` / `circle` button named `transaction.paidLabel` ("Paid: <title>") with the toggle trait and selected state. Android: the whole `ListItem` is a checkbox (`toggleable`, role checkbox) and TalkBack reads its texts |
+| `AddButton` | `src/ui/native/add-button.*` | iOS: a `plus` icon button in the navigation bar (`headerRight`, tint `primary`); Android: an M3 `FloatingActionButton` (`primary`, bottom end, `assets/icons/add.xml`). `label` is the accessible name |
 
 Native wrappers have a `.ios.tsx` and an `.android.tsx` file; the plain `.tsx` file re-exports the Android one so
 TypeScript sees one API. Every wrapper requires a `testID`. Expo UI on Android puts it on a wrapper node, so e2e tests
@@ -56,6 +62,13 @@ tap `getByRole("button")` inside it (see [testing](testing.md#e2e-smoke-tests-15
 
 The `NativeTabs` bar is tinted with `primary`, and the Router theme uses the tokens for backgrounds, headers and
 borders.
+
+## Large text
+
+Text scales with the system setting everywhere (no `allowFontScaling={false}`, no fixed heights around text).
+Controls that pair a label with a value stack the label above the control instead of sharing a row, so neither is
+squeezed at the largest sizes; long pages scroll. Check at 200% before merging UI changes (see
+[testing](testing.md#large-text-200)); the #182 captures are in [evidence/182](evidence/182/README.md).
 
 ### React Native Reusables
 
@@ -71,7 +84,8 @@ Pin the added dependencies exactly and adapt the copy to the tokens (no `font-*`
 containers). Do not add RNR versions of controls that exist natively (button, input, switch, checkbox, select,
 tabs, menus, dialogs, popover, tooltip, progress). `doctor` still reports `react-native-reanimated`,
 `tailwindcss-animate`, a `lib/theme.ts` file and `PortalHost`: these are only needed by animated or portal-based RNR
-components, which this app does not use.
+components, which this app does not use. Whether to add them anyway so the RNR `doctor` passes is an open owner question on #182;
+until it is decided they stay out. (`expo-doctor` itself passes.)
 
 ## Showcase
 
@@ -79,5 +93,8 @@ components, which this app does not use.
 and the light and dark colour tokens. It is reachable only in development builds, from the Settings button
 `settings-open-design-system`; release builds redirect it to the start screen. All copy uses `dev.designSystem.*`
 i18n keys. Its elements use `ds-` test IDs (`ds-card`, `ds-badge`, `ds-amount-income`, `ds-primary-button`,
-`ds-toggle`, `ds-segmented`, `ds-progress`, `ds-swatches-light`, …). Screenshots from the e2e run are in
-[evidence/119](evidence/119/README.md).
+`ds-toggle`, `ds-segmented`, `ds-progress`, `ds-swatches-light`, the inputs `ds-text-field`, `ds-amount-field`,
+`ds-secure-field`, `ds-picker`, `ds-date-picker`, …). `/dev/design-system-list` (from `ds-open-list`, or the deep link
+`budget-lens:///dev/design-system-list`) shows `GroupedList`, `TransactionRow` and `AddButton` with example rows
+(`ds-list`, `ds-row-rent`, `ds-add-button`). Screenshots from the e2e runs are in
+[evidence/119](evidence/119/README.md) and [evidence/182](evidence/182/README.md).
