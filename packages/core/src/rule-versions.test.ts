@@ -13,6 +13,7 @@ import {
   toMinorUnits,
   toYearMonth,
   type VersionedItem,
+  validateRuleVersions,
 } from "./index";
 
 const ym = toYearMonth;
@@ -66,6 +67,55 @@ const rentState: RuleEditState = {
   overrides: [],
 };
 const FIRST_HALF = ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07"];
+
+// A stored version as it may come from a corrupt database or a JSON backup.
+const STORED = { effectiveFrom: "2026-01", amount: 250_000, schedule: monthly("2026-01") };
+
+describe("validateRuleVersions", () => {
+  it.each<[string, unknown, string[]]>([
+    ["no array", null, ["invalid-versions"]],
+    ["a string", "2026-01", ["invalid-versions"]],
+    ["a null version", [null], ["invalid-versions"]],
+    ["no versions", [], ["no-versions"]],
+    ["an empty version", [{}], ["invalid-effective-from", "invalid-amount", "invalid-schedule"]],
+    ["an invalid month", [{ ...STORED, effectiveFrom: "2026-13" }], ["invalid-effective-from"]],
+    ["a negative amount", [{ ...STORED, amount: -5_000 }], ["invalid-amount"]],
+    ["a fractional amount", [{ ...STORED, amount: 1.5 }], ["invalid-amount"]],
+    ["a null schedule", [{ ...STORED, schedule: null }], ["invalid-schedule"]],
+    ["a duplicate month", [STORED, { ...STORED, amount: 1 }], ["duplicate-effective-from"]],
+  ])("reports %s as codes without throwing", (_case, value, expected) => {
+    // Arrange
+    const stored = JSON.parse(JSON.stringify(value));
+
+    // Act
+    const errors = validateRuleVersions(stored);
+
+    // Assert
+    expect(errors).toEqual(expected);
+  });
+
+  it("rejects an edit of an item whose stored versions are invalid", () => {
+    // Arrange
+    const state: RuleEditState = {
+      item: rent(...JSON.parse(JSON.stringify([STORED, { ...STORED, amount: -5_000 }]))),
+      overrides: [],
+    };
+    const edit: RuleEdit = {
+      kind: "change-from",
+      from: ym("2026-05"),
+      patch: { amount: toMinorUnits(270_000) },
+    };
+
+    // Act
+    const result = planRuleEdit(state, edit, { activeMonth: ym("2026-04") });
+
+    // Assert
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "invalid-item", errors: ["invalid-amount", "duplicate-effective-from"] },
+    });
+  });
+});
 
 describe("resolveVersionedOccurrences", () => {
   it.each([
@@ -134,6 +184,25 @@ describe("resolveVersionedOccurrences", () => {
 
     // Assert
     expect(days).toEqual([28, 29]);
+  });
+
+  it("leaves out and reports an item with invalid versions instead of failing the month", () => {
+    // Arrange
+    const corrupt: VersionedItem = JSON.parse(
+      JSON.stringify({ id: "gym", itemType: "expense", versions: [{ ...STORED, schedule: null }] }),
+    );
+    const valid = rent(version("2026-01", 250_000, monthly("2026-01")));
+
+    // Act
+    const { occurrences, invalidItems } = resolveVersionedOccurrences(
+      [valid, corrupt],
+      [],
+      ym("2026-04"),
+    );
+
+    // Assert
+    expect(occurrences.map(({ item, amount }) => [item.id, amount])).toEqual([["rent", 250_000]]);
+    expect(invalidItems).toEqual([corrupt]);
   });
 
   it("applies an override by month whichever version is in force", () => {

@@ -115,6 +115,36 @@ const scenario = fc
     edit(activeMonth, state.item.versions).map((edit) => ({ state, activeMonth, edit })),
   );
 
+// Edits only the closed-month invariant can reject: a version in force since a closed month without a closed
+// occurrence yet (so "fix everywhere" is offered), fixed with a schedule that may reach into closed months.
+const closedMonthRisk = fc
+  .record({
+    activeOffset: fc.integer({ min: 1, max: MONTHS - 1 }),
+    startOffset: fc.integer({ min: 0, max: MONTHS - 1 }),
+    anchorAfter: fc.integer({ min: 0, max: 6 }),
+    intervalMonths: fc.integer({ min: 1, max: 6 }),
+    amount,
+    overrides: fc.uniqueArray(override, { maxLength: 6, selector: (override) => override.month }),
+  })
+  .chain(({ activeOffset, startOffset, anchorAfter, intervalMonths, amount, overrides }) => {
+    const activeMonth = addMonths(FIRST_MONTH, activeOffset);
+    const effectiveFrom = addMonths(FIRST_MONTH, startOffset % activeOffset);
+    const schedule = {
+      kind: "recurring" as const,
+      intervalMonths,
+      anchor: addMonths(activeMonth, anchorAfter),
+    };
+    const state: RuleEditState = {
+      item: { id: "item", itemType: "expense", versions: [{ effectiveFrom, amount, schedule }] },
+      overrides,
+    };
+    return patch(effectiveFrom).map((patch) => ({
+      state,
+      activeMonth,
+      edit: { kind: "fix-everywhere" as const, patch },
+    }));
+  });
+
 /** What the user sees for the item in `month`: the effective amount and day, or nothing. */
 const shown = ({ item, overrides }: RuleEditState, month: YearMonth) =>
   resolveVersionedOccurrences([item], overrides, month).occurrences.map(({ amount, day }) => [
@@ -127,18 +157,21 @@ const isBefore = (month: YearMonth, other: YearMonth) => monthsBetween(month, ot
 describe("planRuleEdit (properties)", () => {
   it("leaves every closed month unchanged after any accepted edit", () => {
     // Arrange
-    const property = fc.property(scenario, ({ state, activeMonth, edit }) => {
-      // Act
-      const result = planRuleEdit(state, edit, { activeMonth });
+    const property = fc.property(
+      fc.oneof(scenario, closedMonthRisk),
+      ({ state, activeMonth, edit }) => {
+        // Act
+        const result = planRuleEdit(state, edit, { activeMonth });
 
-      // Assert
-      fc.pre(result.ok);
-      if (!result.ok) return;
-      const after = applyRuleEditPlan(state, result.plan);
-      for (const month of ALL_MONTHS.filter((month) => isBefore(month, activeMonth))) {
-        expect(shown(after, month)).toEqual(shown(state, month));
-      }
-    });
+        // Assert
+        fc.pre(result.ok);
+        if (!result.ok) return;
+        const after = applyRuleEditPlan(state, result.plan);
+        for (const month of ALL_MONTHS.filter((month) => isBefore(month, activeMonth))) {
+          expect(shown(after, month)).toEqual(shown(state, month));
+        }
+      },
+    );
 
     fc.assert(property);
   });

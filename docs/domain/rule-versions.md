@@ -58,6 +58,14 @@ change cannot move it.
 | `edit-scheduled` / `cancel-scheduled` | Change or delete a version whose `effectiveFrom` is after the active month. |
 | `fix-everywhere` | Change the version in force in the active month (or the first version of an item that starts later) in place. Only while no closed month has an occurrence of that version (Q6). |
 
+Two `change-from` edge cases:
+
+- Before the item's first version, with a full patch (amount and schedule), it adds an earlier first version, so
+  the item starts earlier. This is allowed while that month is open; a later first version stays as a
+  `scheduled-change-kept` notice.
+- On a version that has already ended (`endMonth` before M), a patch without a schedule copies that end month, so
+  the new version has no occurrence. There is no notice; to restart the item, the patch needs a schedule.
+
 The plan (`RuleEditPlan`):
 
 - `upsertVersions` and `deleteVersions` (by `effectiveFrom`); `upsertOverrides` (only for `only-month`).
@@ -78,8 +86,9 @@ occurrence in a closed month, otherwise `fix-everywhere` (Q8).
 
 ### The closed-month invariant
 
-Every month before the active month counts as closed: months close in sequence and no item starts before the active
-month. **An edit is accepted only if it changes the resolved occurrences of no closed month**, including whether an
+Closed months are the months before the active month: `closeMonth` keeps exactly one active month, strictly after
+every closed month, and closes months one by one without skipping ([month closing](month-closing.md)). Months before
+the budget's first month hold no items, because new items start no earlier than the active month (Q7). **An edit is accepted only if it changes the resolved occurrences of no closed month**, including whether an
 override there still applies (a skipped closed month must not lose or gain its occurrence behind the skip). The
 check compares the item before and after the edit for every closed month from its first version on. Together with the
 `closed_occurrences` snapshot written at close (Q3, [month closing](month-closing.md), #85), past months never change
