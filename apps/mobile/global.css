@@ -1,2 +1,62 @@
+/* Budget Lens design tokens, direction C (Indigo), approved in #58. Keep in sync with src/ui/theme.ts
+   (checked by src/ui/theme.test.ts). Token names follow shadcn / React Native Reusables. */
+/* biome-ignore-all lint/suspicious/noDuplicateCustomProperties: each @variant block (light, dark) defines the same tokens. */
 @import "tailwindcss";
 @import "uniwind";
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: #f2f2f7;
+      --color-foreground: #1c1c1e;
+      --color-card: #ffffff;
+      --color-card-foreground: #1c1c1e;
+      --color-popover: #ffffff;
+      --color-popover-foreground: #1c1c1e;
+      --color-primary: #3f4ba8;
+      --color-primary-foreground: #ffffff;
+      --color-secondary: #e5e5ea;
+      --color-secondary-foreground: #1c1c1e;
+      --color-muted: #e5e5ea;
+      --color-muted-foreground: #636369;
+      --color-accent: #e8eaf6;
+      --color-accent-foreground: #1c1c1e;
+      --color-destructive: #c0392b;
+      --color-expense: #c0392b;
+      --color-income: #2e7d4f;
+      --color-border: #c6c6c8;
+      --color-input: #c6c6c8;
+      --color-ring: #3f4ba8;
+    }
+    @variant dark {
+      --color-background: #000000;
+      --color-foreground: #ffffff;
+      --color-card: #1c1c1e;
+      --color-card-foreground: #ffffff;
+      --color-popover: #1c1c1e;
+      --color-popover-foreground: #ffffff;
+      --color-primary: #9aa3f5;
+      --color-primary-foreground: #10154a;
+      --color-secondary: #2c2c2e;
+      --color-secondary-foreground: #ffffff;
+      --color-muted: #2c2c2e;
+      --color-muted-foreground: #98989f;
+      --color-accent: #23264a;
+      --color-accent-foreground: #ffffff;
+      --color-destructive: #ff6b5e;
+      --color-expense: #ff6b5e;
+      --color-income: #4cc38a;
+      --color-border: #38383a;
+      --color-input: #38383a;
+      --color-ring: #9aa3f5;
+    }
+  }
+}
+
+@theme {
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  /* No font-family tokens: the platform system font (SF Pro on iOS, Roboto on Android) is used
+     everywhere, so fontFamily is never set and no custom font is loaded. */
+}
