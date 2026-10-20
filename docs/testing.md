@@ -190,9 +190,11 @@ For Android, first forward Metro to the dedicated emulator only: `adb -s <Budget
 tcp:8073`. The scripts set `E2E_TELEMETRY_DISABLED=1`. Output (report, `trace.md` per test, screenshots, iOS video)
 goes to `apps/mobile/.e2e/<platform>/` and is ignored by Git; `app.screenshot()` files are under
 `results/<test>/attempt-1/screenshots/`. Attach the screenshots to UI PRs (see the PR template).
-Android screenshots are stabilized by agent-device (System UI demo mode: fixed clock, no signal or notification
-icons), so an unchanged screen gives a byte-identical PNG on every run; to show that a run used new test code, attach
-that test's `trace.md` (run ID and steps) as well.
+Android screenshots are stabilized by agent-device (System UI demo mode with the clock set to 9:41 and
+notification icons hidden), so captures of an unchanged screen can be identical; to show that a run used new test
+code, attach that test's `trace.md` (run ID and steps) as well. If they show a clock other than 9:41, reset demo
+mode on the dedicated emulator once (`adb -s <emulator-serial> shell am broadcast -a com.android.systemui.demo -e
+command enter`, then the same with `exit`); see [evidence/15](evidence/15/README.md).
 
 **`.e2e/cache`:** agent steps (`agent.act()` / `agent.assert()`) record their resolved actions in
 `apps/mobile/.e2e/cache/`, one file per step key, so later runs replay them without calling a model. This directory is
