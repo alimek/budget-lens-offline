@@ -2,9 +2,8 @@
 
 Owner decisions: iOS builds go to **TestFlight, internal testing only** (#176; no external testers, no App Store
 submission), and they are built and submitted with **Expo Application Services**: EAS Build and EAS Submit (#178).
-The local build and upload script from #177 was removed; EAS is the only release path. Native builds stay out of
-GitHub CI (#166): every EAS build is started manually with `eas build`. Only the **free EAS plan** is used; paid
-features need the owner's consent.
+Native builds stay out of GitHub CI (#166): every EAS build is started manually with `eas build`. Only the **free EAS
+plan** is used; paid features need the owner's consent.
 
 ## Configuration in the repository
 
@@ -17,61 +16,83 @@ features need the owner's consent.
   - `build.preview`: Release build, internal distribution (ad hoc), for testing without TestFlight.
   - `build.production`: Release build for App Store Connect (`distribution: store`), `autoIncrement: true`.
   - `submit.production.ios`: intentionally empty. It has no `ascAppId`, `appleTeamId` or Apple ID; those come from
-    EAS credentials and the interactive `eas submit` (see [Owner setup](#owner-setup-one-time)).
-- `apps/mobile/app.json`: bundle identifier, version, icon, splash and export compliance (see
-  [Release configuration](#release-configuration)). It is static. There is no `app.config.ts`, so `eas init` can write
-  `extra.eas.projectId` into `app.json` itself. `app.json` never contains `owner` (an Expo account name, #171);
-  `pnpm lint` rejects it (`scripts/check-machine-agnostic.mjs`).
+    EAS credentials and the interactive `eas submit` (see [Release flow](#release-flow)).
+- `apps/mobile/app.json`: bundle identifier, version, icon, splash, export compliance (see
+  [Release configuration](#release-configuration)) and the EAS project link `extra.eas.projectId` (#183). It is
+  static; there is no `app.config.ts`.
+  - **The project is already linked.** `extra.eas.projectId` is committed; it is not a secret. EAS CLI identifies the
+    project and its account by this ID alone (since SDK 53 it does not need `owner`; eas-cli #2835 and #3017).
+  - **Never commit `owner`.** It is an Expo account name, and the repository stays account-agnostic (#171).
+    `pnpm lint` rejects it (`scripts/check-machine-agnostic.mjs`).
+  - **`extra.router` is not committed.** The `expo-router` config plugin adds `extra.router.asyncRoutes.web: true`
+    whenever the config is evaluated (`expo config` shows the same value with or without it in `app.json`), and it
+    only affects async routes on web. EAS writes it into `app.json` only while linking a project (`eas init`), not on
+    `eas build` once `extra.eas.projectId` is set.
 - The root `prepare` script skips `lefthook install` when `EAS_BUILD=true` (set on EAS builders), so the install step
   does not depend on Git hooks. Locally, `pnpm install` still installs the hooks.
 - EAS uploads the repository without the files ignored by `.gitignore`. It installs dependencies with pnpm from the
   workspace root and runs `expo prebuild` itself (CNG; `ios/` is never committed).
 
 No credentials, team IDs, Apple IDs or Expo account names are in the repository. Signing credentials (distribution
-certificate, provisioning profiles) and the App Store Connect API key live in **EAS credentials** on the owner's Expo
-account.
+certificate, provisioning profile) and the App Store Connect API key live in **EAS credentials** of the linked project.
 
-## Owner setup (one time)
+## Release flow
 
-1. **Apple:** a paid Apple Developer Program membership (approved).
-2. **Expo:** create an Expo account (free plan) and log in on the machine that starts builds:
-   `pnpm --filter @budget-lens/mobile eas login`.
-3. **Link the project:** `pnpm --filter @budget-lens/mobile eas init`. This creates the EAS project and writes
-   `extra.eas.projectId` and `owner` into `apps/mobile/app.json`. **Commit only `extra.eas.projectId`**: delete the
-   `owner` line before committing, because it is an Expo account name and the repository stays account-agnostic
-   (#171; `pnpm lint` fails while it is there). EAS does not need it: since SDK 53, EAS CLI identifies the project by
-   `extra.eas.projectId` alone, and `owner` is only required for SDK 52 and older (eas-cli changelog, "No longer
-   require owner field for SDK >= 53", eas-cli #2835 and #3017). The project ID is not a secret; it stays out of the
-   repository until the owner's project exists. Commit it in a small PR.
-4. **Credentials and first build:** `pnpm eas:build:ios` (production profile). On the first run EAS CLI asks for the
-   Apple Developer login and offers to create and store the distribution certificate and provisioning profile.
-   Let EAS manage them. `pnpm --filter @budget-lens/mobile eas credentials --platform ios` shows or changes them later.
-5. **App Store Connect API key for submissions:** in
-   `pnpm --filter @budget-lens/mobile eas credentials --platform ios`, choose *production* → *App Store Connect: Manage
-   your API Key* → *Set up your project to use an API Key for EAS Submit*. EAS can create the key (App Manager role)
-   and keeps it on EAS servers, never in the repository or an env file.
-6. **App Store Connect app record and internal testers:** the first `pnpm eas:submit:ios` can create the app record
-   for `com.budgetlens.offline` (or create it in App Store Connect first). Then add an internal testing group in the
-   app's TestFlight tab with the testers (team members).
-7. **Optional values for `submit.production.ios`** (only for non-interactive submits, for example
-   `--non-interactive` or `--auto-submit` on a later EAS Workflow): `ascAppId` (App Store Connect → App Information →
-   Apple ID, a number) and, if wanted, `groups` (internal TestFlight group names). These are app identifiers, not
-   secrets; the owner adds them once the app record exists. `appleTeamId` and the Apple ID are not needed when the
-   API key is stored in EAS.
+Run every command from a **clean working tree** of an up-to-date `main` (`git status` shows nothing). EAS uploads the
+working tree, and `eas` may write `owner` or `extra.router` into `apps/mobile/app.json` (see
+[Relinking](#relinking-the-project)); a clean tree shows such a change immediately, so it can be reverted and never
+ends up in a build or a commit.
 
-## Build and submit
+Prerequisites: a paid Apple Developer Program membership, and an Expo login with access to the account that owns the
+linked project (`pnpm --filter @budget-lens/mobile eas whoami`; Developer role or higher).
+
+1. **First build (owner, interactive):** `pnpm eas:build:ios`, which runs
+   `eas build --platform ios --profile production`. The owner runs it in a terminal and logs in to the Apple
+   Developer account when EAS asks. EAS then creates the **distribution certificate and provisioning profile** for
+   `com.budgetlens.offline` and stores them in the project's EAS credentials. Later builds reuse them and need no
+   Apple login. The build runs in the EAS cloud; its page on expo.dev shows the progress.
+2. **App Store Connect API key:** add it to the project's EAS credentials, either on expo.dev (project →
+   *Credentials* → iOS → `com.budgetlens.offline` → App Store Connect API Key) or with
+   `pnpm --filter @budget-lens/mobile eas credentials --platform ios` → *production* → *App Store Connect: Manage
+   your API Key* → *Set up your project to use an API Key for EAS Submit*. EAS can create the key (App Manager role).
+   It stays on EAS servers, never in the repository, an env file or a CI secret.
+3. **Submit:** `pnpm eas:submit:ios`, which runs `eas submit --platform ios --profile production`. Pick the finished
+   build. EAS uploads it to App Store Connect for **internal TestFlight testing**; on the first submit it can create
+   the App Store Connect app record for `com.budgetlens.offline`. Processing takes about 10–15 minutes.
+4. **Testers:** in App Store Connect → the app → *TestFlight*, create an internal testing group with the testers
+   (team members), add the build (or enable automatic distribution for the group), and the testers install it with
+   the **TestFlight** app on their iPhone.
+
+Optional, only for non-interactive submits (`--non-interactive`, `--auto-submit`): add `ascAppId` (App Store Connect →
+App Information → Apple ID, a number) and, if wanted, `groups` (internal TestFlight group names) to
+`submit.production.ios` in `eas.json`. They are app identifiers, not secrets. `appleTeamId` and an Apple ID are not
+needed while the API key is stored in EAS.
+
+## Commands
 
 Run from the repository root (the scripts call EAS CLI pinned to `eas-cli@25.2.0` via `pnpm dlx` in `apps/mobile`):
 
 ```sh
 pnpm eas:build:ios        # eas build --platform ios --profile production (cloud build, remote build number)
 pnpm eas:submit:ios       # eas submit --platform ios --profile production (pick the build, upload to TestFlight)
+pnpm --filter @budget-lens/mobile eas project:info                              # linked project and ID
 pnpm --filter @budget-lens/mobile eas build --platform ios --profile preview   # ad hoc internal build
 pnpm --filter @budget-lens/mobile eas <command>                                  # any other EAS CLI command
 ```
 
-After the upload, App Store Connect processes the build (usually 10–15 minutes). It then appears in TestFlight; add it
-to the internal group (or enable automatic distribution for the group) and install it with the TestFlight app.
+## Relinking the project
+
+Only needed if `extra.eas.projectId` is lost or the project changes. Use the ID shown on the project's overview page
+on expo.dev:
+
+```sh
+pnpm --filter @budget-lens/mobile eas init --id <projectId> --non-interactive --no-icon
+```
+
+`--no-icon` matters: without it, `eas init` uploads the app icon from `app.json` to the project on expo.dev. `eas init`
+also writes `owner` (and `extra.router`, see above) into `app.json`. Before committing, keep only
+`extra.eas.projectId` and revert the rest; `pnpm lint` fails while `owner` is there. Never use `eas init` without
+`--id` or with `--force`: those can create a new project or relink to another account.
 
 ## Free plan limits
 
