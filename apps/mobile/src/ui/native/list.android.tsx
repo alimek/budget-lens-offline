@@ -156,7 +156,8 @@ function RowActions({
   const { t } = useTranslation();
   return (
     <View className="flex-row items-center gap-2 px-2">
-      {actions.map((action) => (
+      {/* Laid out from the outer edge inwards, so the first action is the trailing-most, as on iOS. */}
+      {[...actions].reverse().map((action) => (
         <Host key={action.key} matchContents>
           <Button
             onClick={() => onAction(action.key)}

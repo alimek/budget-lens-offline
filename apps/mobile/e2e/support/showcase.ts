@@ -132,12 +132,23 @@ export function appAlert(
 
 /** Showcase nodes from top to bottom, close enough that scrolling to each in turn leaves no part of the page out. */
 const showcaseAnchors = [
+  "ds-toggle",
+  "ds-progress-over",
   "ds-section-inputs",
+  "ds-amount-field",
   "ds-picker",
+  "ds-date-picker",
   "ds-section-overlays",
+  "ds-overlay-result",
   "ds-section-lists",
   "ds-section-amounts",
+  "ds-amount-zero",
   "ds-section-typography",
+  "ds-type-title-1",
+  "ds-type-title-3",
+  "ds-type-body",
+  "ds-type-subheadline",
+  "ds-type-caption",
   "ds-section-colors",
   "ds-swatches-light",
   "ds-swatches-dark",
