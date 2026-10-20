@@ -1,60 +1,56 @@
 # Transaction row swipe verification (#195)
 
-Captured on 2026-10-20 with TesterArmy e2e 0.21.2 on the dedicated Android emulator (`E2E_ANDROID_AVD`) and iOS
-simulator (`E2E_IOS_SIMULATOR`), using development builds and Metro freshly started with `--clear` on port 8073.
-Telemetry was disabled. Every run below records `vcs.dirty: false`; the evidence commit only adds these artifacts.
+## Review round 1
 
-| Run | App commit | Result | Run ID |
+Captured on 2026-10-20 using TesterArmy e2e 0.21.2 and the dedicated Android emulator (`E2E_ANDROID_AVD`) and iOS
+simulator (`E2E_IOS_SIMULATOR`). Every run below records `vcs.dirty: false`. Both full suites ran on the final code
+and baseline commit `97d8aba`; the final head differs from it only in `docs/evidence`.
+
+| Run | Commit | Result | Run ID |
 | --- | --- | --- | --- |
-| Android baseline, deletion test | `311ac62` | 1 passed | `01a15aa8-3f97-7caa-8dd4-87200557efde` |
-| Android focused list suite | `e864eab` | 4 passed | `01a15aaa-234e-7600-88d6-0a06513f3a3b` |
-| Full Android suite | `364aa05` | 23 passed, 4 skipped | `01a15ab8-f008-795c-8299-cba8bdc69ae0` |
-| Full iOS suite | `364aa05` | 23 passed, 4 skipped | `01a15ab2-37bf-7265-955d-8a25db3d60fe` |
-| Android 200% text | `364aa05` | 4 passed | `01a15abd-2203-753e-b73c-b979e4048cd5` |
-| iOS 200% text | `364aa05` | 1 passed, 3 failed (Settings scrolling) | `01a15abe-2930-7128-957f-2fb7b915fe9d` |
-| Final focused android list suite | `42f6b7c` | 4 passed | `01a15ac2-71c4-71c8-b32c-db638749113b` |
-| Final focused ios list suite | `42f6b7c` | 4 passed | `01a15ac3-2cee-7714-807a-a1992c97be01` |
+| Pre-fix Android regression | `311ac62` | 1 failed (expected) | `01a15adb-1f57-77fd-8562-192c4af7f373` |
+| Full Android suite and regression | `97d8aba` | 24 passed, 4 skipped | `01a15aed-a44c-7fad-b57e-dfd978a609b4` |
+| Full iOS suite | `97d8aba` | 23 passed, 4 skipped | `01a15af2-5879-7516-bf31-f3ab2edcfd82` |
 
-The baseline functional test passed while its screenshot reproduced the stuck grey press indication. The final
-full suites include all four `design-system-list.e2e.ts` tests; the four large-text tests are opt-in and run
-separately. Android checks the exact checkbox name, both action names before swiping, unchanged unpaid/paid state
-after swiping, paid toggling, deletion and editing. The iOS implementation is unchanged. The final focused runs cover the test-only simplification of the two
-action-name assertions; product code is identical to the full-suite commit. The swiped-row PNGs come from these
-final focused runs.
+The new Android-only test, `keeps the open Android row background unchanged`, swipes Rent open and calls
+`expect(rent).toHaveScreenshot("android-rent-open", { threshold: 0, maxDiffPixels: 0 })`. Its crop covers only the
+visible row, excluding the clock, action buttons and surrounding screen. The [committed baseline](../../../apps/mobile/e2e/design-system-list.e2e.ts-snapshots/android-rent-open-android-darwin.png)
+was generated on the fix, inspected and committed before the full suites; neither proof run updates snapshots.
 
-- [Android before](android-before-list-swipe.png): sampled open-row RGB `(224, 224, 229)`, page `(242, 242, 247)`.
-- [Android after](android-list-swipe.png): sampled open-row and page RGB both `(242, 242, 247)`; no persistent highlight.
-- [iOS swipe](ios-list-swipe.png): native trailing actions remain unchanged.
-- [Raw traces and screenshots](traces/): full-suite list tests, final focused swipe tests, baseline and 200% list checks. The three failed
-  iOS large-text showcase traces are retained too. Videos remain in the ignored runner output.
+For the negative proof, the same worktree was checked out at the actual pre-fix commit `311ac62`. Because that
+commit predates the regression spec, an ignored harness replayed the screenshot test and committed baseline.
+The regression test case is byte-identical to the final spec, and the expected PNG is byte-identical to the
+committed baseline. The assertion fails on pixel differences: **112,248 pixels (99%)**, with matching image sizes.
+The worktree was then returned to the implementation branch for the full suites.
 
-All PNGs and `trace.md` files are raw runner artifacts, copied without edits. The three swiped-row PNGs were
-verified byte-identical to their source artifacts. Android screenshots use the demo clock 9:41.
+- [Pre-fix actual row crop](round-1/android-red/attempt-1/screenshots/android-rent-open-actual.png),
+  [expected crop](round-1/android-red/attempt-1/screenshots/android-rent-open-expected.png),
+  [diff](round-1/android-red/attempt-1/screenshots/android-rent-open-diff.png), [failure trace](round-1/android-red/trace.md).
+- Raw swiped-row screenshots: [Android before](android-before-list-swipe.png), [Android after](android-list-swipe.png),
+  [iOS](ios-list-swipe.png). Android uses the 9:41 demo clock.
+- [Current raw traces and screenshots](round-1/): five Android list tests, four iOS list tests and the negative proof.
+  Every PNG and `trace.md` is copied without edits. The three full screenshots were verified byte-identical to
+  their source run artifacts. Videos remain in ignored runner output.
 
-Additional verification limitation: the iOS 200% list test passes, but the three showcase tests fail in
-`openShowcase` while scrolling Settings to its showcase button, before reaching the showcase. This path is outside
-the Android row change. Both system text sizes were restored after verification; the Metro process was stopped.
+The full runs cover all standard tests; four 200% text tests are opt-in. The Android-specific visual test is
+excluded from iOS. The iOS alert helper now finds the title-labelled container containing its named confirm button,
+so native snapshot container kinds and matching triggers behind the modal do not affect confirmation.
 
-Commands from the repository root (device identifiers supplied locally):
+Commands used for the full suites, from the repository root:
 
 ```sh
 pnpm --filter @budget-lens/mobile start --clear
 adb -s <emulator-serial> reverse tcp:8073 tcp:8073
 export E2E_TELEMETRY_DISABLED=1
 export AGENT_DEVICE_STATE_DIR="$PWD/apps/mobile/.e2e/agent-device"
-pnpm --filter @budget-lens/mobile exec e2e run --target android --output .e2e/195-list e2e/design-system-list.e2e.ts
-E2E_IOS_SIMULATOR=<simulator> pnpm e2e:ios
 pnpm e2e:android
-adb -s <emulator-serial> shell settings put system font_scale 2.0
-E2E_LARGE_TEXT=1 pnpm --filter @budget-lens/mobile exec e2e run --target android --output .e2e/android-large-text e2e/large-text.e2e.ts
-adb -s <emulator-serial> shell settings put system font_scale 1.0
-xcrun simctl ui <simulator> content_size accessibility-extra-large
-E2E_LARGE_TEXT=1 E2E_IOS_SIMULATOR=<simulator> pnpm --filter @budget-lens/mobile exec e2e run --target ios --output .e2e/ios-large-text e2e/large-text.e2e.ts
-xcrun simctl ui <simulator> content_size large
+E2E_IOS_SIMULATOR=<simulator> pnpm e2e:ios
 pnpm check
-pnpm audit --audit-level high
-pnpm check:licenses
 ```
 
-The worktree-local device daemon avoids attaching the runner to another checkout's daemon. No model steps or
-credentials were used.
+Metro was freshly started on port 8073 from this worktree; shared-device access was locked throughout verification.
+The Metro process was stopped and the lock released afterwards. No model steps or credentials were used.
+
+The optional TalkBack audio check with usage hints disabled was not performed. The previously reported iOS 200%
+Settings/showcase scrolling failure was not changed or rerun in this round. Earlier verification artifacts remain
+under [traces](traces/); the table and `round-1` artifacts above are the current acceptance evidence.
