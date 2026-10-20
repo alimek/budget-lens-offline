@@ -20,3 +20,4 @@ by Grzegorz on 2026-10-18
 | [0010](0010-dependency-versions.md) | Latest stable dependencies, pinned exactly | Accepted |
 | [0011](0011-money-formatting-without-intl.md) | Money formatting without native Intl, CLDR data in core | Superseded by [0012](0012-native-intl-money-formatting.md) |
 | [0012](0012-native-intl-money-formatting.md) | Native Intl money formatting, always full amounts | Accepted |
+| [0013](0013-eas-update-network-exception.md) | EAS Update check as the only outbound request (offline exception) | Accepted |

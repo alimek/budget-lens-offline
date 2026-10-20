@@ -2,7 +2,8 @@
 
 Owner decision (#184): JavaScript and asset changes reach installed TestFlight builds through **EAS Update**
 (`expo-updates`), without a new native build. Builds stay on the free EAS plan. The app stays offline-first: the update
-check never blocks startup and needs no network.
+check never blocks startup and the app works fully without network. The check is the app's only outbound request today and an
+accepted exception to the offline rule: [ADR 0013](../decisions/0013-eas-update-network-exception.md).
 
 ## How it works
 
@@ -18,14 +19,34 @@ check never blocks startup and needs no network.
 - `apps/mobile/eas.json`: `build.production.channel: "production"` (TestFlight builds) and
   `build.preview.channel: "preview"` (ad hoc builds). EAS Build writes the channel into the binary; development builds
   have no channel and load the bundle from Metro.
-- `apps/mobile/src/updates/update-check.ts`, called once from the root layout after the first render: if the binary has
-  `expo-updates` enabled, is not a development bundle and has a channel, it asks the update server for a newer update
+- `apps/mobile/src/updates/update-check.ts`, called from the root layout after the first render on **every launch**: if
+  the binary has `expo-updates` enabled, is not a development bundle and has a channel, it asks the update server for a newer update
   of that channel and downloads it in the background. Every error (offline, server, download) is swallowed and the app
   keeps running the current bundle. Nothing is reloaded during a session: a downloaded update is applied on the
   **next launch** (after the app is closed and started again).
-- The request goes only to Expo's update server over HTTPS and carries what `expo-updates` needs to pick an update
-  (platform, runtime version, channel, current and embedded update IDs). No user data, no analytics and no
-  telemetry are sent. Local builds without a channel (for example `expo run:ios`) make no request.
+
+## What an update check sends
+
+The check (and, when an update is downloaded, the requests for its files) goes over HTTPS to Expo's EAS Update server
+(`u.expo.dev`, the project's update URL). Verified in the `expo-updates` 58.0.17 sources (`FileDownloader` on iOS and
+Android) and `expo-eas-client` 58.0.2, the request carries these headers:
+
+| Header | Content |
+| --- | --- |
+| `EAS-Client-ID` | A random UUID created once per installation and kept on the device (iOS `UserDefaults`, Android `SharedPreferences`); a **persistent per-install identifier**, sent on every check |
+| `Expo-Fatal-Error` | The message of the fatal JavaScript error that ended the previous launch, truncated to 1024 characters; only when there was one |
+| `Expo-Recent-Failed-Update-IDs` | IDs of updates that recently failed to launch, if any |
+| `Expo-Current-Update-ID`, `Expo-Embedded-Update-ID` | The running update and the update embedded in the build (`Expo-Requested-Update-ID` on asset requests) |
+| `Expo-Platform`, `Expo-Runtime-Version` | `ios` / `android` and the fingerprint |
+| `expo-channel-name` | The channel EAS Build writes into the binary (`production`, `preview`) |
+| `Expo-Protocol-Version`, `Expo-API-Version`, `Expo-Updates-Environment`, `Expo-JSON-Error`, `Accept` | Protocol constants |
+| Server-defined headers, `Expo-Extra-Params` | Headers the server asked the client to send back; extra params only if the app sets them (it does not) |
+
+The server also sees the device's **IP address** and the **time** of the request. The app adds no analytics or tracking
+of its own and sends no budget data, but the installation identifier reaches Expo with every check, and a crash message with the first check after a
+crash. Local
+builds without a channel (for example `expo run:ios`) and development bundles make no request. How to switch the
+check off if that is ever required: [ADR 0013](../decisions/0013-eas-update-network-exception.md) (Consequences).
 
 ## Update or new build?
 
@@ -38,7 +59,9 @@ when the fingerprint changes, for example:
   upgrade);
 - changing config plugins or native fields in `app.json` (bundle identifier, icon, splash, permissions, Info.plist,
   `updates`, `runtimeVersion`);
-- the first build after this change: binaries built before `expo-updates` was added cannot receive updates.
+- the first build after this change: binaries built before `expo-updates` was added cannot receive updates. The
+  first build with `expo-updates`, a test publish and a rollback test on TestFlight are tracked in
+  [#190](https://github.com/alimek/budget-lens-offline/issues/190).
 
 To check, compare the local fingerprint with the build on the phone (the build ID is on its expo.dev page):
 

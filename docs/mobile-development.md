@@ -105,7 +105,8 @@ generated (ignored) `android/` and `ios/` projects; for Android also check the G
   so every remote request must use HTTPS.
 - **EAS Update:** `expo-updates` adds no permission on either platform (Android already has `INTERNET`). Release
   builds with an EAS channel make one background HTTPS request to Expo's update server after launch; it never blocks
-  startup and fails silently offline ([release/updates.md](release/updates.md)).
+  startup and fails silently offline ([release/updates.md](release/updates.md), what it sends:
+  [ADR 0013](decisions/0013-eas-update-network-exception.md)).
 
 ## Dependency compatibility and temporary audit exceptions
 

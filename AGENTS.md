@@ -5,7 +5,8 @@ live in `docs/`. If a PR changes domain behaviour, architecture or conventions, 
 
 ## Product and scope
 
-Budget Lens is a **fully offline personal budget app** built with Expo (iOS and Android). It ports the business logic
+Budget Lens is an **offline-first personal budget app** built with Expo (iOS and Android); the only outbound request
+today is the optional EAS Update check ([ADR 0013](docs/decisions/0013-eas-update-network-exception.md)). It ports the business logic
 of the legacy web app [`alimek/budget-lens`](https://github.com/alimek/budget-lens) (private; Next.js + Supabase) into a
 platform-agnostic TypeScript package.
 
