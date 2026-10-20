@@ -110,9 +110,8 @@ The properties we have (#122 completes the set deferred from #18):
 - `src/money.property.test.ts`: amounts are drawn from size bands (below 1 000, 1 000 – 999 999, up to 10^9 and up
   to 10^12 minor units) so typical, grouped amounts are as common as tiny and huge ones. `sumMinorUnits` equals the
   exact integer sum; `toMinorUnits` rejects every amount that is not a whole number of minor units; typing back what
-  `formatMoney` printed (`parseMoney` of its digits, both languages) gives the same amount in every currency with
-  minor digits; for currencies without them (CLP, ISK, JPY, KRW) English amounts with exactly one thousands group
-  are skipped, because `parseMoney` reads `JP¥1,000` as a decimal (#2 rule, owner decision in #164);
+  `formatMoney` printed (`parseMoney` of its digits, both languages) gives the same amount in every currency, over
+  the full range (for currencies without minor digits, `JP¥1,000` reads as thousands, #164);
   `multiplyByRate` always returns whole minor units at most half a minor unit from the exact product and rounds an
   exact half away from zero; `convertMinor` only rescales at rate 1 into a currency with as many or more minor
   digits (and back losslessly), stays within half a target minor unit of the exact value, is odd (negating the
@@ -137,7 +136,7 @@ line):
   tests are one-line act-and-assert checks, so explicit AAA sections are not needed there, and the newer ones
   (#2) use explicit AAA sections.
 - `src/money-parse.test.ts` and `src/money-format.test.ts` (#2): parsing and native full-amount currency formatting,
-  with explicit AAA sections. Formatting expectations use the current runtime's Intl output, accepting platform
+  with explicit AAA sections; thousands with a single `,` or `.` in currencies without minor digits (#164). Formatting expectations use the current runtime's Intl output, accepting platform
   differences in symbols, spacing and grouping (#131); whole-unit rounding is checked separately.
 - `src/money.property.test.ts` and `src/recurrence.property.test.ts` (#122): the properties listed above.
 - `src/recurrence.test.ts` (#4): recurrence schedules – intervals, anchors, end month, day-of-month clamping,
