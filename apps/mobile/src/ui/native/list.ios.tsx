@@ -63,7 +63,27 @@ export function ListSection({ title, testID, children }: ListSectionProps) {
  * and the signed amount in `income` / `expense`. The status button is a toggle named "Paid: <title>". `actions`
  * become SwiftUI trailing swipe actions (`<testID>-<key>`), which VoiceOver also offers as row actions.
  */
-export function TransactionRow({
+export function TransactionRow({ actions, onAction, ...row }: TransactionRowProps) {
+  if (!actions?.length) return <RowContent {...row} />;
+  return (
+    <SwipeActions>
+      <RowContent {...row} />
+      <SwipeActions.Actions edge="trailing">
+        {actions.map((action) => (
+          <SwipeButton
+            key={action.key}
+            action={action}
+            testID={`${row.testID}-${action.key}`}
+            onPress={() => onAction?.(action.key)}
+          />
+        ))}
+      </SwipeActions.Actions>
+    </SwipeActions>
+  );
+}
+
+/** The row itself: status button, texts and amount. */
+function RowContent({
   title,
   meta,
   amount,
@@ -71,9 +91,7 @@ export function TransactionRow({
   paid,
   onPaidChange,
   testID,
-  actions,
-  onAction,
-}: TransactionRowProps) {
+}: Omit<TransactionRowProps, "actions" | "onAction">) {
   const theme = useThemeColors();
   const { t } = useTranslation();
   const lang = useLanguage();
@@ -84,7 +102,7 @@ export function TransactionRow({
   const amountText = (
     <Text modifiers={[monospacedDigit(), foregroundStyle(amountColor)]}>{formatted.text}</Text>
   );
-  const row = (
+  return (
     <HStack spacing={12}>
       <Button
         onPress={() => onPaidChange(!paid)}
@@ -102,22 +120,6 @@ export function TransactionRow({
       <Spacer />
       {stacked ? null : amountText}
     </HStack>
-  );
-  if (!actions?.length) return row;
-  return (
-    <SwipeActions>
-      {row}
-      <SwipeActions.Actions edge="trailing">
-        {actions.map((action) => (
-          <SwipeButton
-            key={action.key}
-            action={action}
-            testID={`${testID}-${action.key}`}
-            onPress={() => onAction?.(action.key)}
-          />
-        ))}
-      </SwipeActions.Actions>
-    </SwipeActions>
   );
 }
 

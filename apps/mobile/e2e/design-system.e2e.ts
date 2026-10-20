@@ -1,6 +1,6 @@
 import { test } from "@e2e-dev/mobile";
 import { expect } from "e2e";
-import { openShowcase } from "./support/showcase";
+import { captureShowcase, openShowcase } from "./support/showcase";
 
 const componentIds = [
   "ds-card",
@@ -29,6 +29,7 @@ for (const appearance of ["light", "dark"] as const) {
       // Assert
       for (const id of componentIds) await expect(screen.getByTestId(id)).toBeVisible();
       await app.screenshot(`design-system-${appearance}`);
+      await captureShowcase(fixtures, `showcase-${appearance}`);
     } finally {
       await device.setAppearance("light");
     }

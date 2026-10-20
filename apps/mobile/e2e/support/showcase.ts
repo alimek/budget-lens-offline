@@ -129,3 +129,28 @@ export function appAlert(
   const alert = fixtures.screen.getByRole("group", title);
   return { alert, confirm: alert.getByRole("button").last() };
 }
+
+/**
+ * Captures the whole showcase page by page (`<name>-1`, `<name>-2`, …) for the review evidence: each swipe scrolls
+ * about two thirds of the screen, until the last section (the dark colour tokens) is on screen.
+ */
+export async function captureShowcase(
+  { app, screen }: Pick<Fixtures, "app" | "screen">,
+  name: string,
+) {
+  const page = await screen.getByTestId("screen-design-system").boundingBox();
+  if (!page) throw new Error("the showcase has no bounds");
+  const x = page.x + page.width / 2;
+  const last = screen.getByTestId("ds-swatches-dark");
+  for (let index = 1; index <= 16; index += 1) {
+    await app.screenshot(`${name}-${index}`);
+    if (await last.isVisible()) return;
+    await screen.swipe({
+      from: { x, y: page.y + page.height * 0.8 },
+      to: { x, y: page.y + page.height * 0.15 },
+      duration: 500,
+    });
+    await settle(1200);
+  }
+  throw new Error("the end of the showcase was not reached");
+}
