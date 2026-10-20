@@ -57,7 +57,7 @@ function Swatches({ scheme }: { scheme: ColorScheme }) {
       style={{ backgroundColor: palette.background }}
     >
       {(Object.keys(palette) as ColorToken[]).map((token) => (
-        <View key={token} className="w-[31%] gap-1">
+        <View key={token} className="gap-1" style={{ width: "31%" }}>
           <View
             className="h-10 rounded-md border"
             style={{ backgroundColor: palette[token], borderColor: palette.border }}
