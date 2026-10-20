@@ -180,7 +180,14 @@ reference. The scaffold tab tests take one screenshot per tab (`settings` includ
 accessible name, the amount validation error appearing and clearing, the native picker menu and the native
 calendar. `design-system-list.e2e.ts` opens the list example by deep
 link (`device.openLink`; on iOS it confirms the "Open in …?" alert when the simulator shows it) and checks the paid
-toggle (named on both platforms) and the add button. Shared steps are in `e2e/support/showcase.ts`.
+toggle (named on both platforms), the add button and the row swipe actions (#187): a swipe reveals the named
+actions, "Delete" asks in the alert and removes the row, "Edit" opens the sheet. `design-system-overlays.e2e.ts`
+(#187) opens the sheet, confirms the alert and picks a menu action, checking the last-action text. Rows are swiped
+across the list at the row's height (`swipeRowLeft`), because on iOS the row's test ID is on the small status
+button. The iOS system alert has no identifiers: XCUITest exposes it as a group named by its title, and `appAlert`
+returns it with its last button as the confirm button. On Android, Compose puts a
+`semantics` content description on a child node when the control also has text, so names are checked there
+(`describedNode`). Shared steps are in `e2e/support/showcase.ts`.
 Fallow lists the config and test glob as real runner entry points (it has no e2e plugin).
 
 **Requirements:** Node from `.nvmrc` (the `e2e` package needs Node `^22.22.3 || >=24.8.0`), pnpm from
@@ -224,8 +231,11 @@ E2E_LARGE_TEXT=1 pnpm exec e2e run --target android --output .e2e/android-large-
 E2E_LARGE_TEXT=1 pnpm exec e2e run --target ios --output .e2e/ios-large-text e2e/large-text.e2e.ts
 ```
 
-It checks that every showcase control is reachable by scrolling and captures the components, the inputs and the
-list example at that size.
+It checks that every showcase control (overlay triggers included) is reachable by scrolling and captures the
+components, the inputs, the list example and the whole showcase at that size. The light and dark tests in
+`design-system.e2e.ts` capture the whole showcase too: `captureShowcase` scrolls to each section in turn and takes one
+screenshot per position (`showcase-<appearance>-<n>`). At 200% on iOS the engine's scroll can start on an embedded
+SwiftUI control and move nothing, so `scrollShowcaseTo` falls back to slow drags along the page's left margin.
 
 **`.e2e/cache`:** agent steps (`agent.act()` / `agent.assert()`) record their resolved actions in
 `apps/mobile/.e2e/cache/`, one file per step key, so later runs replay them without calling a model. This directory is

@@ -15,10 +15,10 @@ then a custom component.
   `primary-foreground`, `muted-foreground`, `destructive`, `border`, `input`, `ring`, …) plus `income` and `expense`,
   and the radii `sm` 6, `md` 8, `lg` 12 for custom elements. Use them as classes: `bg-background`, `bg-card`,
   `text-muted-foreground`, `text-income`, `rounded-lg`.
-- `apps/mobile/src/ui/theme.ts`: the same values as a typed object for native props that take colours (tab tint,
+- `apps/mobile/src/ui/lib/theme.ts`: the same values as a typed object for native props that take colours (tab tint,
   Expo UI tints, navigation theme). `useThemeColors()` returns the set for the system appearance;
   `useDynamicColor(token)` returns a `DynamicColorIOS` on iOS.
-- `src/ui/theme.test.ts` fails when `global.css` and `theme.ts` drift apart (run by `pnpm test` in CI).
+- `src/ui/lib/theme.test.ts` fails when `global.css` and `theme.ts` drift apart (run by `pnpm test` in CI).
 - No font tokens: the platform system font (SF Pro / Roboto) is used everywhere. Never set `fontFamily` or a
   `font-sans` / `font-mono` class.
 
@@ -52,8 +52,11 @@ for totals), tabular figures and right alignment.
 | `AppTextField` | `src/ui/native/text-field.*` | SwiftUI `TextField` / `SecureField` (rounded border) under a visible label; M3 `OutlinedTextField` with a floating label. `kind`: `text`, `decimal` (decimal keypad) or `secure`. The label is the accessible name (on iOS the visible label is hidden from VoiceOver and set on the field; on Android TalkBack reads the Compose label with the field). `error` shows below the field in `expense` (`<testID>-error`) and is the iOS hint / the M3 supporting text. The native field owns the text while typing (`useSyncedText`), so a late re-render never drops keystrokes. `validateAmountInput()` (`src/ui/amount-input.ts`) maps `parseMoney` errors to `amountInput.*` messages |
 | `AppPicker` | `src/ui/native/picker.*` | SwiftUI menu `Picker` under a visible label (VoiceOver: label, value, pop-up button); M3 `ExposedDropdownMenuBox` with a read-only outlined field. Options get `<testID>-<value>` |
 | `AppDatePicker` | `src/ui/native/date-picker.*` | Date only, on a `CalendarDate` (`YYYY-MM-DD`, `src/ui/calendar-date.ts`). SwiftUI compact `DatePicker` under a visible label; on Android a read-only outlined field (a button named by the label, value = formatted date) that opens the M3 `DatePickerDialog` (`common.ok` / `common.cancel`). Conversions use local midnight on iOS and UTC midnight on Android, as each platform expects |
-| `GroupedList`, `ListSection` | `src/ui/native/list.*` | SwiftUI `List` (`insetGrouped`) with `Section` headers (header trait, test ID on the header); M3 `LazyColumn` with `primary` section headers. The list scrolls itself, so it fills a screen instead of sitting in `Screen` |
-| `TransactionRow` | `src/ui/native/list.*` | Title, optional meta (due date), signed `AmountText`-style amount in `income` / `expense`, and the paid status. iOS: a `checkmark.circle.fill` / `circle` button named `transaction.paidLabel` ("Paid: <title>") with the toggle trait and selected state. Android: the whole `ListItem` is a checkbox (`toggleable`, role checkbox) with the same name (`semantics` content description; Compose exposes it as a non-focusable child of the row node because the row also has text, and TalkBack reads it with the row). `currency` is required: each row is formatted in its item's own currency |
+| `GroupedList`, `ListSection` | `src/ui/native/list.*` | SwiftUI `List` (`insetGrouped`) with `Section` headers (header trait, test ID on the header); on Android a React Native `ScrollView` of M3 rows with `primary` section headers (not a Compose `LazyColumn`, so rows can take gesture-handler swipe actions; it is not virtualized, so long real lists need a `FlatList`-based variant first). The list scrolls itself, so it fills a screen instead of sitting in `Screen` |
+| `TransactionRow` | `src/ui/native/list.*` | Title, optional meta (due date), signed `AmountText`-style amount in `income` / `expense`, and the paid status. iOS: a `checkmark.circle.fill` / `circle` button named `transaction.paidLabel` ("Paid: <title>") with the toggle trait and selected state. Android: the whole `ListItem` is a checkbox (`toggleable`, role checkbox) with the same name (`semantics` content description; Compose exposes it as a non-focusable child of the row node because the row also has text, and TalkBack reads it with the row). `currency` is required: each row is formatted in its item's own currency. Optional `actions` (`MenuAction`: `key`, `label`, `destructive`) with `onAction` are revealed by swiping the row to the left, each with the test ID `<testID>-<key>`: SwiftUI trailing `swipeActions` on iOS (destructive in system red, others `primary`, named `transaction.actionLabel` as on Android; VoiceOver offers them as row actions; the first action is the trailing-most and a full swipe performs it), a `ReanimatedSwipeable` from react-native-gesture-handler (Reanimated) on Android (first action at the outer edge too) with filled M3 buttons in `destructive` / `primary` named `transaction.actionLabel` ("Delete: Rent"), which stay in the accessibility tree while the row is closed so TalkBack users reach them without the swipe |
+| `AppContextMenu` | `src/ui/native/context-menu.*` | A button that opens a menu of `actions` (`onAction(key)`): SwiftUI `Menu` (bordered, `ellipsis.circle`, tint `primary`, destructive items in the system style); M3 `DropdownMenu` anchored to an `OutlinedButton`, destructive items in `destructive`. `label` is the visible label and accessible name; items get `<testID>-<key>` |
+| `AppSheet` | `src/ui/native/sheet.*` | SwiftUI `BottomSheet` sized to its content with the drag indicator; M3 `ModalBottomSheet` on `card` with the drag handle. Controlled by `visible` / `onDismiss` (swipe down, tap outside, back). The `title` (`title-2`, header role) and the React Native `children` are hosted in the sheet (`RNHostView`); `testID` is on the content |
+| `AppAlert` | `src/ui/native/alert.*` | Confirmation with a cancel and a confirm button; `destructive` styles the confirm button for actions such as "Delete". iOS: the system alert (`UIAlertController` through React Native's `Alert`: Expo UI's SwiftUI `Alert` needs a visible `Alert.Trigger` and did not present from an invisible anchor); Android: M3 `AlertDialog` (`popover` container, confirm in `primary` / `destructive`, buttons `<testID>-confirm` / `<testID>-cancel`). `onDismiss` runs whenever it closes, after a button or a dismiss gesture |
 | `AddButton` | `src/ui/native/add-button.*` | iOS: a `plus` icon button in the navigation bar (`headerRight`, tint `primary`); Android: an M3 `FloatingActionButton` (`primary`, bottom end, `assets/icons/add.xml`). `label` is the accessible name |
 
 Native wrappers have a `.ios.tsx` and an `.android.tsx` file; the plain `.tsx` file re-exports the Android one so
@@ -84,9 +87,17 @@ npx @react-native-reusables/cli@latest add --styling-library uniwind <component>
 
 Pin the added dependencies exactly and adapt the copy to the tokens (no `font-*` family classes, `rounded-lg`
 containers). Do not add RNR versions of controls that exist natively (button, input, switch, checkbox, select,
-tabs, menus, dialogs, popover, tooltip, progress). The RNR `doctor` must pass with no ignored items; the items it still
-reports (`react-native-reanimated`, `tailwindcss-animate`, a `lib/theme.ts` file and `PortalHost`) are handled in #187,
-and anything left unused is removed there. `expo-doctor` passes.
+tabs, menus, dialogs, popover, tooltip, progress). The RNR `doctor` passes with no ignored items:
+
+- `react-native-reanimated` (with `react-native-worklets`) and `react-native-gesture-handler` (Expo SDK 58 versions)
+  run the Android `TransactionRow` swipe actions; `GestureHandlerRootView` wraps the root layout.
+- `src/ui/lib/theme.ts` (the RNR `lib` alias) holds the typed tokens and `NAV_THEME`, which the root layout passes to
+  the navigation `ThemeProvider`.
+- `PortalHost` (`@rn-primitives/portal`) is mounted in the root layout and `tailwindcss-animate` is loaded in
+  `global.css` (`@plugin`): both are part of the RNR setup that `doctor` checks. Our overlays are native and use neither
+  the portal nor the animation classes, so the two exist only for RNR components that may need them.
+
+`expo-doctor` passes.
 
 ## Showcase
 
@@ -97,5 +108,9 @@ i18n keys. Its elements use `ds-` test IDs (`ds-card`, `ds-badge`, `ds-amount-in
 `ds-toggle`, `ds-segmented`, `ds-progress`, `ds-swatches-light`, the inputs `ds-text-field`, `ds-amount-field`,
 `ds-secure-field`, `ds-picker`, `ds-date-picker`, …). `/dev/design-system-list` (from `ds-open-list`, or the deep link
 `budget-lens:///dev/design-system-list`) shows `GroupedList`, `TransactionRow` and `AddButton` with example rows
-(`ds-list`, `ds-row-rent`, `ds-add-button`). Screenshots from the e2e runs are in
-[evidence/119](evidence/119/README.md) and [evidence/182](evidence/182/README.md).
+(`ds-list`, `ds-row-rent`, `ds-add-button`) and the row swipe actions: "Edit" (`ds-row-<id>-edit`) opens an
+`AppSheet` (`ds-edit-sheet`), "Delete" (`ds-row-<id>-delete`) asks in an `AppAlert` (`ds-delete-alert`) and removes the
+row. The showcase's Overlays section has the sheet (`ds-open-sheet`, `ds-sheet`), the alert (`ds-open-alert`,
+`ds-alert`) and the menu (`ds-menu`, `ds-menu-<key>`), with the last result in `ds-overlay-result`. Screenshots from
+the e2e runs are in [evidence/119](evidence/119/README.md), [evidence/182](evidence/182/README.md) and
+[evidence/187](evidence/187/README.md).

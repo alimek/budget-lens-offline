@@ -1,8 +1,11 @@
-/* Budget Lens design tokens, direction C (Indigo), approved in #58. Keep in sync with src/ui/theme.ts
-   (checked by src/ui/theme.test.ts). Token names follow shadcn / React Native Reusables. */
+/* Budget Lens design tokens, direction C (Indigo), approved in #58. Keep in sync with src/ui/lib/theme.ts
+   (checked by src/ui/lib/theme.test.ts). Token names follow shadcn / React Native Reusables. */
 /* biome-ignore-all lint/suspicious/noDuplicateCustomProperties: each @variant block (light, dark) defines the same tokens. */
 @import "tailwindcss";
 @import "uniwind";
+/* React Native Reusables setup (checked by its `doctor`):
+   the `animate-in` / `fade-in` / … utilities of RNR components. */
+@plugin "tailwindcss-animate";
 
 @layer theme {
   :root {

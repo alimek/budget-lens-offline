@@ -4,8 +4,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { type CalendarDate, formatCalendarDate } from "@/ui/calendar-date";
+import { Text } from "@/ui/components/text";
 import { AddButton } from "@/ui/native/add-button";
+import { AppAlert } from "@/ui/native/alert";
 import { GroupedList, ListSection, TransactionRow } from "@/ui/native/list";
+import { AppSheet } from "@/ui/native/sheet";
+import type { MenuAction } from "@/ui/native/types";
 import { useLanguage } from "@/ui/use-language";
 
 interface ExampleRow {
@@ -19,7 +23,18 @@ interface ExampleRow {
 
 type SetRows = (update: (rows: ExampleRow[]) => ExampleRow[]) => void;
 
-/** Dev-only example of the native grouped list, transaction rows and the add button (#182). */
+type RowActionKey = "edit" | "delete";
+
+/** The row that a swipe action opened the sheet or the delete alert for. */
+interface Target {
+  row: ExampleRow;
+  setRows: SetRows;
+}
+
+/**
+ * Dev-only example of the native grouped list, transaction rows, the add button (#182) and the row swipe actions:
+ * "Edit" opens a sheet, "Delete" asks in an alert and removes the row (#187).
+ */
 export default function DesignSystemListScreen() {
   const { t } = useTranslation();
   const lang = useLanguage();
@@ -51,7 +66,14 @@ export default function DesignSystemListScreen() {
       paid: true,
     },
   ]);
+  const [editing, setEditing] = useState<Target | null>(null);
+  const [deleting, setDeleting] = useState<Target | null>(null);
   if (!__DEV__) return <Redirect href="/" />;
+
+  const rowActions: readonly MenuAction<RowActionKey>[] = [
+    { key: "delete", label: t("dev.designSystem.delete"), destructive: true },
+    { key: "edit", label: t("dev.designSystem.edit") },
+  ];
 
   const renderRow = (row: ExampleRow, setRows: SetRows) => (
     <TransactionRow
@@ -67,6 +89,8 @@ export default function DesignSystemListScreen() {
       onPaidChange={(paid) =>
         setRows((rows) => rows.map((other) => (other.id === row.id ? { ...other, paid } : other)))
       }
+      actions={rowActions}
+      onAction={(key) => (key === "edit" ? setEditing : setDeleting)({ row, setRows })}
     />
   );
 
@@ -96,6 +120,27 @@ export default function DesignSystemListScreen() {
         </ListSection>
       </GroupedList>
       <AddButton testID="ds-add-button" label={t("dev.designSystem.addItem")} onPress={addItem} />
+      <AppSheet
+        testID="ds-edit-sheet"
+        visible={editing !== null}
+        onDismiss={() => setEditing(null)}
+        title={t("dev.designSystem.editing", { title: editing?.row.title ?? "" })}
+      >
+        <Text variant="body">{t("dev.designSystem.editBody")}</Text>
+      </AppSheet>
+      <AppAlert
+        testID="ds-delete-alert"
+        visible={deleting !== null}
+        title={t("dev.designSystem.deletePrompt", { title: deleting?.row.title ?? "" })}
+        message={t("dev.designSystem.deleteMessage")}
+        confirmLabel={t("dev.designSystem.delete")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={() =>
+          deleting?.setRows((rows) => rows.filter((other) => other.id !== deleting.row.id))
+        }
+        onDismiss={() => setDeleting(null)}
+      />
     </View>
   );
 }

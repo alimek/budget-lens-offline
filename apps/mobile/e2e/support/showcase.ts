@@ -24,7 +24,7 @@ export async function openShowcase({ app, screen, platform }: Fixtures) {
 }
 
 /** Waits for animations (scroll momentum, navigation transitions) that the engine does not wait for. */
-function settle(ms = 600) {
+export function settle(ms = 600) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -67,5 +67,140 @@ async function confirmOpenInApp(screen: Fixtures["screen"], target: Locator) {
     if (await target.isVisible()) return;
     if (await alert.isVisible()) return alert.getByRole("button").last().tap();
     await settle(250);
+  }
+}
+
+/**
+ * Swipes a list row to the left to reveal its actions. The row's test ID sits on its paid control, which on iOS is
+ * only the small status button (a swipe there would be a tap), so the swipe runs across the list at the row's height.
+ */
+export async function swipeRowLeft(screen: Fixtures["screen"], row: Locator) {
+  await expect(row).toBeVisible();
+  const list = await screen.getByTestId("ds-list").boundingBox();
+  const box = await row.boundingBox();
+  if (!list || !box) throw new Error("the list or the row has no bounds");
+  const y = box.y + box.height / 2;
+  await screen.swipe({
+    from: { x: list.x + list.width * 0.85, y },
+    to: { x: list.x + list.width * 0.25, y },
+    duration: 400,
+  });
+  await settle();
+}
+
+/**
+ * The tappable node of an Expo UI button: on Android the test ID sits on a wrapper around the Compose button (see
+ * docs/testing.md), on iOS on the button itself.
+ */
+export function nativeButton(
+  { screen, platform }: Pick<Fixtures, "screen" | "platform">,
+  testID: string,
+) {
+  const node = screen.getByTestId(testID);
+  return platform === "android" ? node.getByRole("button") : node;
+}
+
+/**
+ * The node that carries a Compose `semantics` content description: Compose exposes it on a child of the test ID
+ * node when the control also has text (as with the paid checkbox, docs/evidence/182).
+ */
+export function describedNode(
+  { screen, platform }: Pick<Fixtures, "screen" | "platform">,
+  testID: string,
+) {
+  const node = screen.getByTestId(testID);
+  return platform === "android" ? node.getByRole("group").first() : node;
+}
+
+/**
+ * An `AppAlert` and its confirm button. On iOS it is the system alert (React Native `Alert`), which has no
+ * identifiers: XCUITest exposes it as a group named by its title, and the confirm button is its last. On Android the
+ * Compose dialog's confirm button carries `<testID>-confirm`.
+ */
+export function appAlert(
+  fixtures: Pick<Fixtures, "screen" | "platform">,
+  testID: string,
+  title: string,
+) {
+  if (fixtures.platform === "android") {
+    const confirm = nativeButton(fixtures, `${testID}-confirm`);
+    return { alert: confirm, confirm };
+  }
+  const alert = fixtures.screen.getByRole("group", title);
+  return { alert, confirm: alert.getByRole("button").last() };
+}
+
+/** Showcase nodes from top to bottom, close enough that scrolling to each in turn leaves no part of the page out. */
+const showcaseAnchors = [
+  "ds-toggle",
+  "ds-progress-over",
+  "ds-section-inputs",
+  "ds-amount-field",
+  "ds-picker",
+  "ds-date-picker",
+  "ds-section-overlays",
+  "ds-overlay-result",
+  "ds-section-lists",
+  "ds-section-amounts",
+  "ds-amount-zero",
+  "ds-section-typography",
+  "ds-type-title-1",
+  "ds-type-title-3",
+  "ds-type-body",
+  "ds-type-subheadline",
+  "ds-type-caption",
+  "ds-section-colors",
+  "ds-swatches-light",
+  "ds-swatches-dark",
+];
+
+/**
+ * Scrolls the showcase until `target` is visible. At large text sizes the engine's scroll on iOS can start on an
+ * embedded SwiftUI control, which swallows it ("scroll down moved nothing"); slow drags along the page's left margin,
+ * where there is only the scroll view, are the fallback.
+ */
+export async function scrollShowcaseTo(screen: Fixtures["screen"], target: Locator) {
+  try {
+    await screen.scrollUntilVisible(target);
+  } catch (error) {
+    if (!(await dragAlongMargin(screen, target))) throw error;
+  }
+}
+
+/** Drags the showcase up along its left margin until `target` is visible; false if it never shows. */
+async function dragAlongMargin(screen: Fixtures["screen"], target: Locator) {
+  const page = await screen.getByTestId("screen-design-system").boundingBox();
+  if (!page) return false;
+  const x = page.x + 6;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    if (await target.isVisible()) return true;
+    await screen.swipe({
+      from: { x, y: page.y + page.height * 0.75 },
+      to: { x, y: page.y + page.height * 0.35 },
+      duration: 1200,
+    });
+    await settle();
+  }
+  return target.isVisible();
+}
+
+/**
+ * Captures the whole showcase page by page (`<name>-1`, `<name>-2`, …) for the review evidence: it scrolls to each
+ * anchor in turn and captures each new position. The engine's scroll is used because plain swipes on iOS were
+ * sometimes dropped right after an appearance switch.
+ */
+export async function captureShowcase(
+  { app, screen }: Pick<Fixtures, "app" | "screen">,
+  name: string,
+) {
+  let index = 1;
+  await app.screenshot(`${name}-${index}`);
+  for (const id of showcaseAnchors) {
+    const anchor = screen.getByTestId(id);
+    if (await anchor.isVisible()) continue;
+    await scrollShowcaseTo(screen, anchor);
+    await settle();
+    index += 1;
+    await app.screenshot(`${name}-${index}`);
   }
 }

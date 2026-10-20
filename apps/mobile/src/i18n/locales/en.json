@@ -55,7 +55,25 @@
       "salary": "Salary",
       "newItem": "New item {{number}}",
       "due": "Due {{date}}",
-      "addItem": "Add item"
+      "addItem": "Add item",
+      "overlays": "Overlays",
+      "openSheet": "Show details",
+      "sheetTitle": "Rent, October 2026",
+      "sheetBody": "Due 10 October. Paid by bank transfer.",
+      "done": "Done",
+      "closeMonthPrompt": "Close October?",
+      "closeMonthMessage": "Items and amounts of October can no longer be changed.",
+      "moreActions": "More actions",
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "lastAction": "Last action: {{action}}",
+      "noAction": "none",
+      "monthClosed": "Month closed",
+      "deletePrompt": "Delete “{{title}}”?",
+      "deleteMessage": "The item is removed from every month.",
+      "editing": "Editing: {{title}}",
+      "editBody": "The item editor opens here."
     }
   },
   "budget": {
@@ -67,7 +85,8 @@
     "cancel": "Cancel"
   },
   "transaction": {
-    "paidLabel": "Paid: {{title}}"
+    "paidLabel": "Paid: {{title}}",
+    "actionLabel": "{{action}}: {{title}}"
   },
   "amountInput": {
     "empty": "Enter an amount",

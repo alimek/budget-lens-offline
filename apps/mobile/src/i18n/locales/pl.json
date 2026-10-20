@@ -55,7 +55,25 @@
       "salary": "Wynagrodzenie",
       "newItem": "Nowa pozycja {{number}}",
       "due": "Termin: {{date}}",
-      "addItem": "Dodaj pozycję"
+      "addItem": "Dodaj pozycję",
+      "overlays": "Nakładki",
+      "openSheet": "Pokaż szczegóły",
+      "sheetTitle": "Czynsz, październik 2026",
+      "sheetBody": "Termin 10 października. Płatne przelewem.",
+      "done": "Gotowe",
+      "closeMonthPrompt": "Zamknąć październik?",
+      "closeMonthMessage": "Pozycji i kwot z października nie będzie można już zmienić.",
+      "moreActions": "Więcej akcji",
+      "edit": "Edytuj",
+      "duplicate": "Duplikuj",
+      "delete": "Usuń",
+      "lastAction": "Ostatnia akcja: {{action}}",
+      "noAction": "brak",
+      "monthClosed": "Miesiąc zamknięty",
+      "deletePrompt": "Usunąć „{{title}}”?",
+      "deleteMessage": "Pozycja zostanie usunięta ze wszystkich miesięcy.",
+      "editing": "Edycja: {{title}}",
+      "editBody": "Tutaj otworzy się edytor pozycji."
     }
   },
   "budget": {
@@ -67,7 +85,8 @@
     "cancel": "Anuluj"
   },
   "transaction": {
-    "paidLabel": "Zapłacone: {{title}}"
+    "paidLabel": "Zapłacone: {{title}}",
+    "actionLabel": "{{action}}: {{title}}"
   },
   "amountInput": {
     "empty": "Wpisz kwotę",

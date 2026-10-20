@@ -1,6 +1,11 @@
 import { test } from "@e2e-dev/mobile";
 import { expect } from "e2e";
-import { openListExample, openShowcase } from "./support/showcase";
+import {
+  captureShowcase,
+  openListExample,
+  openShowcase,
+  scrollShowcaseTo,
+} from "./support/showcase";
 
 // Needs the system text size raised before the run (docs/testing.md#large-text): Android font scale 2.0,
 // iOS accessibility size AX2 (about 200% of the default body size).
@@ -35,8 +40,11 @@ test("keeps every showcase control reachable at 200% text size", options, async 
     "ds-amount-field",
     "ds-picker",
     "ds-date-picker",
+    "ds-open-sheet",
+    "ds-open-alert",
+    "ds-menu",
   ]) {
-    await screen.scrollUntilVisible(screen.getByTestId(id));
+    await scrollShowcaseTo(screen, screen.getByTestId(id));
     await expect(screen.getByTestId(id)).toBeVisible();
   }
   await app.screenshot("large-text-inputs");
@@ -52,4 +60,12 @@ test("keeps the list example usable at 200% text size", options, async (fixtures
   // Assert
   await expect(screen.getByTestId("ds-row-rent")).toBeVisible();
   await app.screenshot("large-text-list");
+});
+
+test("captures the whole showcase at 200% text size", options, async (fixtures) => {
+  // Arrange
+  await openShowcase(fixtures);
+
+  // Act / Assert: every page down to the last section is captured.
+  await captureShowcase(fixtures, "large-text-showcase");
 });

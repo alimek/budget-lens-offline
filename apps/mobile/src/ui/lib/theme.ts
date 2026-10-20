@@ -76,8 +76,41 @@ export const colors: Readonly<Record<ColorScheme, ThemeColors>> = {
   },
 };
 
-/** Corner radii in points for custom elements only; native controls keep their platform shapes. */
+/**
+ * Corner radius tokens (`--radius-*` in `global.css`) in points, for custom elements only; native controls keep their
+ * platform shapes.
+ */
 export const radii = { sm: 6, md: 8, lg: 12 } as const;
+
+/** The colours React Navigation takes (`Theme["colors"]` in `expo-router`). */
+export interface NavigationColors {
+  primary: string;
+  background: string;
+  card: string;
+  text: string;
+  border: string;
+  notification: string;
+}
+
+/**
+ * Navigation theme colours (stack headers, screen backgrounds) from the tokens. The root layout passes them to the
+ * `ThemeProvider`; React Native Reusables expects this `NAV_THEME` in its theme file.
+ */
+export const NAV_THEME: Readonly<Record<ColorScheme, NavigationColors>> = {
+  light: navigationColors(colors.light),
+  dark: navigationColors(colors.dark),
+};
+
+function navigationColors(tokens: ThemeColors): NavigationColors {
+  return {
+    primary: tokens.primary,
+    background: tokens.background,
+    card: tokens.card,
+    text: tokens.foreground,
+    border: tokens.border,
+    notification: tokens.destructive,
+  };
+}
 
 /** Resolves React Native's colour scheme (`null` or `"unspecified"` when unknown) to a token set. */
 export function resolveColorScheme(scheme: string | null | undefined): ColorScheme {

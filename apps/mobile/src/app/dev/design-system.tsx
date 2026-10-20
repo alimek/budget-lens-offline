@@ -12,13 +12,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/
 import { Screen } from "@/ui/components/screen";
 import { Separator } from "@/ui/components/separator";
 import { Text } from "@/ui/components/text";
+import { type ColorScheme, type ColorToken, colors } from "@/ui/lib/theme";
+import { AppAlert } from "@/ui/native/alert";
 import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
+import { AppContextMenu } from "@/ui/native/context-menu";
 import { AppDatePicker } from "@/ui/native/date-picker";
 import { AppPicker } from "@/ui/native/picker";
 import { SegmentedControl } from "@/ui/native/segmented-control";
+import { AppSheet } from "@/ui/native/sheet";
 import { AppTextField } from "@/ui/native/text-field";
 import { AppToggle } from "@/ui/native/toggle";
-import { type ColorScheme, type ColorToken, colors } from "@/ui/theme";
 import type { TypeVariant } from "@/ui/typography";
 import { useStackedRows } from "@/ui/use-stacked-rows";
 
@@ -181,6 +184,9 @@ export default function DesignSystemScreen() {
           />
         </Card>
       </Section>
+      <Section title={t("dev.designSystem.overlays")} testID="ds-section-overlays">
+        <Overlays />
+      </Section>
       <Section title={t("dev.designSystem.lists")} testID="ds-section-lists">
         <SecondaryButton
           testID="ds-open-list"
@@ -272,5 +278,67 @@ function SummaryRow({
       </Text>
       {children}
     </View>
+  );
+}
+
+type MenuKey = "edit" | "duplicate" | "delete";
+
+/** The overlay wrappers: a sheet, a confirmation alert and a menu of actions; the last result is shown as text. */
+function Overlays() {
+  const { t } = useTranslation();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [lastAction, setLastAction] = useState<string | null>(null);
+  return (
+    <Card>
+      <View className="flex-row flex-wrap gap-3">
+        <PrimaryButton
+          testID="ds-open-sheet"
+          label={t("dev.designSystem.openSheet")}
+          onPress={() => setSheetOpen(true)}
+        />
+        <SecondaryButton
+          testID="ds-open-alert"
+          label={t("dev.designSystem.secondaryAction")}
+          onPress={() => setAlertOpen(true)}
+        />
+        <AppContextMenu<MenuKey>
+          testID="ds-menu"
+          label={t("dev.designSystem.moreActions")}
+          actions={[
+            { key: "edit", label: t("dev.designSystem.edit") },
+            { key: "duplicate", label: t("dev.designSystem.duplicate") },
+            { key: "delete", label: t("dev.designSystem.delete"), destructive: true },
+          ]}
+          onAction={(key) => setLastAction(t(`dev.designSystem.${key}`))}
+        />
+      </View>
+      <Text testID="ds-overlay-result" variant="footnote" className="text-muted-foreground">
+        {t("dev.designSystem.lastAction", { action: lastAction ?? t("dev.designSystem.noAction") })}
+      </Text>
+      <AppSheet
+        testID="ds-sheet"
+        visible={sheetOpen}
+        onDismiss={() => setSheetOpen(false)}
+        title={t("dev.designSystem.sheetTitle")}
+      >
+        <Text variant="body">{t("dev.designSystem.sheetBody")}</Text>
+        <PrimaryButton
+          testID="ds-sheet-done"
+          label={t("dev.designSystem.done")}
+          onPress={() => setSheetOpen(false)}
+        />
+      </AppSheet>
+      <AppAlert
+        testID="ds-alert"
+        visible={alertOpen}
+        title={t("dev.designSystem.closeMonthPrompt")}
+        message={t("dev.designSystem.closeMonthMessage")}
+        confirmLabel={t("dev.designSystem.secondaryAction")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => setLastAction(t("dev.designSystem.monthClosed"))}
+        onDismiss={() => setAlertOpen(false)}
+      />
+    </Card>
   );
 }

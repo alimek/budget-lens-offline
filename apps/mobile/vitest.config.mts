@@ -11,7 +11,7 @@ export default defineConfig({
       include: [
         "src/ui/amount.ts",
         "src/ui/progress.ts",
-        "src/ui/theme.ts",
+        "src/ui/lib/theme.ts",
         "src/ui/typography.ts",
         "src/updates/update-check.ts",
       ],

@@ -1,6 +1,14 @@
 import { test } from "@e2e-dev/mobile";
 import { expect } from "e2e";
-import { openListExample, tapUntilVisible } from "./support/showcase";
+import {
+  appAlert,
+  describedNode,
+  nativeButton,
+  openListExample,
+  settle,
+  swipeRowLeft,
+  tapUntilVisible,
+} from "./support/showcase";
 
 test("shows grouped transaction rows and toggles the paid state", async (fixtures) => {
   // Arrange
@@ -35,4 +43,43 @@ test("adds a row with the add button", async (fixtures) => {
   // Act / Assert
   await tapUntilVisible(add, screen.getByTestId("ds-row-new-1"));
   await app.screenshot("list-added");
+});
+
+test("deletes a row with its swipe action after confirming", async (fixtures) => {
+  // Arrange
+  const { app, screen } = fixtures;
+  await openListExample(fixtures);
+  const rent = screen.getByTestId("ds-row-rent");
+  const remove = nativeButton(fixtures, "ds-row-rent-delete");
+  await swipeRowLeft(screen, rent);
+  // Named "<action>: <title>" ("Delete: Rent"); on Android on the child node Compose creates for the description.
+  await expect(describedNode(fixtures, "ds-row-rent-delete")).toHaveAccessibleName(/\S/);
+  await app.screenshot("list-swipe");
+
+  // Act
+  const { alert, confirm } = appAlert(fixtures, "ds-delete-alert", "Delete “Rent”?");
+  await tapUntilVisible(remove, alert);
+  await settle();
+  await confirm.tap();
+
+  // Assert
+  await expect(rent).toHaveCount(0);
+  await expect(screen.getByTestId("ds-row-internet")).toBeVisible();
+});
+
+test("opens the edit sheet from a swipe action", async (fixtures) => {
+  // Arrange
+  const { app, screen } = fixtures;
+  await openListExample(fixtures);
+  await swipeRowLeft(screen, screen.getByTestId("ds-row-internet"));
+
+  // Act
+  await tapUntilVisible(
+    nativeButton(fixtures, "ds-row-internet-edit"),
+    screen.getByTestId("ds-edit-sheet"),
+  );
+
+  // Assert
+  await settle();
+  await app.screenshot("list-edit-sheet");
 });
