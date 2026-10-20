@@ -176,6 +176,11 @@ accessibility without translated text (the toggle has a non-empty accessible nam
 budget progress bars are named and show their status text), scrolls to the type scale and the colour tokens with
 `screen.scrollUntilVisible` (the mobile engine has no `scrollIntoView`) and takes the screenshots used as the visual
 reference. The scaffold tab tests take one screenshot per tab (`settings` included).
+`design-system-inputs.e2e.ts` (#182) checks the text, amount, secure, picker and date fields by test ID and
+accessible name, the amount validation error appearing and clearing, the native picker menu and the native
+calendar. `design-system-list.e2e.ts` opens the list example by deep
+link (`device.openLink`; on iOS it confirms the "Open in …?" alert when the simulator shows it) and checks the paid
+toggle (named on both platforms) and the add button. Shared steps are in `e2e/support/showcase.ts`.
 Fallow lists the config and test glob as real runner entry points (it has no e2e plugin).
 
 **Requirements:** Node from `.nvmrc` (the `e2e` package needs Node `^22.22.3 || >=24.8.0`), pnpm from
@@ -200,6 +205,27 @@ notification icons hidden), so captures of an unchanged screen can be identical;
 code, attach that test's `trace.md` (run ID and steps) as well. If they show a clock other than 9:41, reset demo
 mode on the dedicated emulator once (`adb -s <emulator-serial> shell am broadcast -a com.android.systemui.demo -e
 command enter`, then the same with `exit`); see [evidence/15](evidence/15/README.md).
+
+**Known capture quirks:** screenshots black out secure text fields (`SecureField`, password fields), including
+ones on a screen underneath, which is why the list example is opened by deep link. On iOS the first gesture right
+after `app.screenshot()` can be dropped by SwiftUI lists and scroll views, so tests take their captures after the
+interactions they check.
+
+### Large text (200%)
+
+`apps/mobile/e2e/large-text.e2e.ts` is skipped unless `E2E_LARGE_TEXT=1`: the e2e API cannot change the system text
+size, so set it on the dedicated devices first and reset it afterwards:
+
+```sh
+adb -s <BudgetLens-emulator-serial> shell settings put system font_scale 2.0   # reset: 1.0
+xcrun simctl ui <BudgetLens-simulator> content_size accessibility-extra-large  # AX2, about 200%; reset: large
+cd apps/mobile
+E2E_LARGE_TEXT=1 pnpm exec e2e run --target android --output .e2e/android-large-text e2e/large-text.e2e.ts
+E2E_LARGE_TEXT=1 pnpm exec e2e run --target ios --output .e2e/ios-large-text e2e/large-text.e2e.ts
+```
+
+It checks that every showcase control is reachable by scrolling and captures the components, the inputs and the
+list example at that size.
 
 **`.e2e/cache`:** agent steps (`agent.act()` / `agent.assert()`) record their resolved actions in
 `apps/mobile/.e2e/cache/`, one file per step key, so later runs replay them without calling a model. This directory is

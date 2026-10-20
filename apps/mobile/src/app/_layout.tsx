@@ -41,6 +41,14 @@ function RootStack() {
           title: t("dev.designSystem.title"),
         }}
       />
+      <Stack.Screen
+        name="dev/design-system-list"
+        options={{
+          headerShown: true,
+          headerBackButtonDisplayMode: "minimal",
+          title: t("dev.designSystem.listTitle"),
+        }}
+      />
     </Stack>
   );
 }

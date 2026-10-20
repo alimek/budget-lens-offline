@@ -36,11 +36,43 @@
       "onlyThisMonth": "Only this month",
       "fromThisMonth": "From this month",
       "groceries": "Groceries",
-      "eatingOut": "Eating out"
+      "eatingOut": "Eating out",
+      "inputs": "Inputs",
+      "name": "Name",
+      "namePlaceholder": "e.g. Rent",
+      "amount": "Amount",
+      "recoverySecret": "Recovery secret",
+      "recurrence": "Repeats",
+      "once": "Once",
+      "monthly": "Every month",
+      "yearly": "Every year",
+      "dueDate": "Due date",
+      "lists": "Lists",
+      "openList": "Open list example",
+      "listTitle": "List example",
+      "rent": "Rent",
+      "internet": "Internet",
+      "salary": "Salary",
+      "newItem": "New item {{number}}",
+      "due": "Due {{date}}",
+      "addItem": "Add item"
     }
   },
   "budget": {
     "used": "{{percent}}% used",
     "overBudget": "Over budget: {{percent}}% used"
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "transaction": {
+    "paidLabel": "Paid: {{title}}"
+  },
+  "amountInput": {
+    "empty": "Enter an amount",
+    "invalidFormat": "Enter a number, e.g. 1 234,56",
+    "tooManyFractionDigits": "Use at most 2 decimal places",
+    "outOfRange": "This amount is too large"
   }
 }
