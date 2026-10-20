@@ -45,7 +45,8 @@ export function AppTextField({
     textFieldStyle("roundedBorder"),
     tint(theme.primary),
     accessibilityLabel(label),
-    ...(error ? [accessibilityHint(error)] : []),
+    // Always present (empty without an error): changing the modifier list mid-typing resets the field's focus.
+    accessibilityHint(error ?? ""),
     ...(kind === "decimal" ? [keyboardType("decimal-pad")] : []),
   ];
   const Field = kind === "secure" ? SecureField : TextField;
