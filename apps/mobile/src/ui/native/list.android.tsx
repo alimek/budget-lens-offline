@@ -102,7 +102,7 @@ function RowItem({
       accessibilityRole="checkbox"
       accessibilityLabel={t("transaction.paidLabel", { title })}
       accessibilityState={{ checked: paid }}
-      accessibilityValue={{ text: [meta, formatted.text].filter(Boolean).join(", ") }}
+      accessibilityHint={[meta, formatted.text].filter(Boolean).join(", ")}
       onPress={() => onPaidChange(!paid)}
       android_ripple={{ color: theme["muted-foreground"], foreground: true }}
     >
