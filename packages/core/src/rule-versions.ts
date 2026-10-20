@@ -191,23 +191,6 @@ function firstClosedOccurrence(
   return occurrencesInRange(version.schedule, version.effectiveFrom, to)[0]?.month;
 }
 
-/**
- * Whether the item has an occurrence in a closed month. Every month before the active month counts as closed:
- * months close in sequence, and no item starts before the active month (see {@link planRuleEdit}).
- */
-const hasClosedHistory = (versions: readonly RuleVersion[], activeMonth: YearMonth): boolean =>
-  windows(versions).some((window) => firstClosedOccurrence(window, activeMonth) !== undefined);
-
-export type RuleEditScope = "from-month" | "fix-everywhere";
-
-/**
- * The edit scope the item form selects first: "from this month on" when the item has closed history, otherwise
- * "fix everywhere" (#40, Q8). Expects valid versions.
- */
-export function defaultEditScope(item: VersionedItem, activeMonth: YearMonth): RuleEditScope {
-  return hasClosedHistory(item.versions, activeMonth) ? "from-month" : "fix-everywhere";
-}
-
 /** New values of versioned fields; a missing field keeps its current value. */
 export interface RulePatch {
   readonly amount?: MinorUnits;

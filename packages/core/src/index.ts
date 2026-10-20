@@ -99,7 +99,6 @@ export type {
   RuleEditNotice,
   RuleEditPlan,
   RuleEditResult,
-  RuleEditScope,
   RuleEditState,
   RulePatch,
   RuleVersion,
@@ -108,7 +107,6 @@ export type {
 } from "./rule-versions";
 export {
   applyRuleEditPlan,
-  defaultEditScope,
   itemInForce,
   planRuleEdit,
   resolveVersionedOccurrences,

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   applyRuleEditPlan,
-  defaultEditScope,
   type OccurrenceOverride,
   planRuleEdit,
   type RecurringSchedule,
@@ -504,22 +503,5 @@ describe("planRuleEdit", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.plan.upsertVersions).toEqual([version(ACTIVE, 205_000, monthly(ACTIVE))]);
-  });
-});
-
-describe("defaultEditScope", () => {
-  it.each([
-    ["an item with closed history", rentState.item, "from-month"],
-    [
-      "an item that starts in the active month",
-      rent(version(ACTIVE, 1, monthly(ACTIVE))),
-      "fix-everywhere",
-    ],
-  ])("selects the scope for %s", (_case, item, expected) => {
-    // Act
-    const scope = defaultEditScope(item, ym(ACTIVE));
-
-    // Assert
-    expect(scope).toBe(expected);
   });
 });
