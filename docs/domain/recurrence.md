@@ -45,6 +45,9 @@ Functions (pure, the month range is always passed in):
 
 `occurrencesInRange` and `isActiveInMonth` throw a `RangeError` for an invalid schedule.
 
+An item's schedule can change over time: each [rule version](rule-versions.md) (#80) holds an amount and a schedule
+from an `effectiveFrom` month, and the schedule decides the occurrence months inside that version's window.
+
 ## Legacy data
 
 Legacy data is **not imported** and the legacy migrations are not ported (owner decision). The legacy rules are

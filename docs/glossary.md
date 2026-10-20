@@ -10,6 +10,9 @@ Domain terms used across the code and docs. Details are in [domain/](domain/).
 | Occurrence | A single month's instance of an item (`{ month, day? }`). | [recurrence](domain/recurrence.md) |
 | `YearMonth` | A calendar month written as `YYYY-MM`; the only month format in the domain. | [recurrence](domain/recurrence.md) |
 | Schedule | One-time (`month`) or recurring (`intervalMonths`, `anchor`, optional `endMonth` and `dayOfMonth`) rule of an item. | [recurrence](domain/recurrence.md) |
+| Rule version | The amount and schedule of an item from an `effectiveFrom` month until the next version; the one in force in a month has the greatest `effectiveFrom` ≤ that month. "From this month on" edits add a version. | [rule-versions](domain/rule-versions.md) |
+| Edit scope | How far an item edit reaches: only this month (override), from a month on, stop from a month, a scheduled change, or fix everywhere. | [rule-versions](domain/rule-versions.md) |
+| Closed-month invariant | An edit is accepted only if it changes the resolved occurrences of no closed month. | [rule-versions](domain/rule-versions.md) |
 | Occurrence override | Change of the amount of, or skipping, one occurrence in one month (`occurrence_overrides`). Replaces the legacy name-based "(nadpisanie)" items. | [occurrence-overrides](domain/occurrence-overrides.md) |
 | Payment status | Whether an expense was paid / an income received for `(itemType, itemId, month)`; missing means unsettled. | [month-closing](domain/month-closing.md) |
 | Forecast | Month-by-month projection of the balance (rolling balance, total funds, warnings). | [forecast](domain/forecast.md) |
