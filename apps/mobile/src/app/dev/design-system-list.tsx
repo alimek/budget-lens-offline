@@ -1,4 +1,4 @@
-import { type MinorUnits, toMinorUnits } from "@budget-lens/core";
+import { type CurrencyCode, type MinorUnits, toMinorUnits } from "@budget-lens/core";
 import { Redirect } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ interface ExampleRow {
   id: string;
   title: string;
   amount: MinorUnits;
+  currency: CurrencyCode;
   paid: boolean;
   due?: CalendarDate;
 }
@@ -27,13 +28,16 @@ export default function DesignSystemListScreen() {
       id: "rent",
       title: t("dev.designSystem.rent"),
       amount: toMinorUnits(-200_000),
+      currency: "PLN",
       paid: false,
       due: "2026-10-10",
     },
     {
       id: "internet",
       title: t("dev.designSystem.internet"),
-      amount: toMinorUnits(-8_999),
+      amount: toMinorUnits(-1_999),
+      // A foreign-currency item: each row is formatted in its own currency.
+      currency: "EUR",
       paid: true,
       due: "2026-10-15",
     },
@@ -43,6 +47,7 @@ export default function DesignSystemListScreen() {
       id: "salary",
       title: t("dev.designSystem.salary"),
       amount: toMinorUnits(850_000),
+      currency: "PLN",
       paid: true,
     },
   ]);
@@ -57,6 +62,7 @@ export default function DesignSystemListScreen() {
         row.due ? t("dev.designSystem.due", { date: formatCalendarDate(row.due, lang) }) : undefined
       }
       amount={row.amount}
+      currency={row.currency}
       paid={row.paid}
       onPaidChange={(paid) =>
         setRows((rows) => rows.map((other) => (other.id === row.id ? { ...other, paid } : other)))
@@ -73,6 +79,7 @@ export default function DesignSystemListScreen() {
           id: `new-${number}`,
           title: t("dev.designSystem.newItem", { number }),
           amount: toMinorUnits(-1_000),
+          currency: "PLN",
           paid: false,
         },
       ];

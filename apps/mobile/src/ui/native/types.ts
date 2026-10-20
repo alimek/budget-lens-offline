@@ -1,4 +1,4 @@
-import type { MinorUnits } from "@budget-lens/core";
+import type { CurrencyCode, MinorUnits } from "@budget-lens/core";
 import type { ReactNode } from "react";
 import type { CalendarDate } from "../calendar-date";
 
@@ -95,6 +95,8 @@ export interface TransactionRowProps {
   /** Secondary line, e.g. the due date. */
   meta?: string | undefined;
   amount: MinorUnits;
+  /** The item's own currency; the amount is formatted in it. */
+  currency: CurrencyCode;
   paid: boolean;
   onPaidChange: (paid: boolean) => void;
   /** Test ID of the paid control (the row on Android, the status button on iOS). */

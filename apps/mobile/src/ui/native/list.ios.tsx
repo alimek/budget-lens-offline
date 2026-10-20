@@ -64,6 +64,7 @@ export function TransactionRow({
   title,
   meta,
   amount,
+  currency,
   paid,
   onPaidChange,
   testID,
@@ -71,7 +72,7 @@ export function TransactionRow({
   const theme = useThemeColors();
   const { t } = useTranslation();
   const lang = useLanguage();
-  const formatted = formatAmount(amount, { lang, currency: "PLN" });
+  const formatted = formatAmount(amount, { lang, currency });
   const amountColor = theme[toneColorToken(formatted.tone)];
   const stacked = useStackedRows();
   const status = paid ? PAID : UNPAID;
