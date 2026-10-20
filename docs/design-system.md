@@ -91,8 +91,8 @@ tabs, menus, dialogs, popover, tooltip, progress). The RNR `doctor` passes with 
 
 - `react-native-reanimated` (with `react-native-worklets`) and `react-native-gesture-handler` (Expo SDK 58 versions)
   run the Android `TransactionRow` swipe actions; `GestureHandlerRootView` wraps the root layout.
-- `src/ui/lib/theme.ts` (the RNR `lib` alias) holds the typed tokens and `NAV_THEME`, which the root layout passes to the
-  navigation `ThemeProvider`.
+- `src/ui/lib/theme.ts` (the RNR `lib` alias) holds the typed tokens and `NAV_THEME`, which the root layout passes to
+  the navigation `ThemeProvider`.
 - `PortalHost` (`@rn-primitives/portal`) is mounted in the root layout and `tailwindcss-animate` is a dev dependency:
   both are part of the RNR setup that `doctor` checks. Our overlays are native and render neither into the portal nor
   with animation classes, so the two exist only for RNR components that may need them.
