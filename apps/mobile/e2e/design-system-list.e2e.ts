@@ -60,7 +60,8 @@ test("deletes a row with its swipe action after confirming", async (fixtures) =>
     }
   }
   await swipeRowLeft(screen, rent);
-  await expect(rent).toBeChecked({ checked: false });
+  // SwiftUI moves its small paid control offscreen while open; Android keeps the row checkbox exposed.
+  if (fixtures.platform === "android") await expect(rent).toBeChecked({ checked: false });
   // Named "<action>: <title>" ("Delete: Rent"); on Android on the child node Compose creates for the description.
   await expect(describedNode(fixtures, "ds-row-rent-delete")).toHaveAccessibleName("Delete: Rent");
   await app.screenshot("list-swipe");
@@ -82,7 +83,7 @@ test("opens the edit sheet from a swipe action", async (fixtures) => {
   await openListExample(fixtures);
   const internet = screen.getByTestId("ds-row-internet");
   await swipeRowLeft(screen, internet);
-  await expect(internet).toBeChecked();
+  if (fixtures.platform === "android") await expect(internet).toBeChecked();
 
   // Act
   await tapUntilVisible(
