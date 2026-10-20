@@ -33,7 +33,7 @@ Android) and `expo-eas-client` 58.0.2, the request carries these headers:
 
 | Header | Content |
 | --- | --- |
-| `EAS-Client-ID` | A random UUID created once per installation and kept on the device (iOS `UserDefaults`, Android `SharedPreferences`); a **persistent per-install identifier**, sent on every check |
+| `EAS-Client-ID` | A random UUID created on first use and kept on the device (see [Installation ID storage](#installation-id-storage)); a **persistent per-install identifier**, sent on every check |
 | `Expo-Fatal-Error` | The message of the fatal JavaScript error that ended the previous launch, truncated to 1024 characters; only when there was one |
 | `Expo-Recent-Failed-Update-IDs` | IDs of updates that recently failed to launch, if any |
 | `Expo-Current-Update-ID`, `Expo-Embedded-Update-ID` | The running update and the update embedded in the build (`Expo-Requested-Update-ID` on asset requests) |
@@ -48,8 +48,25 @@ crash. Local
 builds without a channel (for example `expo run:ios`) and development bundles make no request. How to switch the
 check off if that is ever required: [ADR 0013](../decisions/0013-eas-update-network-exception.md) (Consequences).
 
+### Installation ID storage
+
+Verified in `expo-eas-client` 58.0.2 (`EASClientID` on iOS and Android) and in the generated Android manifest
+(`expo prebuild`):
+
+- **iOS:** `UserDefaults` key `expo.eas-client-id`, in the app's preferences in its data container (not the
+  keychain). Deleting the app removes it; restoring an iCloud or computer backup of the device (or moving to a new
+  iPhone from a backup) brings it back.
+- **Android:** `SharedPreferences` file `dev.expo.EASSharedPreferences`, key `eas-client-id`. The app sets
+  `android:allowBackup="true"` (Expo's default) without backup rules, so Android Auto Backup includes the file:
+  deleting the app removes it, but a reinstall with a cloud backup or a device-to-device transfer restores it.
+
+So the ID is reset by deleting the app unless a device backup is restored. Excluding it from backups would need
+native backup rules (a new build, a new fingerprint); the explicit Android backup rules are planned with the
+database ([app-shell-storage.md](../features/app-shell-storage.md)).
+
 Users see this in the app: Settings → *Privacy* (`privacy.updates` in the locale files, English and Polish) explains
-the update check, the installation ID, the technical details, the crash message and the IP address. The App Store
+that the app checks for updates each time it starts, the installation ID (and that a device backup can restore it),
+the technical details, the crash message and the IP address. The App Store
 privacy label answers are prepared in [app-store-privacy.md](app-store-privacy.md).
 
 ## Update or new build?

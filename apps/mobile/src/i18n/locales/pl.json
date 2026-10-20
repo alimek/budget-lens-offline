@@ -15,7 +15,7 @@
   },
   "privacy": {
     "title": "Prywatność",
-    "updates": "Dane budżetu pozostają na tym urządzeniu i nigdy nie są nigdzie wysyłane. Jedyne połączenie, jakie nawiązuje aplikacja, to sprawdzanie aktualizacji w usłudze Expo. Każde sprawdzenie wysyła losowy identyfikator instalacji, który nie zmienia się do czasu usunięcia aplikacji, dane techniczne zainstalowanej wersji (platforma, wersja środowiska, kanał aktualizacji, identyfikatory aktualizacji), a po awarii także treść błędu. Expo widzi też Twój adres IP. Aplikacja Cię nie śledzi i nie ma reklam ani analityki."
+    "updates": "Dane budżetu pozostają na tym urządzeniu i nigdy nie są nigdzie wysyłane. Przy każdym uruchomieniu (wersje ze sklepu i z TestFlight) aplikacja sprawdza aktualizacje w usłudze Expo; to jedyne połączenie, jakie nawiązuje. Każde sprawdzenie wysyła losowy identyfikator instalacji zapisany na tym urządzeniu, dane techniczne zainstalowanej wersji (platforma, wersja środowiska uruchomieniowego, kanał aktualizacji, identyfikatory aktualizacji), a po awarii także treść błędu. Usunięcie aplikacji usuwa identyfikator, ale przywrócenie kopii zapasowej urządzenia może go odtworzyć. Expo widzi też Twój adres IP. Aplikacja Cię nie śledzi i nie ma reklam ani analityki."
   },
   "dev": {
     "designSystem": {

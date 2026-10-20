@@ -15,7 +15,7 @@
   },
   "privacy": {
     "title": "Privacy",
-    "updates": "Your budget data stays on this device and is never sent anywhere. The only connection the app makes is a check for app updates with Expo, the update service. Each check sends a random installation ID that stays the same until you delete the app, technical details of the installed version (platform, runtime version, update channel, update IDs) and, after a crash, the error message. Expo also sees your IP address. The app does not track you and has no ads or analytics."
+    "updates": "Your budget data stays on this device and is never sent anywhere. Each time the app starts (store and TestFlight versions), it checks for app updates with Expo, the update service; this is the only connection the app makes. Each check sends a random installation ID stored on this device, technical details of the installed version (platform, runtime version, update channel, update IDs) and, after a crash, the error message. Deleting the app removes the ID, but restoring a device backup can bring it back. Expo also sees your IP address. The app does not track you and has no ads or analytics."
   },
   "dev": {
     "designSystem": {

@@ -23,7 +23,8 @@ update servers and needed an explicit owner decision first.
   and, when an update is downloaded, requests for its files. Per the `expo-updates` 58.0.17 sources
   (`FileDownloader` on iOS and Android) and `expo-eas-client` 58.0.2, the headers are:
   - `EAS-Client-ID`: a random UUID created once per installation and stored on the device (iOS `UserDefaults`,
-    Android `SharedPreferences`), sent on every check;
+    Android `SharedPreferences`), sent on every check; device backups can restore it after a reinstall
+    ([storage](../release/updates.md#installation-id-storage));
   - `Expo-Fatal-Error`: the message of the fatal JavaScript error that ended the previous launch, truncated to 1024
     characters, only when there was one;
   - `Expo-Recent-Failed-Update-IDs`, `Expo-Current-Update-ID`, `Expo-Embedded-Update-ID` (and

@@ -13,7 +13,7 @@ It goes to **Expo** (the EAS Update service), a third party, so Apple counts it 
 
 | Sent with every check | Apple data type | Notes |
 | --- | --- | --- |
-| `EAS-Client-ID`: random UUID per installation, kept until the app is deleted | Identifiers → **Device ID** | Not an advertising ID (no IDFA), not linked to an account; the app has no accounts |
+| `EAS-Client-ID`: random UUID per installation, removed when the app is deleted but restored with an iOS device backup or Android Auto Backup ([storage](updates.md#installation-id-storage)) | Identifiers → **Device ID** | Not an advertising ID (no IDFA), not linked to an account; the app has no accounts |
 | `Expo-Fatal-Error`: last fatal JavaScript error message (up to 1024 characters), only after a crash | Diagnostics → **Crash Data** | Error text of the app's code; no budget data is put into error messages on purpose |
 | Platform, runtime version, channel, update IDs | Diagnostics → **Other Diagnostic Data** (see question 2) | Technical metadata of the installed build |
 | IP address and request time (seen by the server) | Not a data type by itself; **Coarse Location** only if location is derived from it (see question 3) | |
