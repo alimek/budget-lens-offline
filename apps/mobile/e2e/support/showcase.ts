@@ -159,6 +159,32 @@ const showcaseAnchors = [
  * anchor in turn and captures each new position. The engine's scroll is used because plain swipes on iOS were
  * sometimes dropped right after an appearance switch.
  */
+/**
+ * Scrolls the showcase until `target` is visible. At large text sizes the engine's scroll on iOS can start on an
+ * embedded SwiftUI control, which swallows it ("scroll down moved nothing"); slow drags along the page's left margin,
+ * where there is only the scroll view, are the fallback.
+ */
+export async function scrollShowcaseTo(screen: Fixtures["screen"], target: Locator) {
+  try {
+    await screen.scrollUntilVisible(target);
+    return;
+  } catch (error) {
+    const page = await screen.getByTestId("screen-design-system").boundingBox();
+    if (!page) throw error;
+    const x = page.x + 6;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      if (await target.isVisible()) return;
+      await screen.swipe({
+        from: { x, y: page.y + page.height * 0.75 },
+        to: { x, y: page.y + page.height * 0.35 },
+        duration: 1200,
+      });
+      await settle();
+    }
+    throw error;
+  }
+}
+
 export async function captureShowcase(
   { app, screen }: Pick<Fixtures, "app" | "screen">,
   name: string,
@@ -168,7 +194,7 @@ export async function captureShowcase(
   for (const id of showcaseAnchors) {
     const anchor = screen.getByTestId(id);
     if (await anchor.isVisible()) continue;
-    await screen.scrollUntilVisible(anchor);
+    await scrollShowcaseTo(screen, anchor);
     await settle();
     index += 1;
     await app.screenshot(`${name}-${index}`);
