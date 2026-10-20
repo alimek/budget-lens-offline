@@ -13,6 +13,7 @@ export default defineConfig({
         "src/ui/progress.ts",
         "src/ui/theme.ts",
         "src/ui/typography.ts",
+        "src/updates/update-check.ts",
       ],
       reporter: ["text", ["text", { file: "coverage.txt" }], "html", "json-summary"],
       reportsDirectory: "coverage",

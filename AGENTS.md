@@ -81,6 +81,8 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
 - [docs/release/testflight.md](docs/release/testflight.md) – iOS builds and internal TestFlight via EAS Build and EAS
   Submit (`apps/mobile/eas.json`, `pnpm eas:build:ios`, `pnpm eas:submit:ios`), linked project, release flow and export compliance
+- [docs/release/updates.md](docs/release/updates.md) – over-the-air updates with EAS Update (`expo-updates`, fingerprint
+  runtime version, channels, publishing and rollback)
 - [docs/github-automation.md](docs/github-automation.md) – label sync from `.github/labels.tsv` and the per-label
   issue queue export (`scripts/github/`), token scopes and scheduling rules
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
