@@ -65,9 +65,11 @@ export function TransactionRow({
         supportingContentColor: theme["muted-foreground"],
       }}
       modifiers={[
-        toggleable(paid, () => onPaidChange(!paid), { role: "checkbox" }),
-        // Same name as the iOS status button, so TalkBack says what the checkbox means.
+        // Same name as the iOS status button, so TalkBack says what the checkbox means. Because the merged row
+        // also has text, Compose exposes the description as a non-focusable child of the checkbox node, which
+        // TalkBack reads with the row ("Paid: Rent, Rent, …, checkbox, not checked").
         semantics({ contentDescription: t("transaction.paidLabel", { title }) }),
+        toggleable(paid, () => onPaidChange(!paid), { role: "checkbox" }),
         testIDModifier(testID),
       ]}
     >

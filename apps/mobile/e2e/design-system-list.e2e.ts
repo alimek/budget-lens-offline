@@ -4,14 +4,15 @@ import { openListExample, tapUntilVisible } from "./support/showcase";
 
 test("shows grouped transaction rows and toggles the paid state", async (fixtures) => {
   // Arrange
-  const { app, screen } = fixtures;
+  const { app, screen, platform } = fixtures;
   await openListExample(fixtures);
   for (const id of ["ds-list", "ds-list-expenses", "ds-list-income", "ds-row-salary"]) {
     await expect(screen.getByTestId(id)).toBeVisible();
   }
   const rent = screen.getByTestId("ds-row-rent");
-  // Named "Paid: <title>" on both platforms (the iOS status button, the Android row checkbox).
-  await expect(rent).toHaveAccessibleName(/\S/);
+  // Named "Paid: <title>" on both platforms. On Android Compose puts the row's content description on a child node
+  // of the checkbox (the row also has text), so the name is checked there.
+  await expect(platform === "ios" ? rent : rent.getByRole("group")).toHaveAccessibleName(/\S/);
   await expect(rent).toBeChecked({ checked: false });
   await expect(screen.getByTestId("ds-row-internet")).toBeChecked();
 
