@@ -46,22 +46,24 @@ ends up in a build or a commit.
 Prerequisites: a paid Apple Developer Program membership, and an Expo login with access to the account that owns the
 linked project (`pnpm --filter @budget-lens/mobile eas whoami`; Developer role or higher).
 
-1. **First build (owner, interactive):** `pnpm eas:build:ios`, which runs
-   `eas build --platform ios --profile production`. The owner runs it in a terminal and logs in to the Apple
-   Developer account when EAS asks. EAS then creates the **distribution certificate and provisioning profile** for
-   `com.budgetlens.offline` and stores them in the project's EAS credentials. Later builds reuse them and need no
-   Apple login. The build runs in the EAS cloud; its page on expo.dev shows the progress.
-2. **App Store Connect API key:** add it to the project's EAS credentials, either on expo.dev (project →
-   *Credentials* → iOS → `com.budgetlens.offline` → App Store Connect API Key) or with
+1. **Build:** `pnpm eas:build:ios`, which runs `eas build --platform ios --profile production` in the EAS cloud; its
+   page on expo.dev shows the progress. **Signing credentials already exist in EAS** (#183): the owner's first
+   production build ran interactively with his Apple Developer login, and EAS created the distribution certificate and
+   provisioning profile for `com.budgetlens.offline` and stored them in the project's EAS credentials. Later builds
+   reuse them; `pnpm --filter @budget-lens/mobile eas credentials --platform ios` shows them. If they are ever revoked
+   or expire, the next interactive build asks for the Apple login again and recreates them.
+2. **App Store Connect API key (for EAS Submit):** it lives in the project's EAS credentials, never in the
+   repository, an env file or a CI secret. Check it, or add it if it is missing, on expo.dev (project → *Credentials*
+   → iOS → `com.budgetlens.offline` → App Store Connect API Key) or with
    `pnpm --filter @budget-lens/mobile eas credentials --platform ios` → *production* → *App Store Connect: Manage
    your API Key* → *Set up your project to use an API Key for EAS Submit*. EAS can create the key (App Manager role).
-   It stays on EAS servers, never in the repository, an env file or a CI secret.
+   Without a stored key, `eas submit` asks for the Apple login interactively instead.
 3. **Submit:** `pnpm eas:submit:ios`, which runs `eas submit --platform ios --profile production`. Pick the finished
    build. EAS uploads it to App Store Connect for **internal TestFlight testing**; on the first submit it can create
    the App Store Connect app record for `com.budgetlens.offline`. Processing takes about 10–15 minutes.
 4. **Testers:** in App Store Connect → the app → *TestFlight*, create an internal testing group with the testers
    (team members), add the build (or enable automatic distribution for the group), and the testers install it with
-   the **TestFlight** app on their iPhone.
+   the **TestFlight** app on their iPhone. The owner's first production build reached TestFlight and is installed on an iPhone (#183).
 
 Optional, only for non-interactive submits (`--non-interactive`, `--auto-submit`): add `ascAppId` (App Store Connect →
 App Information → Apple ID, a number) and, if wanted, `groups` (internal TestFlight group names) to
