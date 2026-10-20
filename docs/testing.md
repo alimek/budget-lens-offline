@@ -217,9 +217,10 @@ size, so set it on the dedicated devices first and reset it afterwards:
 
 ```sh
 adb -s <BudgetLens-emulator-serial> shell settings put system font_scale 2.0   # reset: 1.0
-xcrun simctl ui BudgetLens-CI content_size accessibility-extra-large            # AX2, about 200%; reset: large
-E2E_LARGE_TEXT=1 pnpm e2e:android -- e2e/large-text.e2e.ts
-E2E_LARGE_TEXT=1 E2E_IOS_SIMULATOR=BudgetLens-CI pnpm e2e:ios -- e2e/large-text.e2e.ts
+xcrun simctl ui <BudgetLens-simulator> content_size accessibility-extra-large  # AX2, about 200%; reset: large
+cd apps/mobile
+E2E_LARGE_TEXT=1 pnpm exec e2e run --target android --output .e2e/android-large-text e2e/large-text.e2e.ts
+E2E_LARGE_TEXT=1 pnpm exec e2e run --target ios --output .e2e/ios-large-text e2e/large-text.e2e.ts
 ```
 
 It checks that every showcase control is reachable by scrolling and captures the components, the inputs and the
