@@ -10,9 +10,14 @@ export async function openShowcase({ app, screen, platform }: Fixtures) {
   await expect(screen.getByTestId("screen-home")).toBeVisible();
   await tapUntilVisible(screen.getByTestId("tab-settings"), screen.getByTestId("screen-settings"));
   const open = screen.getByTestId("settings-open-design-system");
-  // Below the fold only at large text sizes; a tap during scroll momentum would just stop the scroll.
+  // Target Settings itself: the viewport scroll can stall inside the long privacy text at large sizes.
+  // A tap during scroll momentum would just stop the scroll.
   if (!(await open.isVisible())) {
-    await screen.scrollUntilVisible(open);
+    const settings = screen.getByTestId("screen-settings");
+    await settings.scrollUntilVisible(open);
+    // Visibility can begin underneath the floating tab bar. The button is the last Settings control;
+    // one more bounded scroll brings it clear of the bar before tapping.
+    await settings.swipe({ direction: "down", momentum: "slow" });
     await settle();
   }
   await tapUntilVisible(
