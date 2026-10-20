@@ -17,8 +17,10 @@ plan** is used; paid features need the owner's consent.
     channel `preview`.
   - `build.production`: Release build for App Store Connect (`distribution: store`), `autoIncrement: true`, EAS
     Update channel `production`.
-  - `submit.production.ios`: intentionally empty. It has no `ascAppId`, `appleTeamId` or Apple ID; those come from
-    EAS credentials and the interactive `eas submit` (see [Release flow](#release-flow)).
+  - `submit.production.ios`: only `ascAppId` (`6824934955`), the numeric App Store Connect app ID of
+    `com.budgetlens.offline` (App Store Connect → App Information → Apple ID). It is an app identifier, not a secret
+    or an account name, and lets `eas submit` run non-interactively (#190). There is no `appleTeamId` or Apple ID;
+    the App Store Connect API key comes from EAS credentials (see [Release flow](#release-flow)).
 - `apps/mobile/app.json`: bundle identifier, version, icon, splash, export compliance (see
   [Release configuration](#release-configuration)), the EAS project link `extra.eas.projectId` (#183) and the EAS
   Update settings `updates` and `runtimeVersion` ([updates.md](updates.md)). It is static; there is no
@@ -65,16 +67,17 @@ linked project (`pnpm --filter @budget-lens/mobile eas whoami`; Developer role o
    your API Key* → *Set up your project to use an API Key for EAS Submit*. EAS can create the key (App Manager role).
    Without a stored key, `eas submit` asks for the Apple login interactively instead.
 3. **Submit:** `pnpm eas:submit:ios`, which runs `eas submit --platform ios --profile production`. Pick the finished
-   build. EAS uploads it to App Store Connect for **internal TestFlight testing**; on the first submit it can create
+   build, or submit a known build without prompts:
+   `pnpm --filter @budget-lens/mobile eas submit --platform ios --profile production --id <build-id> --non-interactive`
+   (needs the stored API key and `ascAppId`). EAS uploads it to App Store Connect for **internal TestFlight testing**; on the first submit it can create
    the App Store Connect app record for `com.budgetlens.offline`. Processing takes about 10–15 minutes.
 4. **Testers:** in App Store Connect → the app → *TestFlight*, create an internal testing group with the testers
    (team members), add the build (or enable automatic distribution for the group), and the testers install it with
    the **TestFlight** app on their iPhone. The owner's first production build reached TestFlight and is installed on an iPhone (#183).
 
-Optional, only for non-interactive submits (`--non-interactive`, `--auto-submit`): add `ascAppId` (App Store Connect →
-App Information → Apple ID, a number) and, if wanted, `groups` (internal TestFlight group names) to
-`submit.production.ios` in `eas.json`. They are app identifiers, not secrets. `appleTeamId` and an Apple ID are not
-needed while the API key is stored in EAS.
+Non-interactive submits (`--non-interactive`, `eas build --auto-submit`) work because `ascAppId` is set and the API key
+is stored in EAS. If wanted, `groups` (internal TestFlight group names) can be added to `submit.production.ios` too.
+`appleTeamId` and an Apple ID are not needed while the API key is stored in EAS.
 
 ## Commands
 
