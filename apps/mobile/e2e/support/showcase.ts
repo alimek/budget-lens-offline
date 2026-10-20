@@ -114,20 +114,26 @@ export function describedNode(
 
 /**
  * An `AppAlert` and its confirm button. On iOS it is the system alert (React Native `Alert`), which has no
- * identifiers: XCUITest exposes it as a group named by its title, and the confirm button is its last. On Android the
+ * identifiers and its container kind varies between native snapshots. Find the innermost container labelled by
+ * the title that contains the named confirm button, excluding matching triggers behind the modal. On Android the
  * Compose dialog's confirm button carries `<testID>-confirm`.
  */
 export function appAlert(
-  fixtures: Pick<Fixtures, "screen" | "platform">,
+  fixtures: Pick<Fixtures, "screen" | "platform" | "device">,
   testID: string,
   title: string,
+  confirmLabel: string,
 ) {
   if (fixtures.platform === "android") {
     const confirm = nativeButton(fixtures, `${testID}-confirm`);
     return { alert: confirm, confirm };
   }
-  const alert = fixtures.screen.getByRole("group", title);
-  return { alert, confirm: alert.getByRole("button").last() };
+  const alert = fixtures.screen.getByText(title);
+  const container = fixtures.device
+    .locator(`label=${JSON.stringify(title)}`)
+    .filter({ has: fixtures.screen.getByRole("button", confirmLabel) })
+    .last();
+  return { alert, confirm: container.getByRole("button", confirmLabel) };
 }
 
 /** Showcase nodes from top to bottom, close enough that scrolling to each in turn leaves no part of the page out. */
