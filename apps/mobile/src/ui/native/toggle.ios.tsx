@@ -3,7 +3,10 @@ import { disabled as disabledModifier, tint } from "@expo/ui/swift-ui/modifiers"
 import { useThemeColors } from "../use-theme";
 import type { ToggleProps } from "./types";
 
-/** SwiftUI `Toggle` with its label; on colour `primary`. */
+/**
+ * SwiftUI `Toggle(label:)`: VoiceOver reads the label and the on/off state as one switch, and the label is part of
+ * the touch target. On colour `primary`.
+ */
 export function AppToggle({ label, value, onValueChange, testID, disabled = false }: ToggleProps) {
   const theme = useThemeColors();
   return (
