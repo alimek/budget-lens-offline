@@ -45,9 +45,10 @@ for totals), tabular figures and right alignment.
 | `Separator` | RNR `separator` | custom views only; native lists keep their own |
 | `Screen` | `src/ui/components/screen.tsx` | scrollable screen root on `background`, `screen-<name>` test ID |
 | `PrimaryButton`, `SecondaryButton` | `src/ui/native/button.*` | SwiftUI `borderedProminent` / `bordered`; M3 `Button` / `OutlinedButton` |
-| `AppToggle` | `src/ui/native/toggle.*` | SwiftUI `Toggle`; M3 `Switch` |
+| `AppToggle` | `src/ui/native/toggle.*` | SwiftUI `Toggle(label:)`; M3 `Switch` in a toggleable row. The required `label` is the accessible name: VoiceOver and TalkBack read one switch with its label and on/off state (on Android a React Native `switch` wrapper carries the semantics and the Compose row is hidden from accessibility) |
 | `SegmentedControl` | `src/ui/native/segmented-control.*` | SwiftUI segmented `Picker`; M3 `SegmentedButton` row |
-| `BudgetProgress` | `src/ui/native/budget-progress.*` | SwiftUI `ProgressView`; M3 `LinearProgressIndicator`; `expense` when over budget (`budgetProgress()` in `src/ui/progress.ts`) |
+| `BudgetProgress` | `src/ui/components/budget-progress.tsx` | label, bar and status text; `progressbar` role named by the label with `accessibilityValue` (0–100, status text). Over budget the bar and the status turn `expense` and the text says so (`budget.overBudget`), so it is never shown by colour alone (`budgetProgress()` in `src/ui/progress.ts`) |
+| `ProgressIndicator` | `src/ui/native/progress-indicator.*` | SwiftUI `ProgressView`; M3 `LinearProgressIndicator`; decorative, used by `BudgetProgress` |
 
 Native wrappers have a `.ios.tsx` and an `.android.tsx` file; the plain `.tsx` file re-exports the Android one so
 TypeScript sees one API. Every wrapper requires a `testID`. Expo UI on Android puts it on a wrapper node, so e2e tests

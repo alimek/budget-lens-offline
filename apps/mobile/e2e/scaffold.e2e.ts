@@ -24,6 +24,7 @@ for (const tab of ["month", "forecast", "items", "settings"]) {
 
     // Assert
     await expect(screen.getByTestId(`screen-${tab}`)).toBeVisible();
+    await app.screenshot(tab);
   });
 }
 

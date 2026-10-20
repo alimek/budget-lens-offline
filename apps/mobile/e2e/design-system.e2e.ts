@@ -46,6 +46,36 @@ for (const appearance of ["light", "dark"] as const) {
   });
 }
 
+test("toggles a labelled switch", async (fixtures) => {
+  // Arrange
+  const { screen } = fixtures;
+  await openShowcase(fixtures);
+  const toggle = screen.getByTestId("ds-toggle");
+  // Any non-empty accessible name: tests never select by translated labels.
+  await expect(toggle).toHaveAccessibleName(/\S/);
+  await expect(toggle).toBeChecked({ checked: false });
+
+  // Act
+  await toggle.tap();
+
+  // Assert
+  await expect(toggle).toBeChecked();
+});
+
+test("labels budget progress and states over budget in text", async (fixtures) => {
+  // Arrange
+  const { screen } = fixtures;
+
+  // Act
+  await openShowcase(fixtures);
+
+  // Assert
+  await expect(screen.getByTestId("ds-progress")).toHaveAccessibleName(/\S/);
+  await expect(screen.getByTestId("ds-progress-over")).toHaveAccessibleName(/\S/);
+  await expect(screen.getByTestId("ds-progress-status")).toBeVisible();
+  await expect(screen.getByTestId("ds-progress-over-status")).toBeVisible();
+});
+
 test("shows the type scale", async (fixtures) => {
   // Arrange
   const { app, screen } = fixtures;
