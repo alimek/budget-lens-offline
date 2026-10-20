@@ -4,11 +4,10 @@ import {
   padding,
   semantics,
   testID as testIDModifier,
-  toggleable,
 } from "@expo/ui/jetpack-compose/modifiers";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import Swipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { formatAmount, toneColorToken } from "../amount";
 import { useLanguage } from "../use-language";
@@ -50,7 +49,7 @@ export function ListSection({ title, testID, children }: ListSectionProps) {
 /**
  * Material 3 `ListItem`: leading `Checkbox` (`primary`), headline, supporting meta and the signed amount in
  * `income` / `expense`. The whole row is the paid checkbox (M3 list-control pattern), named "Paid: <title>"
- * (`transaction.paidLabel`, as on iOS); TalkBack reads that name, the texts and the checked state as one control.
+ * (`transaction.paidLabel`, as on iOS); TalkBack reads that name and the checked state as one control.
  * `actions` are revealed by swiping the row to the left (react-native-gesture-handler `ReanimatedSwipeable`).
  */
 export function TransactionRow(props: TransactionRowProps) {
@@ -97,42 +96,51 @@ function RowItem({
   const formatted = formatAmount(amount, { lang, currency });
   const amountColor = theme[toneColorToken(formatted.tone)];
   return (
-    <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
-      <ListItem
-        colors={{
-          containerColor: theme.background,
-          contentColor: theme.foreground,
-          supportingContentColor: theme["muted-foreground"],
-        }}
-        modifiers={[
-          fillMaxWidth(),
-          // Same name as the iOS status button, so TalkBack says what the checkbox means. Because the merged row
-          // also has text, Compose exposes the description as a non-focusable child of the checkbox node, which
-          // TalkBack reads with the row ("Paid: Rent, Rent, …, checkbox, not checked").
-          semantics({ contentDescription: t("transaction.paidLabel", { title }) }),
-          toggleable(paid, () => onPaidChange(!paid), { role: "checkbox" }),
-          testIDModifier(testID),
-        ]}
-      >
-        <ListItem.LeadingContent>
-          <Checkbox
-            value={paid}
-            colors={{ checkedColor: theme.primary, checkmarkColor: theme["primary-foreground"] }}
-          />
-        </ListItem.LeadingContent>
-        <ListItem.HeadlineContent>
-          <Text>{title}</Text>
-        </ListItem.HeadlineContent>
-        {meta ? (
-          <ListItem.SupportingContent>
-            <Text>{meta}</Text>
-          </ListItem.SupportingContent>
-        ) : null}
-        <ListItem.TrailingContent>
-          <Text color={amountColor}>{formatted.text}</Text>
-        </ListItem.TrailingContent>
-      </ListItem>
-    </Host>
+    <Pressable
+      testID={testID}
+      accessible
+      accessibilityRole="checkbox"
+      accessibilityLabel={t("transaction.paidLabel", { title })}
+      accessibilityState={{ checked: paid }}
+      accessibilityValue={{ text: [meta, formatted.text].filter(Boolean).join(", ") }}
+      onPress={() => onPaidChange(!paid)}
+      android_ripple={{ color: theme["muted-foreground"], foreground: true }}
+    >
+      {/* Keep touch handling outside Compose: its toggleable press indication survives swipe cancellation. */}
+      <View pointerEvents="none" importantForAccessibility="no-hide-descendants">
+        <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
+          <ListItem
+            colors={{
+              containerColor: theme.background,
+              contentColor: theme.foreground,
+              supportingContentColor: theme["muted-foreground"],
+            }}
+            modifiers={[fillMaxWidth()]}
+          >
+            <ListItem.LeadingContent>
+              <Checkbox
+                value={paid}
+                colors={{
+                  checkedColor: theme.primary,
+                  checkmarkColor: theme["primary-foreground"],
+                }}
+              />
+            </ListItem.LeadingContent>
+            <ListItem.HeadlineContent>
+              <Text>{title}</Text>
+            </ListItem.HeadlineContent>
+            {meta ? (
+              <ListItem.SupportingContent>
+                <Text>{meta}</Text>
+              </ListItem.SupportingContent>
+            ) : null}
+            <ListItem.TrailingContent>
+              <Text color={amountColor}>{formatted.text}</Text>
+            </ListItem.TrailingContent>
+          </ListItem>
+        </Host>
+      </View>
+    </Pressable>
   );
 }
 
