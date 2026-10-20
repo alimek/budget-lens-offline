@@ -67,7 +67,9 @@ borders.
 
 Text scales with the system setting everywhere (no `allowFontScaling={false}`, no fixed heights around text).
 Controls that pair a label with a value stack the label above the control instead of sharing a row, so neither is
-squeezed at the largest sizes; long pages scroll. Check at 200% before merging UI changes (see
+squeezed at the largest sizes; long pages scroll. Label/amount rows (the summary card, iOS `TransactionRow`) stay on
+one line up to the largest standard size and stack at accessibility sizes / font scale 1.5 and up
+(`useStackedRows()`, threshold in `src/ui/large-text.ts`), so neither a word nor an amount is broken mid-way. Check at 200% before merging UI changes (see
 [testing](testing.md#large-text-200)); the #182 captures are in [evidence/182](evidence/182/README.md).
 
 ### React Native Reusables

@@ -19,9 +19,11 @@ import {
   listStyle,
   monospacedDigit,
 } from "@expo/ui/swift-ui/modifiers";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formatAmount, toneColorToken } from "../amount";
 import { useLanguage } from "../use-language";
+import { useStackedRows } from "../use-stacked-rows";
 import { useThemeColors } from "../use-theme";
 import type { GroupedListProps, ListSectionProps, TransactionRowProps } from "./types";
 
@@ -71,6 +73,11 @@ export function TransactionRow({
   const lang = useLanguage();
   const formatted = formatAmount(amount, { lang, currency: "PLN" });
   const amountColor = theme[toneColorToken(formatted.tone)];
+  const stacked = useStackedRows();
+  const status = paid ? PAID : UNPAID;
+  const amountText = (
+    <Text modifiers={[monospacedDigit(), foregroundStyle(amountColor)]}>{formatted.text}</Text>
+  );
   return (
     <HStack spacing={12}>
       <Button
@@ -79,30 +86,43 @@ export function TransactionRow({
         modifiers={[
           buttonStyle("plain"),
           accessibilityLabel(t("transaction.paidLabel", { title })),
-          accessibilityAddTraits(paid ? ["isToggle", "isSelected"] : ["isToggle"]),
+          accessibilityAddTraits([...status.traits]),
         ]}
       >
-        <Image
-          systemName={paid ? "checkmark.circle.fill" : "circle"}
-          size={22}
-          color={theme.primary}
-        />
+        <Image systemName={status.icon} size={22} color={theme.primary} />
       </Button>
-      <VStack alignment="leading" spacing={2}>
-        <Text modifiers={[foregroundStyle(theme.foreground)]}>{title}</Text>
-        {meta ? (
-          <Text
-            modifiers={[
-              font({ textStyle: "footnote" }),
-              foregroundStyle(theme["muted-foreground"]),
-            ]}
-          >
-            {meta}
-          </Text>
-        ) : null}
-      </VStack>
+      {/* At accessibility text sizes the amount moves under the title instead of squeezing it. */}
+      <RowTexts title={title} meta={meta} below={stacked ? amountText : null} />
       <Spacer />
-      <Text modifiers={[monospacedDigit(), foregroundStyle(amountColor)]}>{formatted.text}</Text>
+      {stacked ? null : amountText}
     </HStack>
+  );
+}
+
+const PAID = { icon: "checkmark.circle.fill", traits: ["isToggle", "isSelected"] } as const;
+const UNPAID = { icon: "circle", traits: ["isToggle"] } as const;
+
+function RowTexts({
+  title,
+  meta,
+  below,
+}: {
+  title: string;
+  meta: string | undefined;
+  below: ReactNode;
+}) {
+  const theme = useThemeColors();
+  return (
+    <VStack alignment="leading" spacing={2}>
+      <Text modifiers={[foregroundStyle(theme.foreground)]}>{title}</Text>
+      {meta ? (
+        <Text
+          modifiers={[font({ textStyle: "footnote" }), foregroundStyle(theme["muted-foreground"])]}
+        >
+          {meta}
+        </Text>
+      ) : null}
+      {below}
+    </VStack>
   );
 }
