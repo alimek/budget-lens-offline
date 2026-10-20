@@ -79,7 +79,7 @@ wrappers in `src/ui/native`, tokens and React Native Reusables components in `sr
 
 Release builds for internal TestFlight testing are built and submitted with EAS (`apps/mobile/eas.json`):
 `pnpm eas:build:ios` and `pnpm eas:submit:ios`. Signing credentials and the App Store Connect API key stay in EAS.
-Profiles, owner setup, versioning, free-plan limits and the export compliance setting:
+Profiles, the linked project, the release flow, versioning, free-plan limits and the export compliance setting:
 [release/testflight.md](release/testflight.md).
 
 ## Native permissions and network
