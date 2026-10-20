@@ -48,6 +48,10 @@ crash. Local
 builds without a channel (for example `expo run:ios`) and development bundles make no request. How to switch the
 check off if that is ever required: [ADR 0013](../decisions/0013-eas-update-network-exception.md) (Consequences).
 
+Users see this in the app: Settings → *Privacy* (`privacy.updates` in the locale files, English and Polish) explains
+the update check, the installation ID, the technical details, the crash message and the IP address. The App Store
+privacy label answers are prepared in [app-store-privacy.md](app-store-privacy.md).
+
 ## Update or new build?
 
 An update is enough when only JavaScript/TypeScript code, translations or bundled assets (images, fonts) change.

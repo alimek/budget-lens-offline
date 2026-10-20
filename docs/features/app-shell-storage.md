@@ -54,7 +54,7 @@ no sign-up, and the first launch guides the user through a short onboarding.
 
 - The app refuses to run in a build without SQLCipher (`PRAGMA cipher_version` guard).
 - Onboarding makes no network requests except the optional lookup of an existing backup in the user's own iCloud /
-  Google Drive ([E8](cloud-backup.md), [#116](https://github.com/alimek/budget-lens-offline/issues/116)), on Android the Google Drive consent step, and the background EAS Update check of release builds ([ADR 0013](../decisions/0013-eas-update-network-exception.md)); the onboarding privacy explanation must mention that check. Confirming it locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
+  Google Drive ([E8](cloud-backup.md), [#116](https://github.com/alimek/budget-lens-offline/issues/116)), on Android the Google Drive consent step, and the background EAS Update check of release builds ([ADR 0013](../decisions/0013-eas-update-network-exception.md)); the onboarding privacy explanation must mention that check, reusing the `privacy.updates` text already shown in Settings → *Privacy* (#191). Confirming it locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
 - The DB file is excluded from Android Auto Backup. A missing key leads to the recovery screen.
 - There is no backup prompt, reminder or nudge besides the Android consent step ([#48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263253821)).
 - Every screen has a `screen-<name>` `testID` and all strings go through i18n (PL+EN).

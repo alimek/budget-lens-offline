@@ -41,7 +41,9 @@ update servers and needed an explicit owner decision first.
 - Updates reach installed builds without the App Store review or a new EAS build; native changes still need a build
   because the fingerprint changes.
 - Expo (the EAS project's account) receives a persistent per-installation identifier, crash messages and the IP
-  address. Privacy texts (onboarding, store privacy labels) must mention this request.
+  address. Privacy texts must mention this request: Settings → *Privacy* in the app (`privacy.updates`, #191), the
+  planned onboarding privacy explanation (reusing that text) and the App Store privacy label
+  ([app-store-privacy.md](../release/app-store-privacy.md)).
 - **Opt-out later, if required:** set `updates.enabled: false` in `app.json` (needs a new build), or add a user
   setting that skips `checkForUpdateInBackground` (JavaScript only). Either removes the request entirely.
 - Publishing stays manual and needs the owner's go-ahead; nothing is published on merge.
