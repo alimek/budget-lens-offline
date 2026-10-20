@@ -32,8 +32,8 @@ The `start`, `ios`, and `android` scripts pass it explicitly and, like `export`,
 or attach to another project's server if 8073 is occupied. The iOS smoke target passes the server URL
 as a launch argument; Android uses an explicit development-client VIEW intent to the same port after `adb -s <BudgetLens-emulator-serial> reverse
 tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
-prompt required to connect the development client to Metro. All application data stays local; this
-scaffold opens no database or Budget Lens service.
+prompt required to connect the development client to Metro. All application data stays local; the app opens
+and migrates its local SQLite database before rendering data screens (#74).
 
 ## Checks and smoke evidence
 
@@ -73,7 +73,8 @@ design system showcase uses `screen-design-system`, opened by `settings-open-des
 The scaffold has bundled English/Polish strings, device-language initialization, light/dark system
 navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
 from locale resources. Screens are built from the [design system](design-system.md) (#119): Expo UI
-wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. DB boot, recovery, persistence (including of the language preference, [i18n](i18n.md)) and onboarding are separate work.
+wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. Database boot and migrations are implemented in #74. SQLCipher key setup, encrypted pre-migration copies
+and recovery remain #75; repositories, language preference persistence ([i18n](i18n.md)) and onboarding are separate work.
 
 ## Release builds (TestFlight)
 

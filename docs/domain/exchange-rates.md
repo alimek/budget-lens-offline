@@ -50,6 +50,7 @@ with the same `(currency, source)`; `getAll()` returns all current rows. Methods
 adapter (#92). Each row contains `currency`, `mid` (positive decimal string, at most 12 fraction digits),
 `effectiveDate` (`YYYY-MM-DD`), `source` (`nbp` or `manual`) and `fetchedAt` (injected epoch milliseconds; the entry
 time for manual rows). There is no rate history. The in-memory store copies rows on read/write.
+The SQLite table for the adapter is `exchange_rates` in `packages/db` (#74), with primary key `(currency, source)`.
 
 `selectCurrentRates` is the shared, generic selector for lookup and other consumers (including forecast #156):
 the newer effective date wins; manual wins equal dates, independently of candidate order. It accepts already

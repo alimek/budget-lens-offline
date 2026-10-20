@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // The package runs in the app (React Native); Node.js types are for the tests only (see test/tsconfig.json).
+    "types": []
+  },
+  "include": ["src"]
+}

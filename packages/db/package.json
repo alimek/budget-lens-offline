@@ -1,0 +1,30 @@
+{
+  "name": "@budget-lens/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "db:generate": "node scripts/migrations.mjs generate",
+    "db:check": "node scripts/migrations.mjs check",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.4"
+  },
+  "devDependencies": {
+    "@budget-lens/core": "workspace:*",
+    "@types/node": "24.19.2",
+    "@types/sql.js": "1.4.11",
+    "@vitest/coverage-v8": "5.0.5",
+    "drizzle-kit": "0.31.11",
+    "expo-sqlite": "58.0.13",
+    "sql.js": "1.15.1",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

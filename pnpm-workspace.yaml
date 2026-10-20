@@ -2,6 +2,8 @@ packages:
   - "apps/*"
   - "packages/*"
 allowBuilds:
+  # drizzle-kit's esbuild ships its platform binary as an optional dependency; its install script is not needed.
+  esbuild: false
   "@swc/core": false
   lefthook: false
 permissions:

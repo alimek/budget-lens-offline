@@ -1,0 +1,917 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "da2c7bd9-3781-4ac8-b303-0fa195eddb9f",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "app_meta": {
+      "name": "app_meta",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "closed_occurrences": {
+      "name": "closed_occurrences",
+      "columns": {
+        "month": {
+          "name": "month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rate_mid": {
+          "name": "rate_mid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rate_source": {
+          "name": "rate_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rate_effective_date": {
+          "name": "rate_effective_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "base_amount_minor": {
+          "name": "base_amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "settled": {
+          "name": "settled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "closed_occurrences_item_idx": {
+          "name": "closed_occurrences_item_idx",
+          "columns": [
+            "item_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "closed_occurrences_month_months_month_fk": {
+          "name": "closed_occurrences_month_months_month_fk",
+          "tableFrom": "closed_occurrences",
+          "tableTo": "months",
+          "columnsFrom": [
+            "month"
+          ],
+          "columnsTo": [
+            "month"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "closed_occurrences_item_id_items_id_fk": {
+          "name": "closed_occurrences_item_id_items_id_fk",
+          "tableFrom": "closed_occurrences",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "closed_occurrences_month_item_id_pk": {
+          "columns": [
+            "month",
+            "item_id"
+          ],
+          "name": "closed_occurrences_month_item_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "closed_occurrences_kind_chk": {
+          "name": "closed_occurrences_kind_chk",
+          "value": "\"kind\" IN ('expense', 'income')"
+        },
+        "closed_occurrences_currency_chk": {
+          "name": "closed_occurrences_currency_chk",
+          "value": "\"currency\" GLOB '[A-Z][A-Z][A-Z]'"
+        },
+        "closed_occurrences_amount_chk": {
+          "name": "closed_occurrences_amount_chk",
+          "value": "\"amount_minor\" >= 0 AND \"base_amount_minor\" >= 0"
+        },
+        "closed_occurrences_rate_chk": {
+          "name": "closed_occurrences_rate_chk",
+          "value": "(\"rate_mid\" IS NULL AND \"rate_source\" IS NULL AND \"rate_effective_date\" IS NULL) OR (\"rate_mid\" IS NOT NULL AND \"rate_source\" IN ('nbp', 'manual') AND \"rate_effective_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')"
+        },
+        "closed_occurrences_settled_chk": {
+          "name": "closed_occurrences_settled_chk",
+          "value": "\"settled\" IN (0, 1)"
+        }
+      }
+    },
+    "exchange_rates": {
+      "name": "exchange_rates",
+      "columns": {
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mid": {
+          "name": "mid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fetched_at": {
+          "name": "fetched_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "exchange_rates_currency_source_pk": {
+          "columns": [
+            "currency",
+            "source"
+          ],
+          "name": "exchange_rates_currency_source_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "exchange_rates_currency_chk": {
+          "name": "exchange_rates_currency_chk",
+          "value": "\"currency\" GLOB '[A-Z][A-Z][A-Z]'"
+        },
+        "exchange_rates_source_chk": {
+          "name": "exchange_rates_source_chk",
+          "value": "\"source\" IN ('nbp', 'manual')"
+        },
+        "exchange_rates_date_chk": {
+          "name": "exchange_rates_date_chk",
+          "value": "\"effective_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'"
+        }
+      }
+    },
+    "item_rule_versions": {
+      "name": "item_rule_versions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "effective_from": {
+          "name": "effective_from",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "interval_months": {
+          "name": "interval_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "anchor_month": {
+          "name": "anchor_month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "target_month": {
+          "name": "target_month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "day_of_month": {
+          "name": "day_of_month",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "end_month": {
+          "name": "end_month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "rule_versions_item_from_uq": {
+          "name": "rule_versions_item_from_uq",
+          "columns": [
+            "item_id",
+            "effective_from"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "item_rule_versions_item_id_items_id_fk": {
+          "name": "item_rule_versions_item_id_items_id_fk",
+          "tableFrom": "item_rule_versions",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "rule_versions_shape_chk": {
+          "name": "rule_versions_shape_chk",
+          "value": "(\"interval_months\" IS NULL AND \"target_month\" IS NOT NULL) OR (\"interval_months\" >= 1 AND \"anchor_month\" IS NOT NULL AND \"target_month\" IS NULL)"
+        },
+        "rule_versions_amount_chk": {
+          "name": "rule_versions_amount_chk",
+          "value": "\"amount_minor\" >= 0"
+        },
+        "rule_versions_day_chk": {
+          "name": "rule_versions_day_chk",
+          "value": "\"day_of_month\" IS NULL OR \"day_of_month\" BETWEEN 1 AND 31"
+        },
+        "rule_versions_months_chk": {
+          "name": "rule_versions_months_chk",
+          "value": "\"effective_from\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"effective_from\", 6, 2) BETWEEN '01' AND '12' AND (\"anchor_month\" IS NULL OR \"anchor_month\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"anchor_month\", 6, 2) BETWEEN '01' AND '12') AND (\"target_month\" IS NULL OR \"target_month\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"target_month\", 6, 2) BETWEEN '01' AND '12') AND (\"end_month\" IS NULL OR \"end_month\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"end_month\", 6, 2) BETWEEN '01' AND '12')"
+        }
+      }
+    },
+    "items": {
+      "name": "items",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "items_kind_archived_idx": {
+          "name": "items_kind_archived_idx",
+          "columns": [
+            "kind",
+            "archived_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "items_kind_chk": {
+          "name": "items_kind_chk",
+          "value": "\"kind\" IN ('expense', 'income')"
+        },
+        "items_currency_chk": {
+          "name": "items_currency_chk",
+          "value": "\"currency\" GLOB '[A-Z][A-Z][A-Z]'"
+        }
+      }
+    },
+    "months": {
+      "name": "months",
+      "columns": {
+        "month": {
+          "name": "month",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "opening_balance_minor": {
+          "name": "opening_balance_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "closing_balance_minor": {
+          "name": "closing_balance_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_income_minor": {
+          "name": "total_income_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_expenses_minor": {
+          "name": "total_expenses_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "net_change_minor": {
+          "name": "net_change_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "base_currency": {
+          "name": "base_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "closed_at": {
+          "name": "closed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "months_single_active_uq": {
+          "name": "months_single_active_uq",
+          "columns": [
+            "status"
+          ],
+          "isUnique": true,
+          "where": "\"status\" = 'active'"
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "months_month_chk": {
+          "name": "months_month_chk",
+          "value": "\"month\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"month\", 6, 2) BETWEEN '01' AND '12'"
+        },
+        "months_status_chk": {
+          "name": "months_status_chk",
+          "value": "\"status\" IN ('active', 'closed')"
+        },
+        "months_closed_chk": {
+          "name": "months_closed_chk",
+          "value": "(\"status\" = 'active' AND \"closed_at\" IS NULL AND \"base_currency\" IS NULL) OR (\"status\" = 'closed' AND \"closed_at\" IS NOT NULL AND \"base_currency\" IS NOT NULL AND \"base_currency\" GLOB '[A-Z][A-Z][A-Z]')"
+        }
+      }
+    },
+    "occurrence_overrides": {
+      "name": "occurrence_overrides",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "month": {
+          "name": "month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "skipped": {
+          "name": "skipped",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "overrides_item_month_uq": {
+          "name": "overrides_item_month_uq",
+          "columns": [
+            "item_id",
+            "month"
+          ],
+          "isUnique": true
+        },
+        "overrides_month_idx": {
+          "name": "overrides_month_idx",
+          "columns": [
+            "month"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "occurrence_overrides_item_id_items_id_fk": {
+          "name": "occurrence_overrides_item_id_items_id_fk",
+          "tableFrom": "occurrence_overrides",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "overrides_month_chk": {
+          "name": "overrides_month_chk",
+          "value": "\"month\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"month\", 6, 2) BETWEEN '01' AND '12'"
+        },
+        "overrides_amount_chk": {
+          "name": "overrides_amount_chk",
+          "value": "\"amount_minor\" IS NULL OR \"amount_minor\" >= 0"
+        },
+        "overrides_skipped_chk": {
+          "name": "overrides_skipped_chk",
+          "value": "\"skipped\" IN (0, 1)"
+        }
+      }
+    },
+    "payment_statuses": {
+      "name": "payment_statuses",
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "month": {
+          "name": "month",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "settled_at": {
+          "name": "settled_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "payment_month_idx": {
+          "name": "payment_month_idx",
+          "columns": [
+            "month"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "payment_statuses_item_id_items_id_fk": {
+          "name": "payment_statuses_item_id_items_id_fk",
+          "tableFrom": "payment_statuses",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "payment_statuses_item_id_month_pk": {
+          "columns": [
+            "item_id",
+            "month"
+          ],
+          "name": "payment_statuses_item_id_month_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "payment_month_chk": {
+          "name": "payment_month_chk",
+          "value": "\"month\" GLOB '[0-9][0-9][0-9][0-9]-[01][0-9]' AND substr(\"month\", 6, 2) BETWEEN '01' AND '12'"
+        }
+      }
+    },
+    "savings": {
+      "name": "savings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "savings_currency_chk": {
+          "name": "savings_currency_chk",
+          "value": "\"currency\" GLOB '[A-Z][A-Z][A-Z]'"
+        }
+      }
+    },
+    "settings": {
+      "name": "settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "base_currency": {
+          "name": "base_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tracked_currencies": {
+          "name": "tracked_currencies",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "low_balance_threshold_minor": {
+          "name": "low_balance_threshold_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "large_expense_threshold_minor": {
+          "name": "large_expense_threshold_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "forecast_horizon_months": {
+          "name": "forecast_horizon_months",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rate_max_age_business_days": {
+          "name": "rate_max_age_business_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "onboarding_completed_at": {
+          "name": "onboarding_completed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "settings_singleton_chk": {
+          "name": "settings_singleton_chk",
+          "value": "\"id\" = 1"
+        },
+        "settings_base_currency_chk": {
+          "name": "settings_base_currency_chk",
+          "value": "\"base_currency\" GLOB '[A-Z][A-Z][A-Z]'"
+        },
+        "settings_thresholds_chk": {
+          "name": "settings_thresholds_chk",
+          "value": "\"low_balance_threshold_minor\" >= 0 AND \"large_expense_threshold_minor\" >= 0"
+        },
+        "settings_positive_chk": {
+          "name": "settings_positive_chk",
+          "value": "\"forecast_horizon_months\" >= 1 AND \"rate_max_age_business_days\" >= 1"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
