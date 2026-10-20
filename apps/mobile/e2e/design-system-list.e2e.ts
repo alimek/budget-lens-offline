@@ -4,14 +4,14 @@ import { openListExample, tapUntilVisible } from "./support/showcase";
 
 test("shows grouped transaction rows and toggles the paid state", async (fixtures) => {
   // Arrange
-  const { app, screen, platform } = fixtures;
+  const { app, screen } = fixtures;
   await openListExample(fixtures);
   for (const id of ["ds-list", "ds-list-expenses", "ds-list-income", "ds-row-salary"]) {
     await expect(screen.getByTestId(id)).toBeVisible();
   }
   const rent = screen.getByTestId("ds-row-rent");
-  // iOS names the status toggle; on Android the row is the checkbox and TalkBack reads its texts.
-  if (platform === "ios") await expect(rent).toHaveAccessibleName(/\S/);
+  // Named "Paid: <title>" on both platforms (the iOS status button, the Android row checkbox).
+  await expect(rent).toHaveAccessibleName(/\S/);
   await expect(rent).toBeChecked({ checked: false });
   await expect(screen.getByTestId("ds-row-internet")).toBeChecked();
 

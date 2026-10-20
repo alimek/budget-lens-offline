@@ -2,9 +2,11 @@ import { Checkbox, Host, LazyColumn, ListItem, Text } from "@expo/ui/jetpack-com
 import {
   fillMaxSize,
   padding,
+  semantics,
   testID as testIDModifier,
   toggleable,
 } from "@expo/ui/jetpack-compose/modifiers";
+import { useTranslation } from "react-i18next";
 import { formatAmount, toneColorToken } from "../amount";
 import { useLanguage } from "../use-language";
 import { useThemeColors } from "../use-theme";
@@ -38,20 +40,22 @@ export function ListSection({ title, testID, children }: ListSectionProps) {
 
 /**
  * Material 3 `ListItem`: leading `Checkbox` (`primary`), headline, supporting meta and the signed amount in
- * `income` / `expense`. The whole row is the paid checkbox (M3 list-control pattern), so TalkBack reads the texts
- * and the checked state as one control.
+ * `income` / `expense`. The whole row is the paid checkbox (M3 list-control pattern), named "Paid: <title>"
+ * (`transaction.paidLabel`, as on iOS); TalkBack reads that name, the texts and the checked state as one control.
  */
 export function TransactionRow({
   title,
   meta,
   amount,
+  currency,
   paid,
   onPaidChange,
   testID,
 }: TransactionRowProps) {
   const theme = useThemeColors();
+  const { t } = useTranslation();
   const lang = useLanguage();
-  const formatted = formatAmount(amount, { lang, currency: "PLN" });
+  const formatted = formatAmount(amount, { lang, currency });
   const amountColor = theme[toneColorToken(formatted.tone)];
   return (
     <ListItem
@@ -62,6 +66,8 @@ export function TransactionRow({
       }}
       modifiers={[
         toggleable(paid, () => onPaidChange(!paid), { role: "checkbox" }),
+        // Same name as the iOS status button, so TalkBack says what the checkbox means.
+        semantics({ contentDescription: t("transaction.paidLabel", { title }) }),
         testIDModifier(testID),
       ]}
     >
