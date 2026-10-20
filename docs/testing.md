@@ -163,13 +163,48 @@ line):
   `formatCurrency` away from rounding halves). They use explicit AAA sections and the frozen-clock exception
   from rule 5.
 
-## Scaffold smoke tests (#73)
+## E2E smoke tests (#15)
 
-`apps/mobile/e2e/scaffold.e2e.ts` checks the home screen, the four other tabs and the Savings push
-with deterministic `getByTestId` locators. It uses no model or credentials. Each test has explicit AAA
-sections. The config targets dedicated devices (names from env, see
-[mobile development](mobile-development.md#development-builds)) and records screenshots/video from development
-builds. They run locally on a dev machine with `pnpm --filter @budget-lens/mobile e2e:ios` /
-`e2e:android`, not in CI. Fallow lists the config and test glob as
-real runner entry points (it has no e2e plugin).
-See [mobile development](mobile-development.md) for commands and the testID convention.
+`apps/mobile/e2e/scaffold.e2e.ts` (added in #73) is the deterministic smoke suite: the app starts on `screen-home`,
+each of the four other tabs opens its `screen-<name>` root, and the `overview-open-savings` action pushes
+`screen-savings` inside Overview. Every step uses `getByTestId` locators only: no agent steps, no model provider, no
+credentials and no translated-label selectors. Each test has explicit AAA sections. Expo UI on Android puts
+`overview-open-savings` on a wrapper around the native button, so on Android the test taps the button inside that
+test ID (`getByTestId("overview-open-savings").getByRole("button")`, selected with the `platform` fixture); iOS taps
+the test ID directly. Fallow lists the config and test glob as real runner entry points (it has no e2e plugin).
+
+**Requirements:** Node from `.nvmrc` (the `e2e` package needs Node `^22.22.3 || >=24.8.0`), pnpm from
+`packageManager`, Xcode with an iOS simulator runtime, the Android SDK with an emulator, and an Expo development build
+installed on the dedicated devices ([mobile development](mobile-development.md#development-builds)).
+
+**Run locally** (macOS dev machine; never in CI, see [ci.md](ci.md#native-builds-and-e2e-local)), from the repo root,
+with Metro running on port 8073 (`pnpm --filter @budget-lens/mobile start`):
+
+```sh
+pnpm e2e:ios       # target ios, simulator E2E_IOS_SIMULATOR (default BudgetLens-iOS)
+pnpm e2e:android   # target android, emulator E2E_ANDROID_AVD (default BudgetLens-Android)
+E2E_IOS_SIMULATOR=My-Simulator pnpm e2e:ios
+```
+
+For Android, first forward Metro to the dedicated emulator only: `adb -s <BudgetLens-emulator-serial> reverse tcp:8073
+tcp:8073`. The scripts set `E2E_TELEMETRY_DISABLED=1`. Output (report, `trace.md` per test, screenshots, iOS video)
+goes to `apps/mobile/.e2e/<platform>/` and is ignored by Git; `app.screenshot()` files are under
+`results/<test>/attempt-1/screenshots/`. Attach the screenshots to UI PRs (see the PR template).
+
+**`.e2e/cache`:** agent steps (`agent.act()` / `agent.assert()`) record their resolved actions in
+`apps/mobile/.e2e/cache/`, one file per step key, so later runs replay them without calling a model. This directory is
+the only part of `apps/mobile/.e2e/` that is not ignored, so the cache can be committed with the test that needs it.
+The current suite has no agent steps, so there is no cache yet.
+
+**Open decisions:**
+
+- **Model provider** for agent steps and `e2e explore` is still open (#15). Options to compare when the first agent
+  step is needed: a hosted API from a major provider (pay per token, data leaves the machine, best accuracy), a
+  self-hosted or local model (no per-run cost and data stays local, weaker vision accuracy, needs local hardware), or
+  an aggregator gateway (one key for many models, an extra third party). Replays from `.e2e/cache` need no model in
+  any option. The API key stays in the local environment only ([conventions](conventions.md#secrets)).
+- **CI plan:** e2e stays local per #166. If e2e is ever added to CI (#9), the plan is a macOS runner for iOS and an
+  Android emulator (or `@e2e-dev/eas` EAS Simulators), replaying the committed `.e2e/cache` so no model is called,
+  with `E2E_TELEMETRY_DISABLED=1`; `@e2e-dev/github` PR comments are optional.
+
+See [mobile development](mobile-development.md) for build commands and the testID convention.

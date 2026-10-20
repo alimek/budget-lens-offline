@@ -12,5 +12,6 @@ coverage/
 apps/mobile/.expo/
 apps/mobile/ios/
 apps/mobile/android/
-apps/mobile/.e2e/
+apps/mobile/.e2e/*
+!apps/mobile/.e2e/cache/
 apps/mobile/.devices/

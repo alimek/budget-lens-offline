@@ -14,7 +14,9 @@
     "format": "biome check --write .",
     "fallow": "fallow",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm fallow",
-    "check:licenses": "node scripts/check-licenses.mjs"
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "e2e:ios": "pnpm --filter @budget-lens/mobile e2e:ios",
+    "e2e:android": "pnpm --filter @budget-lens/mobile e2e:android"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
