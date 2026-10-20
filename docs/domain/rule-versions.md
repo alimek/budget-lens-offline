@@ -84,6 +84,11 @@ and live state).
 `defaultEditScope(item, activeMonth)` is the scope the item form selects first: `from-month` when the item has an
 occurrence in a closed month, otherwise `fix-everywhere` (Q8).
 
+> **Superseded for the item form (2026-10-20, [decision on #80](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151)):** #40 Q8 no longer sets the form's default.
+> The item form does not use `defaultEditScope`: on save, an "Applies from" month picker (active month by default, or
+> the item's first month if it starts later) runs `change-from`. The form uses `fix-everywhere` only for one-time
+> items edited in place (and, optionally, where the result equals `change-from`). The API is unchanged.
+
 ### The closed-month invariant
 
 Closed months are the months before the active month: `closeMonth` keeps exactly one active month, strictly after

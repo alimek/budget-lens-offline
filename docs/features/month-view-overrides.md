@@ -55,7 +55,8 @@ base currency. A change here is **always a one-off change for that month** (an o
 
 - Core: [#5](https://github.com/alimek/budget-lens-offline/issues/5), [#138](https://github.com/alimek/budget-lens-offline/issues/138); conversion [#140](https://github.com/alimek/budget-lens-offline/issues/140).
 - DB: [#83](https://github.com/alimek/budget-lens-offline/issues/83).
-- UI: [#65](https://github.com/alimek/budget-lens-offline/issues/65). (The [#64](https://github.com/alimek/budget-lens-offline/issues/64) choice dialog moved to the items screen.)
+- UI: [#65](https://github.com/alimek/budget-lens-offline/issues/65). (The [#64](https://github.com/alimek/budget-lens-offline/issues/64) choice dialog moved to the items screen as the "Applies from" picker:
+  [#82](https://github.com/alimek/budget-lens-offline/issues/82), [#63](https://github.com/alimek/budget-lens-offline/issues/63).)
 - E3 items: [#81](https://github.com/alimek/budget-lens-offline/issues/81).
 
 ## Open questions

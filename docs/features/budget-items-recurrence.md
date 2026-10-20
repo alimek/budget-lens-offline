@@ -1,6 +1,6 @@
 # PRD: Budget items & recurrence (E3)
 
-Epic: [#25](https://github.com/alimek/budget-lens-offline/issues/25) · Status: approved ([#40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), [#41](https://github.com/alimek/budget-lens-offline/issues/41#issuecomment-6263792895), [item currency](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839), [edit flow](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151), [PO: no "Fix everywhere"](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)) · MVP
+Epic: [#25](https://github.com/alimek/budget-lens-offline/issues/25) · Status: approved ([#40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), [#41](https://github.com/alimek/budget-lens-offline/issues/41#issuecomment-6263792895), [item currency](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839), [edit flow](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151), [no "Fix everywhere"](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)) · MVP
 
 ## Problem
 
@@ -36,7 +36,8 @@ version and never rewrites history. Edits in the month view are always one-off o
 - As a user, I set a quarterly bill that starts in February and ends next year.
 - As a user, I edit an item on the Items tab and choose the month the change applies from (this month or later),
   without changing past months.
-- As a user who typed a wrong amount, I fix it by saving the edit from the item's first open month.
+- As a user who typed a wrong amount, I fix it by saving the edit from the item's first open month; if a later change
+  is scheduled, I'm told it is kept and can replace it.
 - As a user, I see the approximate base-currency value of a foreign-currency item and the rate date.
 
 ## Acceptance criteria (high level)
@@ -48,11 +49,13 @@ version and never rewrites history. Edits in the month view are always one-off o
   - A later scheduled change is kept, with a notice and a "replace" option.
   - Overrides that are no longer scheduled are listed and deleted in the same transaction after confirmation. Kept
     overrides stay, with a "reset these months" option.
-  - Corrections use the same save flow: saving from the item's first open month gives the corrected value in every
-    open month. Closed months never change.
+  - Corrections use the same save flow: saving from the item's first open month gives the corrected value from that
+    month on, **up to any later scheduled change**. Later scheduled changes are kept (`scheduled-change-kept`, #40 Q2),
+    so a later change that only moved, for example, the payment day keeps its own copy of the old amount until the
+    user replaces it with the notice's "replace" option. Closed months never change.
   - New items start no earlier than the active month.
   - The edit form has no scope dialog and no separate "Fix everywhere" action ([owner decision #80](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151),
-    [PO decision #80](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)). On save, the **"Applies from"** picker defaults to the active month (or the item's first
+    [decision on #80, 2026-10-20](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)). On save, the **"Applies from"** picker defaults to the active month (or the item's first
     month if it starts later) and allows any later month. This replaces #40 Q8. One-time items have no picker and
     are edited in place while their month is open.
 - The base-value hint uses the current stored rate (no rate history), fetched on app open when a newer NBP table may exist.
@@ -70,7 +73,7 @@ version and never rewrites history. Edits in the month view are always one-off o
 
 ## Open questions
 
-- Rule versioning model: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided). Edit flow: decided 2026-10-20 ([owner](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151), [PO](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)).
+- Rule versioning model: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided). Edit flow: decided 2026-10-20 ([owner decision](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151), [decision on #80](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)).
 - Categories in MVP: [#41](https://github.com/alimek/budget-lens-offline/issues/41) (decided: no, v1.1).
 - Item currency after creation: fixed, like `kind` (decided: owner-confirmed 2026-10-19, [#81](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)); a different
   currency means a new item.

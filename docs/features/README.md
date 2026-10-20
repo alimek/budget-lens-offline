@@ -38,7 +38,7 @@ Other owner decisions of 2026-10-19 reflected in the PRDs:
   ([#92](https://github.com/alimek/budget-lens-offline/issues/92#issuecomment-6276227995)); an item's currency is fixed after creation ([#81](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
 - Edit flow ([owner decision 2026-10-20](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151)): edits in the month view are always one-off overrides. Future changes
   are made only in the items screen, with an "Applies from" month picker on save (this month or later). There is no
-  separate "Fix everywhere" action ([PO decision](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)).
+  separate "Fix everywhere" action ([decision on #80, 2026-10-20](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299794108)).
 
 | Epic | PRD |
 | --- | --- |
