@@ -21,6 +21,10 @@ const componentIds = [
   "ds-amount-total",
   "ds-primary-button",
   "ds-secondary-button",
+  "ds-toggle",
+  "ds-segmented",
+  "ds-progress",
+  "ds-progress-over",
 ];
 
 for (const appearance of ["light", "dark"] as const) {
@@ -42,19 +46,19 @@ for (const appearance of ["light", "dark"] as const) {
   });
 }
 
-test("shows the native controls of the design system", async (fixtures) => {
+test("shows the type scale", async (fixtures) => {
   // Arrange
   const { app, screen } = fixtures;
   await openShowcase(fixtures);
 
   // Act
-  await screen.scrollUntilVisible(screen.getByTestId("ds-progress-over"));
+  await screen.scrollUntilVisible(screen.getByTestId("ds-type-section-label"));
 
   // Assert
-  for (const id of ["ds-toggle", "ds-segmented", "ds-progress", "ds-progress-over"]) {
+  for (const id of ["ds-type-footnote", "ds-type-caption", "ds-type-section-label"]) {
     await expect(screen.getByTestId(id)).toBeVisible();
   }
-  await app.screenshot("design-system-controls");
+  await app.screenshot("design-system-typography");
 });
 
 test("shows the colour tokens of both appearances", async (fixtures) => {

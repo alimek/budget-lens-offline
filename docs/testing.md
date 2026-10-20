@@ -171,7 +171,7 @@ credentials and no translated-label selectors. Each test has explicit AAA sectio
 `overview-open-savings` on a wrapper around the native button, so on Android the test taps the button inside that
 test ID (`getByTestId("overview-open-savings").getByRole("button")`, selected with the `platform` fixture); iOS taps
 the test ID directly. `apps/mobile/e2e/design-system.e2e.ts` (#119) opens the dev-only design system showcase
-from Settings, checks its components in light and dark mode (`device.setAppearance`), scrolls to the native controls
+from Settings, checks its components and native controls in light and dark mode (`device.setAppearance`), scrolls to the type scale
 and the colour tokens with `screen.scrollUntilVisible` (the mobile engine has no `scrollIntoView`) and takes the
 screenshots used as the visual reference. Fallow lists the config and test glob as real runner entry points (it has no e2e plugin).
 
