@@ -43,6 +43,17 @@ RuleVersion   = { effectiveFrom: YearMonth, amount: MinorUnits, schedule: Schedu
   `(itemType, itemId, month)` and are independent of versions. Items with invalid versions are reported in
   `invalidItems`.
 
+## Forecast integration
+
+`forecast()` (#201) accepts versioned items with a required item-level currency and resolves each forecast month
+with `resolveVersionedOccurrences`. Overrides apply after selecting that month's version. Before the first version
+there is no occurrence; scheduled changes affect only their own month and later months. Single-rule inputs remain
+supported with unchanged results. Invalid versions fail the forecast with `invalid-item` and the item id, without
+partial totals; the data hook (#88) can filter and report invalid stored items before calling it.
+
+The caller supplies the active month. Forecast never recalculates stored closed-month snapshots; historical charts
+continue to use those snapshots. See [forecast](forecast.md) for payment filtering, currency conversion and tests.
+
 ## Edit scopes and the planner
 
 `planRuleEdit(state, edit, { activeMonth })` is pure: it returns what the database writes in one transaction, or a
@@ -114,8 +125,7 @@ after an edit.
 
 ## Not covered yet
 
-- The forecast (#6) still takes items with a single amount and schedule; projecting scheduled versions month by
-  month belongs to the forecast data hook (#88), which can use `itemInForce` per month.
+- Loading versions from storage and passing them to the forecast belongs to the forecast data hook (#88).
 - Per-item currency in the core item model is #138.
 
 ## Legacy behaviour

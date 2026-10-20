@@ -1,7 +1,7 @@
 # Forecast
 
 Status: **implemented** in `packages/core/src/forecast.ts` (#6), with exact currency conversion (`convertViaPln`)
-shared in `src/money.ts`. No clock, I/O or storage.
+shared in `src/money.ts`, and monthly rule-version resolution (#201). No clock, I/O or storage.
 
 ## Input and output
 
@@ -12,12 +12,15 @@ returns `{ ok: true, currency, forecast, warnings, ratesUsed, rejectedOverrides 
 - `fromMonth` is the **active** month, passed explicitly. This API projects open and future months; it does not read
   or recalculate closed history. `months` includes the active month, defaults to `Settings.forecastHorizonMonths`
   and must be an integer from 1 to `MAX_FORECAST_HORIZON_MONTHS`, within the supported calendar range.
-- Each `ForecastItem` is an alias of `ClosingItem`, including required `currency: CurrencyCode`, until #138
-  moves currency onto the shared item model. A resolved occurrence retains its currency through `occurrence.item`;
+- Each `ForecastItem` accepts a `VersionedItem` with required `currency: CurrencyCode`, or a single-rule
+  `ClosingItem` for compatibility. Currency stays fixed per item; amount and schedule belong to each version. A resolved occurrence retains its currency through `occurrence.item`;
   its override amount is in that same currency. Items must have valid identifiers and unique `(itemType, id)` keys
   on load; payment statuses must be unique per `(itemType, itemId, month)`.
-- Each month uses `resolveOccurrences`, which enumerates schedules through `occurrencesInRange`, replaces overridden
-  amounts and removes skipped occurrences. Rejected overrides are returned once, as in the resolver; ignored orphaned overrides can be found with `findOrphanedOverrides`.
+- Each month uses `resolveVersionedOccurrences`: it selects the version with the greatest `effectiveFrom` no later
+  than that month, then enumerates its schedule, replaces overridden amounts and removes skipped occurrences.
+  Before the first version there is no occurrence. A version change preserves its schedule anchor, interval, end month
+  and day clamping (including the 31st in February). Single-rule inputs become one version effective from their
+  anchor or one-time month, preserving existing results. Rejected overrides are returned once, as in the resolver; ignored orphaned overrides can be found with `findOrphanedOverrides`.
 - Payment statuses are `{ itemType, itemId, month, settled }`; `settled: true` means paid expense or received income.
   Only active-month completed occurrences are excluded. Future-month statuses are ignored. `currentBalance` already
   includes completed payments, so they must not be applied again. An override keeps its original item's payment key.
@@ -72,7 +75,10 @@ change produces an outflow warning. Critical and outflow warnings can coexist.
 
 Errors are codes, never UI strings: `invalid-settings`, `invalid-month`, `invalid-horizon`, `invalid-amount`,
 `invalid-item` (with `itemId`), `missing-rate` / `invalid-rate` (with `currency`), and `amount-overflow`.
-Invalid item amounts, currencies, types and schedules all fail with `invalid-item`, without partial totals.
+Invalid item amounts, currencies, types, schedules and version lists all fail with `invalid-item`, without partial
+totals, including invalid versions outside the forecast horizon. This preserves the forecast error contract; callers
+that need to omit and report invalid stored items (#88) can use `validateRuleVersions` or the versioned resolver
+before forecasting.
 Rejected stored overrides retain the resolver's nonfatal diagnostics. Only `MoneyOverflowError` from the shared
 money arithmetic maps to `amount-overflow`; other unexpected errors propagate.
 
@@ -96,3 +102,8 @@ and applies name-based overrides. The port uses explicit months, Settings, warni
 `src/money.test.ts` (`convertViaPln`) checks pair directions, ISO exponents and exact rounding. The forecast characterization
 compares the fixture budget's rolling totals and warning severities at legacy thresholds; the old golden master
 remains unchanged. Deliberate differences are recorded in `test/LEGACY.md`.
+
+`src/forecast-versions.test.ts` covers scheduled changes, boundary months, overrides, recurrence and unchanged
+months before a change. `src/forecast.property.test.ts` compares every month with a one-month forecast of
+`itemInForce`, including arbitrary version order, schedules and overrides. Calendar arithmetic uses `YYYY-MM`
+and integers only; no `Date` or time-zone conversion is involved.

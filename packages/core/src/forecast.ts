@@ -10,17 +10,18 @@ import {
   toMinorUnits,
 } from "./money";
 import type { ClosingItem, PaymentStatus } from "./month-closing";
-import {
-  type OccurrenceOverride,
-  type RejectedOverride,
-  resolveOccurrences,
-} from "./occurrence-overrides";
+import type { OccurrenceOverride, RejectedOverride } from "./occurrence-overrides";
 import { validateSchedule } from "./recurrence";
+import {
+  resolveVersionedOccurrences,
+  type VersionedItem,
+  validateRuleVersions,
+} from "./rule-versions";
 import { MAX_FORECAST_HORIZON_MONTHS, type Settings, updateSettings } from "./settings";
 import { addMonths, daysInMonth, isYearMonth, type YearMonth } from "./year-month";
 
-/** Shared currency-bearing item until #138 moves currency onto ScheduledItem. */
-export type ForecastItem = ClosingItem;
+/** Currency stays fixed per item; single-rule inputs remain supported. */
+export type ForecastItem = ClosingItem | (VersionedItem & { readonly currency: CurrencyCode });
 
 /** Current cached candidate, quoted as 1 currency = mid PLN. Freshness is supplied by the cache (#8/#93). */
 export interface ForecastRate {
@@ -139,10 +140,12 @@ function validHorizon(fromMonth: YearMonth, months: number): boolean {
 function validItem(item: ForecastItem): boolean {
   return (
     isCurrencyCode(item.currency) &&
-    isMinorUnits(item.amount) &&
-    item.amount >= 0 &&
     (item.itemType === "income" || item.itemType === "expense") &&
-    validateSchedule(item.schedule).length === 0
+    ("versions" in item
+      ? validateRuleVersions(item.versions).length === 0
+      : isMinorUnits(item.amount) &&
+        item.amount >= 0 &&
+        validateSchedule(item.schedule).length === 0)
   );
 }
 
@@ -205,6 +208,12 @@ export function forecast(input: ForecastInput): ForecastResult {
   if (error !== undefined) return { ok: false, error };
   const { items, overrides, paymentStatuses, currentBalance, totalSavings, fromMonth, settings } =
     input;
+  const versionedItems = items.map((item) => {
+    if ("versions" in item) return item;
+    const { amount, schedule, ...fields } = item;
+    const effectiveFrom = schedule.kind === "one-time" ? schedule.month : schedule.anchor;
+    return { ...fields, versions: [{ effectiveFrom, amount, schedule }] };
+  });
   const months = input.months ?? settings.forecastHorizonMonths;
   const rates = selectCurrentRates(input.rates);
   const used = new Map<CurrencyCode, ForecastRate>();
@@ -220,7 +229,7 @@ export function forecast(input: ForecastInput): ForecastResult {
   try {
     for (let index = 0; index < months; index++) {
       const month = addMonths(fromMonth, index);
-      const resolved = resolveOccurrences(items, overrides, month);
+      const resolved = resolveVersionedOccurrences(versionedItems, overrides, month);
       rejectedOverrides = resolved.rejectedOverrides;
       let income = toMinorUnits(0);
       let expenses = toMinorUnits(0);
