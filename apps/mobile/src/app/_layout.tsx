@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { StatusBar, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { DatabaseGate } from "../db/database-gate";
 import { I18nProvider } from "../i18n";
 import { AppStoreProvider } from "../state/app-store";
 import { NAV_THEME, resolveColorScheme } from "../ui/lib/theme";
@@ -61,7 +62,9 @@ export default function RootLayout() {
         <AppStoreProvider>
           <ThemeProvider value={theme}>
             <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
-            <RootStack />
+            <DatabaseGate>
+              <RootStack />
+            </DatabaseGate>
             {/* React Native Reusables portal target (its standard root setup, checked by \`doctor\`). The overlay
                 wrappers are native and do not render into it. */}
             <PortalHost />

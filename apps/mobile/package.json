@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@budget-lens/core": "workspace:*",
+    "@budget-lens/db": "workspace:*",
     "@expo/metro-runtime": "58.0.14",
     "@expo/ui": "58.0.21",
     "@formatjs/intl-pluralrules": "6.3.15",
@@ -36,6 +37,7 @@
     "expo-localization": "58.0.5",
     "expo-router": "58.0.24",
     "expo-splash-screen": "58.0.10",
+    "expo-sqlite": "58.0.13",
     "expo-symbols": "58.0.4",
     "expo-updates": "58.0.17",
     "i18next": "26.5.3",

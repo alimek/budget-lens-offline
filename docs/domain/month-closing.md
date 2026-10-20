@@ -68,6 +68,8 @@ Conversion overflow returns `amount-overflow`; invalid rates return `invalid-exc
 
 Frozen original amounts, currencies, rates and converted amounts do not change when later rates or item rules
 change. #85 persists those facts in `closed_occurrences`; history never converts them again at current rates.
+The table exists in `packages/db` schema v1 (#74). It stores the rate as a `mid` decimal string (PLN per
+unit) with source and effective date, matching #141 rather than today's provisional numeric `rate`.
 
 ## Payment status and confirmation
 

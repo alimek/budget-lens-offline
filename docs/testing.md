@@ -7,7 +7,8 @@
   TesterArmy service is not used ([#15 e2e decisions
   comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)). Which model provider to
   use is still an open decision in #15.
-- **Unit tests are minimal:** only business logic in `packages/core`, written as Arrange-Act-Assert. The fewer, the
+- **Unit tests are minimal:** only business logic in `packages/core`, plus the migrations and business-rule
+  constraints of `packages/db`, written as Arrange-Act-Assert. The fewer, the
   better – add a unit test only when it protects a business rule that is not obvious from the code.
 - **There are no percentage coverage thresholds**, anywhere (Vitest config or CI). Coverage is only reported.
 
@@ -23,6 +24,11 @@
     - `__snapshots__/` – Vitest snapshots;
     - `helpers.ts` – fixed time zone and frozen clock;
     - [`LEGACY.md`](../packages/core/test/LEGACY.md) – the list of `LEGACY:` behaviours.
+- **Database tests:** Vitest in `packages/db/test/` on Node with sql.js (SQLite in WebAssembly, tests only). They
+  cover migrating forward, re-running migrations, table rebuilds that keep child rows, and the constraints that
+  encode business rules (one active month, one rule version per item and month, singleton settings, required item
+  currency, RESTRICT foreign keys). SQLCipher itself is covered on devices (#75, e2e); see
+  [packages/db](../packages/db/README.md#tests).
 - **Typecheck of tests:** a separate TypeScript project.
   - `packages/core/tsconfig.json` covers `src` only, with `types: []`, so no Node.js types are available in core.
   - `packages/core/test/tsconfig.json` adds `types: ["node"]` and also checks `vitest.config.ts`.

@@ -1,0 +1,8 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    // Tests and tooling run on Node.js (sql.js, drizzle-kit).
+    "types": ["node"]
+  },
+  "include": [".", "../vitest.config.ts", "../drizzle.config.ts"]
+}

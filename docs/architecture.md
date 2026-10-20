@@ -3,7 +3,8 @@
 ## Current state
 
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
-issue by issue. `apps/mobile` now contains the Expo development-client scaffold (#73). `packages/db` (Drizzle schema) is planned.
+issue by issue. `apps/mobile` now contains the Expo development-client scaffold (#73). `packages/db` holds the Drizzle
+schema v1 and its migrations, which the app runs at startup (#74).
 What exists today in `packages/core`:
 - money in integer minor units: the `MinorUnits` type, exact operations, parsing and native `Intl.NumberFormat`
   currency formatting for `pl` and `en`, always showing full amounts (#2/#131, see [domain/money.md](domain/money.md) and
@@ -21,6 +22,7 @@ What exists today in `packages/core`:
 ```
 apps/mobile/             # Expo development client, Router, i18n, provider-scoped Zustand
 packages/core/           # pure TypeScript domain logic, tested with Vitest
+packages/db/             # Drizzle schema v1, drizzle-kit migrations and runMigrations() (#74, see its README)
   src/index.ts           # public API – everything exported from here
   test/                  # legacy characterization tests (#3): fixtures, legacy reference, snapshots, LEGACY.md
 docs/                    # architecture, conventions, glossary, domain, decisions (ADRs), testing
@@ -32,7 +34,7 @@ docs/                    # architecture, conventions, glossary, domain, decision
 ```
 apps/mobile  (scaffold, Stage 1)   Expo app: UI, navigation, state, platform integrations
    │ depends on
-   ├── packages/db   (planned)    Drizzle schema + migrations for expo-sqlite (SQLCipher)
+   ├── packages/db   (exists)     Drizzle schema + migrations for expo-sqlite (SQLCipher from #75)
    └── packages/core (exists)     pure TypeScript domain logic
 ```
 
@@ -73,7 +75,7 @@ implemented and what is still planned:
 | Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) | Implemented (#73): Expo SDK 58 development client |
 | Navigation | Expo Router | Implemented (#73) |
 | UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73, #119): Expo UI wrappers in `src/ui/native`, Indigo tokens in `global.css` + `src/ui/lib/theme.ts`, React Native Reusables components in `src/ui/components` ([design system](design-system.md)) |
-| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Planned (#75) |
+| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Partly implemented (#74): expo-sqlite 58.0.13, `packages/db` schema v1 with drizzle-orm 0.45.4 / drizzle-kit 0.31.11, migrations applied by `runMigrations()` on every start ([packages/db/README.md](../packages/db/README.md)). SQLCipher, key storage and the cipher guard: planned (#75) |
 | Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) | Planned (#75) |
 | App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
@@ -105,8 +107,16 @@ pnpm workspaces + Turborepo, TypeScript 7 (`tsc`), Vitest, Biome, Fallow, Leftho
 Bundled i18n initializes synchronously from the device locale before navigation. The root contains
 `I18nProvider` → `AppStoreProvider` → Router `ThemeProvider` → Stack. The Zustand vanilla store is
 created once per provider with an injectable clock; it currently holds only the selected month.
-No SQLite data is copied into Zustand. Boot guards, DB injection and migrations belong to #75;
-onboarding and recovery belong to #59/#60. No database is opened by this scaffold.
+No SQLite data is copied into Zustand. Onboarding and recovery belong to #59/#60.
+
+**Database bootstrap (#74).** `DatabaseGate` (`src/db/database-gate.tsx`) wraps the Stack in the root layout. It
+calls `openAppDatabase()` (`src/db/database.ts`), which opens `budget-lens.db` with expo-sqlite (change listener
+on), wraps it with `createDatabase()` from `packages/db` and runs `runMigrations()`. The gate renders the screens only
+after that. This is the same path on first launch (creates schema v1) and after an upgrade (applies only new
+migrations). The connection is opened once per session. A failure is rethrown to the root error boundary. The
+SQLCipher key (`PRAGMA key`), cipher guard, Android Auto Backup exclusion and recovery screen are added in
+`openAppDatabase()` by #75, before migrations run. Until then, development builds create an unencrypted file, which
+#75 must handle. No repository or screen reads the database yet (#81).
 
 The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
 Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,
