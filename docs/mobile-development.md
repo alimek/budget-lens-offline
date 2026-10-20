@@ -73,6 +73,12 @@ navigation, Uniwind layout, and a provider-scoped Zustand selected month. All vi
 from locale resources. Native controls live in `src/ui/native`; #119 owns shared design tokens and
 components. DB boot, recovery, persistence, language preferences and onboarding are separate work.
 
+## Release builds (TestFlight)
+
+Release builds for internal TestFlight testing are made locally with `pnpm ios:build:unsigned` (compile check,
+no Apple account) and `pnpm ios:release` (signed build and upload with an App Store Connect API key from env vars).
+Prerequisites, env vars, versioning and the export compliance setting: [release/testflight.md](release/testflight.md).
+
 ## Native permissions and network
 
 The app is offline-first, so `app.json` keeps the native defaults minimal. Verify changes with
