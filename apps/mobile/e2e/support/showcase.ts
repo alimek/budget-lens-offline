@@ -130,27 +130,36 @@ export function appAlert(
   return { alert, confirm: alert.getByRole("button").last() };
 }
 
+/** Showcase nodes from top to bottom, close enough that scrolling to each in turn leaves no part of the page out. */
+const showcaseAnchors = [
+  "ds-section-inputs",
+  "ds-picker",
+  "ds-section-overlays",
+  "ds-section-lists",
+  "ds-section-amounts",
+  "ds-section-typography",
+  "ds-section-colors",
+  "ds-swatches-light",
+  "ds-swatches-dark",
+];
+
 /**
- * Captures the whole showcase page by page (`<name>-1`, `<name>-2`, …) for the review evidence: each swipe scrolls
- * about two thirds of the screen, until the last section (the dark colour tokens) is on screen.
+ * Captures the whole showcase page by page (`<name>-1`, `<name>-2`, …) for the review evidence: it scrolls to each
+ * anchor in turn and captures each new position. The engine's scroll is used because plain swipes on iOS were
+ * sometimes dropped right after an appearance switch.
  */
 export async function captureShowcase(
   { app, screen }: Pick<Fixtures, "app" | "screen">,
   name: string,
 ) {
-  const page = await screen.getByTestId("screen-design-system").boundingBox();
-  if (!page) throw new Error("the showcase has no bounds");
-  const x = page.x + page.width / 2;
-  const last = screen.getByTestId("ds-swatches-dark");
-  for (let index = 1; index <= 16; index += 1) {
+  let index = 1;
+  await app.screenshot(`${name}-${index}`);
+  for (const id of showcaseAnchors) {
+    const anchor = screen.getByTestId(id);
+    if (await anchor.isVisible()) continue;
+    await screen.scrollUntilVisible(anchor);
+    await settle();
+    index += 1;
     await app.screenshot(`${name}-${index}`);
-    if (await last.isVisible()) return;
-    await screen.swipe({
-      from: { x, y: page.y + page.height * 0.8 },
-      to: { x, y: page.y + page.height * 0.15 },
-      duration: 500,
-    });
-    await settle(1200);
   }
-  throw new Error("the end of the showcase was not reached");
 }

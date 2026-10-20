@@ -231,8 +231,10 @@ E2E_LARGE_TEXT=1 pnpm exec e2e run --target android --output .e2e/android-large-
 E2E_LARGE_TEXT=1 pnpm exec e2e run --target ios --output .e2e/ios-large-text e2e/large-text.e2e.ts
 ```
 
-It checks that every showcase control is reachable by scrolling and captures the components, the inputs and the
-list example at that size.
+It checks that every showcase control (overlay triggers included) is reachable by scrolling and captures the
+components, the inputs, the list example and the whole showcase at that size. The light and dark tests in
+`design-system.e2e.ts` capture the whole showcase too: `captureShowcase` scrolls to each section in turn and takes one
+screenshot per position (`showcase-<appearance>-<n>`).
 
 **`.e2e/cache`:** agent steps (`agent.act()` / `agent.assert()`) record their resolved actions in
 `apps/mobile/.e2e/cache/`, one file per step key, so later runs replay them without calling a model. This directory is
