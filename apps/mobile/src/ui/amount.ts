@@ -37,3 +37,8 @@ export function formatAmount(amount: MinorUnits, options: FormatAmountOptions): 
   if (amount > 0) return { text: sign === "always" ? `+${magnitude}` : magnitude, tone: "income" };
   return { text: magnitude, tone: "neutral" };
 }
+
+/** The colour token of an amount tone, for native views that take a colour instead of a class. */
+export function toneColorToken(tone: AmountTone): "income" | "expense" | "foreground" {
+  return tone === "neutral" ? "foreground" : tone;
+}

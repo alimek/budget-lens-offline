@@ -1,0 +1,40 @@
+import { test } from "@e2e-dev/mobile";
+import { expect } from "e2e";
+import { openListExample } from "./support/showcase";
+
+test("shows grouped transaction rows and toggles the paid state", async (fixtures) => {
+  // Arrange
+  const { app, screen, platform } = fixtures;
+  await openListExample(fixtures);
+  for (const id of ["ds-list", "ds-list-expenses", "ds-list-income", "ds-row-salary"]) {
+    await expect(screen.getByTestId(id)).toBeVisible();
+  }
+  const rent = screen.getByTestId("ds-row-rent");
+  // iOS names the status toggle; on Android the row is the checkbox and TalkBack reads its texts.
+  if (platform === "ios") await expect(rent).toHaveAccessibleName(/\S/);
+  await expect(rent).toBeChecked({ checked: false });
+  await expect(screen.getByTestId("ds-row-internet")).toBeChecked();
+
+  // Act
+  await rent.tap();
+
+  // Assert
+  await expect(rent).toBeChecked();
+  // After the taps: on iOS a tap into the SwiftUI list right after a capture can be dropped.
+  await app.screenshot("list");
+});
+
+test("adds a row with the add button", async (fixtures) => {
+  // Arrange
+  const { app, screen } = fixtures;
+  await openListExample(fixtures);
+  const add = screen.getByTestId("ds-add-button");
+  await expect(add).toHaveAccessibleName(/\S/);
+
+  // Act
+  await add.tap();
+
+  // Assert
+  await expect(screen.getByTestId("ds-row-new-1")).toBeVisible();
+  await app.screenshot("list-added");
+});

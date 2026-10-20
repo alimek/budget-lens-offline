@@ -36,11 +36,43 @@
       "onlyThisMonth": "Tylko ten miesiąc",
       "fromThisMonth": "Od tego miesiąca",
       "groceries": "Zakupy spożywcze",
-      "eatingOut": "Jedzenie na mieście"
+      "eatingOut": "Jedzenie na mieście",
+      "inputs": "Pola",
+      "name": "Nazwa",
+      "namePlaceholder": "np. Czynsz",
+      "amount": "Kwota",
+      "recoverySecret": "Sekret odzyskiwania",
+      "recurrence": "Powtarza się",
+      "once": "Jednorazowo",
+      "monthly": "Co miesiąc",
+      "yearly": "Co rok",
+      "dueDate": "Termin płatności",
+      "lists": "Listy",
+      "openList": "Otwórz przykład listy",
+      "listTitle": "Przykład listy",
+      "rent": "Czynsz",
+      "internet": "Internet",
+      "salary": "Wynagrodzenie",
+      "newItem": "Nowa pozycja {{number}}",
+      "due": "Termin: {{date}}",
+      "addItem": "Dodaj pozycję"
     }
   },
   "budget": {
     "used": "Wykorzystano {{percent}}%",
     "overBudget": "Przekroczony budżet: wykorzystano {{percent}}%"
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Anuluj"
+  },
+  "transaction": {
+    "paidLabel": "Zapłacone: {{title}}"
+  },
+  "amountInput": {
+    "empty": "Wpisz kwotę",
+    "invalidFormat": "Wpisz liczbę, np. 1 234,56",
+    "tooManyFractionDigits": "Użyj najwyżej 2 miejsc po przecinku",
+    "outOfRange": "Ta kwota jest za duża"
   }
 }

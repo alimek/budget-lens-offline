@@ -1,8 +1,10 @@
 import { toMinorUnits } from "@budget-lens/core";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { type PropsWithChildren, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { validateAmountInput } from "@/ui/amount-input";
+import type { CalendarDate } from "@/ui/calendar-date";
 import { AmountText } from "@/ui/components/amount-text";
 import { Badge } from "@/ui/components/badge";
 import { BudgetProgress } from "@/ui/components/budget-progress";
@@ -11,7 +13,10 @@ import { Screen } from "@/ui/components/screen";
 import { Separator } from "@/ui/components/separator";
 import { Text } from "@/ui/components/text";
 import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
+import { AppDatePicker } from "@/ui/native/date-picker";
+import { AppPicker } from "@/ui/native/picker";
 import { SegmentedControl } from "@/ui/native/segmented-control";
+import { AppTextField } from "@/ui/native/text-field";
 import { AppToggle } from "@/ui/native/toggle";
 import { type ColorScheme, type ColorToken, colors } from "@/ui/theme";
 import type { TypeVariant } from "@/ui/typography";
@@ -33,6 +38,8 @@ const TYPE_VARIANTS: readonly TypeVariant[] = [
 const SCHEMES: readonly ColorScheme[] = ["light", "dark"];
 
 type Scope = "only-this-month" | "from-this-month";
+
+type Recurrence = "once" | "monthly" | "yearly";
 
 function Section({
   title,
@@ -76,6 +83,13 @@ export default function DesignSystemScreen() {
   const { t } = useTranslation();
   const [privacyMode, setPrivacyMode] = useState(false);
   const [scope, setScope] = useState<Scope>("only-this-month");
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("12,345");
+  const [secret, setSecret] = useState("");
+  const [recurrence, setRecurrence] = useState<Recurrence>("monthly");
+  const [dueDate, setDueDate] = useState<CalendarDate>("2026-10-10");
+  const router = useRouter();
+  const amountResult = validateAmountInput(amount, "PLN");
   if (!__DEV__) return <Redirect href="/" />;
   return (
     <Screen testID="screen-design-system" contentClassName="gap-6">
@@ -157,6 +171,56 @@ export default function DesignSystemScreen() {
             budget={toMinorUnits(100_000)}
           />
         </Card>
+      </Section>
+      <Section title={t("dev.designSystem.inputs")} testID="ds-section-inputs">
+        <Card>
+          <AppTextField
+            testID="ds-text-field"
+            label={t("dev.designSystem.name")}
+            placeholder={t("dev.designSystem.namePlaceholder")}
+            value={name}
+            onChangeText={setName}
+          />
+          <AppTextField
+            testID="ds-amount-field"
+            label={t("dev.designSystem.amount")}
+            kind="decimal"
+            value={amount}
+            onChangeText={setAmount}
+            error={amountResult.ok ? undefined : t(amountResult.errorKey)}
+          />
+          <AppTextField
+            testID="ds-secure-field"
+            label={t("dev.designSystem.recoverySecret")}
+            kind="secure"
+            value={secret}
+            onChangeText={setSecret}
+          />
+          <AppPicker<Recurrence>
+            testID="ds-picker"
+            label={t("dev.designSystem.recurrence")}
+            value={recurrence}
+            onValueChange={setRecurrence}
+            options={[
+              { value: "once", label: t("dev.designSystem.once") },
+              { value: "monthly", label: t("dev.designSystem.monthly") },
+              { value: "yearly", label: t("dev.designSystem.yearly") },
+            ]}
+          />
+          <AppDatePicker
+            testID="ds-date-picker"
+            label={t("dev.designSystem.dueDate")}
+            value={dueDate}
+            onValueChange={setDueDate}
+          />
+        </Card>
+      </Section>
+      <Section title={t("dev.designSystem.lists")} testID="ds-section-lists">
+        <SecondaryButton
+          testID="ds-open-list"
+          label={t("dev.designSystem.openList")}
+          onPress={() => router.push("/dev/design-system-list")}
+        />
       </Section>
       <Section title={t("dev.designSystem.amounts")} testID="ds-section-amounts">
         <Card>

@@ -1,17 +1,6 @@
-import { type Device, test } from "@e2e-dev/mobile";
-import { expect, type TestFixtures } from "e2e";
-
-type Fixtures = TestFixtures & { device: Device };
-
-/** Opens the dev-only showcase from Settings; Expo UI on Android puts the test ID on a wrapper. */
-async function openShowcase({ app, screen, platform }: Fixtures) {
-  await app.open();
-  await expect(screen.getByTestId("screen-home")).toBeVisible();
-  await screen.getByTestId("tab-settings").tap();
-  const open = screen.getByTestId("settings-open-design-system");
-  await (platform === "android" ? open.getByRole("button") : open).tap();
-  await expect(screen.getByTestId("screen-design-system")).toBeVisible();
-}
+import { test } from "@e2e-dev/mobile";
+import { expect } from "e2e";
+import { openShowcase } from "./support/showcase";
 
 const componentIds = [
   "ds-card",

@@ -1,8 +1,8 @@
 import type { CurrencyCode, Language, MinorUnits } from "@budget-lens/core";
-import { useTranslation } from "react-i18next";
 import { type AmountSign, type AmountTone, formatAmount } from "@/ui/amount";
 import { Text } from "@/ui/components/text";
 import { cn } from "@/ui/lib/utils";
+import { useLanguage } from "@/ui/use-language";
 
 const toneClass: Record<AmountTone, string> = {
   income: "text-income",
@@ -35,8 +35,8 @@ export function AmountText({
   className,
   testID,
 }: AmountTextProps) {
-  const { i18n } = useTranslation();
-  const language: Language = lang ?? (i18n.language === "pl" ? "pl" : "en");
+  const appLanguage = useLanguage();
+  const language: Language = lang ?? appLanguage;
   const { text, tone } = formatAmount(amount, { lang: language, currency, sign });
   return (
     <Text
