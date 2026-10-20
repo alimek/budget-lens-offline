@@ -21,15 +21,17 @@ test("labels the inputs and validates the amount field", async (fixtures) => {
   // UIAutomator dump in docs/evidence/182), so on Android only the date field is checked by name.
   const named = platform === "ios" ? inputIds : ["ds-date-picker"];
   for (const id of named) await expect(screen.getByTestId(id)).toHaveAccessibleName(/\S/);
-  await expect(screen.getByTestId("ds-amount-field-error")).toBeVisible();
+  const amount = screen.getByTestId("ds-amount-field");
+  const amountError = screen.getByTestId("ds-amount-field-error");
+  await expect(amountError).toBeVisible();
+
+  // Act / Assert: a valid amount clears the error, three decimals bring it back.
+  await amount.fill("12,34");
+  await expect(amountError).toHaveCount(0);
+  await amount.fill("12,345");
+  await expect(amountError).toBeVisible();
+  // Captures end each test: on iOS the first gesture right after a capture can be dropped.
   await app.screenshot("inputs-error");
-
-  // Act
-  await screen.getByTestId("ds-amount-field").fill("12,34");
-
-  // Assert
-  await expect(screen.getByTestId("ds-amount-field-error")).toHaveCount(0);
-  await app.screenshot("inputs");
 });
 
 test("picks an option from the native picker menu", async (fixtures) => {
@@ -40,15 +42,15 @@ test("picks an option from the native picker menu", async (fixtures) => {
   const picker = screen.getByTestId("ds-picker");
   await picker.tap();
   await expect(screen.getByTestId("ds-picker-yearly")).toBeVisible();
-  await app.screenshot("picker-menu");
 
   // Act
   await screen.getByTestId("ds-picker-yearly").tap();
 
-  // Assert
+  // Assert: the menu closes and opens again with the new selection.
   await expect(screen.getByTestId("ds-picker-yearly")).toHaveCount(0);
   await picker.tap();
   await expect(screen.getByTestId("ds-picker-yearly")).toBeVisible();
+  await app.screenshot("picker-menu");
 });
 
 test("opens the native calendar from the date picker", async (fixtures) => {

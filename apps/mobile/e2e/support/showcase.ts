@@ -9,10 +9,20 @@ export async function openShowcase({ app, screen, platform }: Fixtures) {
   await expect(screen.getByTestId("screen-home")).toBeVisible();
   await screen.getByTestId("tab-settings").tap();
   const open = screen.getByTestId("settings-open-design-system");
-  // Below the fold at large text sizes.
-  await screen.scrollUntilVisible(open);
+  // Below the fold only at large text sizes; a tap during scroll momentum would just stop the scroll.
+  if (!(await open.isVisible())) {
+    await screen.scrollUntilVisible(open);
+    await settle();
+  }
   await (platform === "android" ? open.getByRole("button") : open).tap();
   await expect(screen.getByTestId("screen-design-system")).toBeVisible();
+  // Let the push transition finish: iOS ignores a scroll that starts while the screen is still sliding in.
+  await settle();
+}
+
+/** Waits for animations (scroll momentum, navigation transitions) that the engine does not wait for. */
+function settle() {
+  return new Promise((resolve) => setTimeout(resolve, 600));
 }
 
 /**
