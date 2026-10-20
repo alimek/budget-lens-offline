@@ -56,7 +56,7 @@ describe("runMigrations", () => {
     const applied = runMigrations(db);
 
     // Assert
-    expect(applied).toBe(1);
+    expect(applied).toBe(schemaMigrations.journal.entries.length);
     expect(tableNames(db)).toEqual([
       "__drizzle_migrations",
       "app_meta",
@@ -69,6 +69,42 @@ describe("runMigrations", () => {
       "payment_statuses",
       "savings",
       "settings",
+    ]);
+    expect(foreignKeysEnabled(db)).toBe(true);
+  });
+
+  it("keeps the current quote when upgrading the currency key", () => {
+    // Arrange
+    const db = openTestDatabase();
+    const initial = schemaMigrations.journal.entries[0];
+    if (initial === undefined) throw new Error("Missing initial migration");
+    runMigrations(db, {
+      journal: { entries: [initial] },
+      migrations: schemaMigrations.migrations,
+    });
+    db.insert(schema.exchangeRates)
+      .values({
+        currency: "EUR",
+        source: "manual",
+        mid: "4.25",
+        effectiveDate: "2026-10-20",
+        fetchedAt: new Date(1),
+      })
+      .run();
+
+    // Act
+    const applied = runMigrations(db);
+
+    // Assert
+    expect(applied).toBe(1);
+    expect(db.select().from(schema.exchangeRates).all()).toEqual([
+      {
+        currency: "EUR",
+        source: "manual",
+        mid: "4.25",
+        effectiveDate: "2026-10-20",
+        fetchedAt: new Date(1),
+      },
     ]);
     expect(foreignKeysEnabled(db)).toBe(true);
   });

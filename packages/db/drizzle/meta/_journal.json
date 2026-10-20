@@ -8,6 +8,13 @@
       "when": 1792522913875,
       "tag": "0000_schema_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792528401885,
+      "tag": "0001_current_rate_per_currency",
+      "breakpoints": true
     }
   ]
 }

@@ -50,6 +50,30 @@ describe("schema v1 constraints", () => {
     );
   });
 
+  it("keeps only one current rate per currency across sources", () => {
+    // Arrange
+    const quote = {
+      currency: "EUR" as const,
+      mid: "4.25",
+      effectiveDate: "2026-10-20",
+      fetchedAt: new Date(1),
+    };
+    db.insert(schema.exchangeRates)
+      .values({ ...quote, source: "nbp" })
+      .run();
+
+    // Act
+    const error = sqliteError(() =>
+      db
+        .insert(schema.exchangeRates)
+        .values({ ...quote, source: "manual" })
+        .run(),
+    );
+
+    // Assert
+    expect(error).toContain("UNIQUE constraint failed: exchange_rates.currency");
+  });
+
   it("keeps settings a single row", () => {
     // Arrange
     db.insert(schema.settings).values(settingsRow(1)).run();

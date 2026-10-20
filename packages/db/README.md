@@ -22,7 +22,7 @@ month-close transaction (#85) are not here yet.
 | `closed_occurrences` | `(month, item_id)` | Frozen close snapshot: original amount and currency, rate used (`rate_mid` PLN per unit, `rate_source`, `rate_effective_date`; all NULL for base-currency items) and the base-currency amount. |
 | `settings` | `id = 1` (CHECK) | Typed singleton for core `Settings` plus `onboarding_completed_at` (locks `base_currency`, #139). No SQL defaults: `DEFAULT_SETTINGS` in core is the only source. |
 | `savings` | `id` | Savings with their own currency. |
-| `exchange_rates` | `(currency, source)` | Current rate only, no history. At most one NBP row and one manual row per currency, matching core's `RateStore` contract. |
+| `exchange_rates` | `currency` | One current rate per currency, no history. The repository selects the newer NBP/manual quote before writing. |
 | `app_meta` | `key` | Small app-level facts. |
 
 Conventions:

@@ -16,7 +16,8 @@ no sign-up, and the first launch guides the user through a short onboarding.
 
 **In:**
 - `apps/mobile` scaffold, navigation skeleton, design-system component layer.
-- `packages/db` (Drizzle schema + migrations).
+- `packages/db` (Drizzle schema + migrations): implemented in #74, with a database gate before data screens render.
+  SQLCipher key setup, encrypted copies before pending migrations and recovery remain #75.
 - SQLCipher with a device-only random key (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), a cipher guard, and a recovery screen
   for "database present, key missing". "Start over" keeps the orphaned DB for 30 days or until the first successful
   backup. The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
