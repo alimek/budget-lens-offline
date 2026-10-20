@@ -64,14 +64,16 @@ Use stable `kebab-case` IDs: `<area>-<element>[-<variant>]`. Never put translate
 data in an ID. Screen roots use `screen-<name>` with `collapsable={false}`. Overview uses `screen-home`
 for the #15 smoke contract; other roots are `screen-month`, `screen-forecast`, `screen-items`,
 `screen-settings`, and `screen-savings`. Native triggers use `tab-overview`, `tab-month`,
-`tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`.
+`tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`. The dev-only
+design system showcase uses `screen-design-system`, opened by `settings-open-design-system`; its elements use the
+`ds-` prefix ([design system](design-system.md#showcase)).
 
 ## Scope
 
 The scaffold has bundled English/Polish strings, device-language initialization, light/dark system
 navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
-from locale resources. Native controls live in `src/ui/native`; #119 owns shared design tokens and
-components. DB boot, recovery, persistence, language preferences and onboarding are separate work.
+from locale resources. Screens are built from the [design system](design-system.md) (#119): Expo UI
+wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. DB boot, recovery, persistence, language preferences and onboarding are separate work.
 
 ## Native permissions and network
 

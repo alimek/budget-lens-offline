@@ -1,10 +1,12 @@
 import { NativeTabs } from "expo-router/native-tabs";
 import { useTranslation } from "react-i18next";
+import { useDynamicColor } from "../../ui/use-theme";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const tint = useDynamicColor("primary");
   return (
-    <NativeTabs disableTransparentOnScrollEdge labelVisibilityMode="labeled">
+    <NativeTabs disableTransparentOnScrollEdge labelVisibilityMode="labeled" tintColor={tint}>
       <NativeTabs.Trigger name="overview" testID="tab-overview">
         <NativeTabs.Trigger.Label>{t("nav.tabs.overview")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="dashboard" />
