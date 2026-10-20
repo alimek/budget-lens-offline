@@ -175,11 +175,12 @@ from Settings, checks its components and native controls in light and dark mode 
 accessibility without translated text (the toggle has a non-empty accessible name and flips its checked state, the
 budget progress bars are named and show their status text), scrolls to the type scale and the colour tokens with
 `screen.scrollUntilVisible` (the mobile engine has no `scrollIntoView`) and takes the screenshots used as the visual
-reference. The scaffold tab tests take one screenshot per tab (`settings` included). `design-system-inputs.e2e.ts` (#182) checks the text,
-amount, secure, picker and date fields by test ID and accessible name, the amount validation error appearing and
-clearing, the native picker menu and the native calendar. `design-system-list.e2e.ts` opens the list example by deep
+reference. The scaffold tab tests take one screenshot per tab (`settings` included).
+`design-system-inputs.e2e.ts` (#182) checks the text, amount, secure, picker and date fields by test ID and
+accessible name, the amount validation error appearing and clearing, the native picker menu and the native
+calendar. `design-system-list.e2e.ts` opens the list example by deep
 link (`device.openLink`; on iOS it confirms the "Open in …?" alert when the simulator shows it) and checks the paid
-toggle and the add button. Shared steps are in `e2e/support/showcase.ts`.
+toggle (named on both platforms) and the add button. Shared steps are in `e2e/support/showcase.ts`.
 Fallow lists the config and test glob as real runner entry points (it has no e2e plugin).
 
 **Requirements:** Node from `.nvmrc` (the `e2e` package needs Node `^22.22.3 || >=24.8.0`), pnpm from
