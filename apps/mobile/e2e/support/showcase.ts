@@ -155,11 +155,6 @@ const showcaseAnchors = [
 ];
 
 /**
- * Captures the whole showcase page by page (`<name>-1`, `<name>-2`, …) for the review evidence: it scrolls to each
- * anchor in turn and captures each new position. The engine's scroll is used because plain swipes on iOS were
- * sometimes dropped right after an appearance switch.
- */
-/**
  * Scrolls the showcase until `target` is visible. At large text sizes the engine's scroll on iOS can start on an
  * embedded SwiftUI control, which swallows it ("scroll down moved nothing"); slow drags along the page's left margin,
  * where there is only the scroll view, are the fallback.
@@ -167,24 +162,33 @@ const showcaseAnchors = [
 export async function scrollShowcaseTo(screen: Fixtures["screen"], target: Locator) {
   try {
     await screen.scrollUntilVisible(target);
-    return;
   } catch (error) {
-    const page = await screen.getByTestId("screen-design-system").boundingBox();
-    if (!page) throw error;
-    const x = page.x + 6;
-    for (let attempt = 0; attempt < 12; attempt += 1) {
-      if (await target.isVisible()) return;
-      await screen.swipe({
-        from: { x, y: page.y + page.height * 0.75 },
-        to: { x, y: page.y + page.height * 0.35 },
-        duration: 1200,
-      });
-      await settle();
-    }
-    throw error;
+    if (!(await dragAlongMargin(screen, target))) throw error;
   }
 }
 
+/** Drags the showcase up along its left margin until `target` is visible; false if it never shows. */
+async function dragAlongMargin(screen: Fixtures["screen"], target: Locator) {
+  const page = await screen.getByTestId("screen-design-system").boundingBox();
+  if (!page) return false;
+  const x = page.x + 6;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    if (await target.isVisible()) return true;
+    await screen.swipe({
+      from: { x, y: page.y + page.height * 0.75 },
+      to: { x, y: page.y + page.height * 0.35 },
+      duration: 1200,
+    });
+    await settle();
+  }
+  return target.isVisible();
+}
+
+/**
+ * Captures the whole showcase page by page (`<name>-1`, `<name>-2`, …) for the review evidence: it scrolls to each
+ * anchor in turn and captures each new position. The engine's scroll is used because plain swipes on iOS were
+ * sometimes dropped right after an appearance switch.
+ */
 export async function captureShowcase(
   { app, screen }: Pick<Fixtures, "app" | "screen">,
   name: string,

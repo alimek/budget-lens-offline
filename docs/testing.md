@@ -234,7 +234,8 @@ E2E_LARGE_TEXT=1 pnpm exec e2e run --target ios --output .e2e/ios-large-text e2e
 It checks that every showcase control (overlay triggers included) is reachable by scrolling and captures the
 components, the inputs, the list example and the whole showcase at that size. The light and dark tests in
 `design-system.e2e.ts` capture the whole showcase too: `captureShowcase` scrolls to each section in turn and takes one
-screenshot per position (`showcase-<appearance>-<n>`).
+screenshot per position (`showcase-<appearance>-<n>`). At 200% on iOS the engine's scroll can start on an embedded
+SwiftUI control and move nothing, so `scrollShowcaseTo` falls back to slow drags along the page's left margin.
 
 **`.e2e/cache`:** agent steps (`agent.act()` / `agent.assert()`) record their resolved actions in
 `apps/mobile/.e2e/cache/`, one file per step key, so later runs replay them without calling a model. This directory is
