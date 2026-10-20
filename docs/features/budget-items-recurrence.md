@@ -18,7 +18,7 @@ and never rewrites history.
 **In:**
 - Recurrence engine ([#4](https://github.com/alimek/budget-lens-offline/issues/4), done).
 - Per-item currency in core ([#138](https://github.com/alimek/budget-lens-offline/issues/138)).
-- Rule versioning ([#80](https://github.com/alimek/budget-lens-offline/issues/80)).
+- Rule versioning ([#80](https://github.com/alimek/budget-lens-offline/issues/80), done in core: [rule versions](../domain/rule-versions.md)).
 - Items tables ([#81](https://github.com/alimek/budget-lens-offline/issues/81)).
 - Items list on the **Items** tab ([#112](https://github.com/alimek/budget-lens-offline/issues/112)), grouped by kind (expenses / incomes).
 - Add/edit form with currency picker and recurrence picker ([#82](https://github.com/alimek/budget-lens-offline/issues/82)).
@@ -56,7 +56,7 @@ and never rewrites history.
 
 ## Dependencies
 
-- Core: [#4](https://github.com/alimek/budget-lens-offline/issues/4) and [#5](https://github.com/alimek/budget-lens-offline/issues/5) (done), [#138](https://github.com/alimek/budget-lens-offline/issues/138), [#80](https://github.com/alimek/budget-lens-offline/issues/80).
+- Core: [#4](https://github.com/alimek/budget-lens-offline/issues/4), [#5](https://github.com/alimek/budget-lens-offline/issues/5) and [#80](https://github.com/alimek/budget-lens-offline/issues/80) (done), [#138](https://github.com/alimek/budget-lens-offline/issues/138).
 - DB: [#81](https://github.com/alimek/budget-lens-offline/issues/81).
 - UI: [#63](https://github.com/alimek/budget-lens-offline/issues/63), [#64](https://github.com/alimek/budget-lens-offline/issues/64), [#61](https://github.com/alimek/budget-lens-offline/issues/61).
 - Rates for the base-value hint: [#8](https://github.com/alimek/budget-lens-offline/issues/8), [#92](https://github.com/alimek/budget-lens-offline/issues/92), [#93](https://github.com/alimek/budget-lens-offline/issues/93).

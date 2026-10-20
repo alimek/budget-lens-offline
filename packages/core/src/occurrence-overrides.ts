@@ -15,7 +15,7 @@ export interface ScheduledItem {
 /**
  * A change of one occurrence of a recurring item in one month: a different `amount` (≥ 0), or `skipped`. At most
  * one override exists per `(itemType, itemId, month)`. Overrides never change other months; "from this month on" is
- * a change of the item's rule (rule versioning, #80), not an override.
+ * a change of the item's rule (a rule version, see `rule-versions.ts`), not an override.
  */
 export interface OccurrenceOverride {
   readonly id: string;

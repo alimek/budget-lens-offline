@@ -91,6 +91,31 @@ export {
   validateSchedule,
 } from "./recurrence";
 export type {
+  ItemInForce,
+  ResolvedVersionedMonth,
+  RuleEdit,
+  RuleEditContext,
+  RuleEditError,
+  RuleEditNotice,
+  RuleEditPlan,
+  RuleEditResult,
+  RuleEditScope,
+  RuleEditState,
+  RulePatch,
+  RuleVersion,
+  RuleVersionErrorCode,
+  VersionedItem,
+} from "./rule-versions";
+export {
+  applyRuleEditPlan,
+  defaultEditScope,
+  itemInForce,
+  planRuleEdit,
+  resolveVersionedOccurrences,
+  validateRuleVersions,
+  versionInForce,
+} from "./rule-versions";
+export type {
   Language,
   LanguagePreference,
   Settings,

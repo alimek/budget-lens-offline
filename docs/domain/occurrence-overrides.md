@@ -23,8 +23,10 @@ An `OccurrenceOverride` changes **one occurrence of one recurring item in one mo
   never applied.
 - Items are matched by `(itemType, itemId)` only – **never by name**. Renaming an item or having two items with the
   same name does not affect overrides.
-- "From this month on" is **not** an override: it is a change of the item's rule (rule versioning, #80), so past
-  months keep their amounts. An override only ever changes its own month.
+- "From this month on" is **not** an override: it is a change of the item's rule ([rule versions](rule-versions.md),
+  #80), so past months keep their amounts. An override only ever changes its own month. Overrides are independent
+  of versions; after a rule edit, `planRuleEdit` lists the overrides it orphans (deleted after confirmation) and the
+  ones it keeps.
 - Payment status stays per item and month (`payment_status`, legacy `004_create_payment_status.sql`): a resolved
   occurrence carries `item` and `month`, which is the key of its payment status. A skipped occurrence has nothing to
   pay; an existing payment-status row of that month is kept but not shown, and applies again if the skip is removed.
