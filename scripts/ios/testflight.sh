@@ -29,8 +29,10 @@ Environment (values are never printed):
   ASC_ISSUER_ID          App Store Connect API issuer ID (signed build, upload)
   ASC_KEY_PATH           path to the AuthKey_<id>.p8 file, outside the repository (signed build, upload)
   IOS_BUNDLE_IDENTIFIER  optional override of ios.bundleIdentifier from apps/mobile/app.json
-  IOS_BUILD_NUMBER       optional CFBundleVersion; default: UTC date and time as YYYYMMDD.HHMM
-  IOS_BUILD_DIR          optional output directory; default: apps/mobile/build/ios (gitignored)
+  IOS_BUILD_NUMBER       optional CFBundleVersion; default: UTC YYYYMMDD.HHMM.SS, each part an integer
+                         without leading zeros (09:05:07 -> 20261020.905.7)
+  IOS_BUILD_DIR          optional output directory outside the repository or under apps/mobile/build/
+                         (gitignored); default: apps/mobile/build/ios
 USAGE
 }
 
@@ -46,6 +48,17 @@ BUILD_DIR="${IOS_BUILD_DIR:-$APP_DIR/build/ios}"
 ARCHIVE_PATH="$BUILD_DIR/BudgetLens.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 LOG_DIR="$BUILD_DIR/logs"
+
+# Temporary directory with the API key link (upload only). Script-level so that the EXIT trap still sees it after
+# upload() has returned; the guard keeps the trap safe under `set -u` when no upload ran.
+KEYS_DIR=""
+cleanup() {
+  if [[ -n ${KEYS_DIR:-} ]]; then
+    rm -rf -- "$KEYS_DIR"
+  fi
+  KEYS_DIR=""
+}
+trap cleanup EXIT
 
 COMMAND="${1:-}"
 [ -n "$COMMAND" ] || {
@@ -138,9 +151,41 @@ check_env() {
       esac
     fi
   fi
+  if [ -n "${IOS_BUILD_DIR:-}" ]; then
+    check_build_dir
+  fi
   if [ -n "${IOS_BUILD_NUMBER:-}" ] && ! [[ "$IOS_BUILD_NUMBER" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
     PROBLEMS+=("IOS_BUILD_NUMBER must be one to three period-separated integers")
   fi
+}
+
+# Absolute, symlink-resolved form of a path that may not exist yet (resolves the nearest existing ancestor).
+resolve_path() {
+  local path="$1" rest=""
+  [[ $path == /* ]] || path="$PWD/$path"
+  while [ ! -d "$path" ]; do
+    rest="/$(basename "$path")$rest"
+    path="$(dirname "$path")"
+  done
+  printf '%s%s' "$(cd "$path" && pwd -P)" "$rest"
+}
+
+# IOS_BUILD_DIR holds ExportOptions.plist (with the team ID) and logs: inside the repository only the gitignored
+# apps/mobile/build/ is allowed.
+check_build_dir() {
+  local resolved repo
+  case "/$IOS_BUILD_DIR/" in
+    */../*)
+      PROBLEMS+=("IOS_BUILD_DIR must not contain '..'")
+      return
+      ;;
+  esac
+  resolved="$(resolve_path "$IOS_BUILD_DIR")"
+  repo="$(cd "$REPO_ROOT" && pwd -P)"
+  case "$resolved/" in
+    "$repo/apps/mobile/build/"*) ;;
+    "$repo/"*) PROBLEMS+=("IOS_BUILD_DIR inside the repository must be under apps/mobile/build/ (gitignored)") ;;
+  esac
 }
 
 env_status() {
@@ -166,11 +211,15 @@ check_tools() {
 }
 
 default_build_number() {
-  # Monotonic per minute (UTC), valid CFBundleVersion: YYYYMMDD.HHMM without leading zeros in the minute part.
-  local day hhmm
-  day="$(date -u +%Y%m%d)"
-  hhmm="$(date -u +%H%M)"
-  printf '%s.%s' "$day" "$((10#$hhmm))"
+  # UTC YYYYMMDD.HHMM.SS with every part written as an integer (no leading zeros, 09:05:07 -> 20261020.905.7):
+  # a valid CFBundleVersion (up to three period-separated integers), increasing and unique per second.
+  local stamp day hhmm ss
+  stamp="$(date -u +%Y%m%d.%H%M.%S)"
+  day="${stamp%%.*}"
+  hhmm="${stamp#*.}"
+  hhmm="${hhmm%.*}"
+  ss="${stamp##*.}"
+  printf '%s.%s.%s' "$day" "$((10#$hhmm))" "$((10#$ss))"
 }
 
 check_env
@@ -289,15 +338,20 @@ upload() {
   fi
   [ -n "$ipa" ] && [ -f "$ipa" ] || die "no IPA found; run 'build' first or pass --ipa <path>"
   # altool looks the key up by file name (AuthKey_<id>.p8) in $API_PRIVATE_KEYS_DIR: link it from a private
-  # temporary directory that is removed on exit, so the key is never copied.
-  local keys_dir
-  keys_dir="$(mktemp -d)"
-  trap 'rm -rf "$keys_dir"' EXIT
-  chmod 700 "$keys_dir"
-  ln -s "$ASC_KEY_PATH" "$keys_dir/AuthKey_${ASC_KEY_ID}.p8"
+  # temporary directory (KEYS_DIR, removed below and by the EXIT trap), so the key is never copied.
+  local tmp_root="${TMPDIR:-/tmp}"
+  KEYS_DIR="$(mktemp -d "${tmp_root%/}/budget-lens-asc-keys.XXXXXX")"
+  chmod 700 "$KEYS_DIR"
+  ln -s "$ASC_KEY_PATH" "$KEYS_DIR/AuthKey_${ASC_KEY_ID}.p8"
   log "Uploading $(basename "$ipa") to App Store Connect (TestFlight)"
-  API_PRIVATE_KEYS_DIR="$keys_dir" xcrun altool --upload-app -f "$ipa" -t ios \
-    --api-key "$ASC_KEY_ID" --api-issuer "$ASC_ISSUER_ID"
+  local status=0
+  API_PRIVATE_KEYS_DIR="$KEYS_DIR" xcrun altool --upload-app -f "$ipa" -t ios \
+    --api-key "$ASC_KEY_ID" --api-issuer "$ASC_ISSUER_ID" || status=$?
+  cleanup
+  if [ "$status" -ne 0 ]; then
+    printf 'error: upload failed (altool exit code %s)\n' "$status" >&2
+    exit "$status"
+  fi
   log "Upload finished; the build appears in TestFlight after App Store Connect processing."
 }
 

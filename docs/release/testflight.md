@@ -34,8 +34,8 @@ template is in [`.env.example`](../../.env.example); export the values in your s
 | `ASC_ISSUER_ID` | signed build, upload | App Store Connect API issuer ID |
 | `ASC_KEY_PATH` | signed build, upload | Path to `AuthKey_<key id>.p8`; must be outside the repository |
 | `IOS_BUNDLE_IDENTIFIER` | optional | Overrides `ios.bundleIdentifier` from `app.json` |
-| `IOS_BUILD_NUMBER` | optional | `CFBundleVersion`; default: UTC date and time `YYYYMMDD.HHMM` |
-| `IOS_BUILD_DIR` | optional | Output directory; default `apps/mobile/build/ios` (gitignored) |
+| `IOS_BUILD_NUMBER` | optional | `CFBundleVersion`; default: UTC `YYYYMMDD.HHMM.SS`, each part an integer (see below) |
+| `IOS_BUILD_DIR` | optional | Output directory; default `apps/mobile/build/ios` (gitignored). Inside the repository only `apps/mobile/build/` is accepted, since the directory holds `ExportOptions.plist` with the team ID and the logs; paths with `..` are refused |
 
 `apps/mobile/app.config.ts` applies `IOS_BUNDLE_IDENTIFIER`, `IOS_BUILD_NUMBER` and `APPLE_TEAM_ID` on top of
 `app.json` during `expo prebuild`.
@@ -44,9 +44,11 @@ template is in [`.env.example`](../../.env.example); export the values in your s
 
 - **Version** (`CFBundleShortVersionString`) is `expo.version` in `apps/mobile/app.json`. Bump it in a PR for a new
   release line.
-- **Build number** (`CFBundleVersion`) is generated per build: by default the UTC date and time as
-  `YYYYMMDD.HHMM` (for example `20261020.1405`), so it increases automatically and never repeats for the same
-  version as long as builds are at least a minute apart. Set `IOS_BUILD_NUMBER` to override it (one to three
+- **Build number** (`CFBundleVersion`) is generated per build: by default the UTC date, time and seconds as
+  `YYYYMMDD.HHMM.SS` with every part written as an integer without leading zeros, so 09:05:07 UTC on 2026-10-20 gives
+  `20261020.905.7` and 14:05:00 gives `20261020.1405.0`. App Store Connect compares the parts numerically, so the
+  number increases automatically and never repeats for the same version as long as builds start at least a second
+  apart. Set `IOS_BUILD_NUMBER` to override it (one to three
   period-separated integers, higher than the last uploaded build).
 
 ## Commands
@@ -72,7 +74,8 @@ Steps of `pnpm ios:release`:
    `apps/mobile/build/ios/export/`.
 4. `xcrun altool --upload-app -t ios --api-key … --api-issuer …` uploads it. altool finds the key as
    `AuthKey_<key id>.p8` in `API_PRIVATE_KEYS_DIR`, which the script points at a private temporary directory with a
-   link to `ASC_KEY_PATH`, removed on exit.
+   link to `ASC_KEY_PATH` (under `$TMPDIR`). The directory is removed right after the upload and, as a fallback, by
+   an exit trap; the script's exit code is altool's exit code.
 
 `xcodebuild` output goes to `apps/mobile/build/ios/logs/` (gitignored; it contains the command line, so the key ID
 and key path, never the key itself). On failure the script prints only the error lines.
