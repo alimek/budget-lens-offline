@@ -1,20 +1,20 @@
 # ✓ captures the whole showcase at 200% text size
 
-`e2e/large-text.e2e.ts` · target `android` · passed · 33.0s
+`e2e/large-text.e2e.ts` · target `android` · passed · 30.6s
 
 Ran on: platform `android` · device `BudgetLens-Android`
 
 ## Steps
 
-1. ✓ `app.open` (1.3s) — `e2e/support/showcase.ts:9`
-2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (3.2s) — `e2e/support/showcase.ts:10`
-   - expect passed after 21 reads in 3.2s: no node (0 matches) x20 -&gt; at 3210ms default states (1 match)
+1. ✓ `app.open` (1.4s) — `e2e/support/showcase.ts:9`
+2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (3.1s) — `e2e/support/showcase.ts:10`
+   - expect passed after 20 reads in 3.1s: no node (0 matches) x19 -&gt; at 3064ms default states (1 match)
    - screen: 54 nodes at `com.budgetlens.offline`
-3. ✓ `locator.tap` `getByTestId("tab-settings")` (255ms) — `e2e/support/showcase.ts:38`
-   - tap tab "Settings" (255ms)
+3. ✓ `locator.tap` `getByTestId("tab-settings")` (245ms) — `e2e/support/showcase.ts:38`
+   - tap tab "Settings" (245ms)
    - screen: unchanged since step 2 at `com.budgetlens.offline`
-4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (501ms) — `e2e/support/showcase.ts:38`
-   - tap button (501ms)
+4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (408ms) — `e2e/support/showcase.ts:38`
+   - tap button (408ms)
    - screen: 18 changes since step 3 at `com.budgetlens.offline`, 52 nodes
      - `added text "Settings"`
      - `added group testid="screen-settings"`
@@ -29,27 +29,27 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `removed group testid="overview-savings-card"`
      - `removed heading "Savings"`
      - 6 more
-5. ✓ `app.screenshot` `large-text-showcase-1` (1.4s) — `e2e/support/showcase.ts:167`
+5. ✓ `app.screenshot` `large-text-showcase-1` (1.3s) — `e2e/support/showcase.ts:197`
    - [screenshot](attempt-1/screenshots/001-large-text-showcase-1.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/001-large-text-showcase-1.png`
-6. ✓ `screen.scrollUntilVisible` `getByTestId("ds-progress-over")` (1.3s) — `e2e/support/showcase.ts:171`
-   - screen: 70 changes since step 4 at `com.budgetlens.offline`, 82 nodes
+6. ✓ `screen.scrollUntilVisible` `getByTestId("ds-progress-over")` (1.3s) — `e2e/support/showcase.ts:164`
+   - screen: 69 changes since step 4 at `com.budgetlens.offline`, 81 nodes
      - `added button "Navigate up"`
      - `added text "Design system"`
      - `added group testid="screen-design-system"`
      - `added group testid="ds-section-components"`
      - `added group testid="ds-card"`
-     - `added text "PLN 3,895.67" text="PLN 3,895.67" testid="ds-amount-total"`
      - `added group testid="ds-primary-button"`
      - `added text "Add item"`
      - `added group testid="ds-secondary-button"`
      - `added text "Close month"`
      - `added button`
      - `added switch "Privacy mode" testid="ds-toggle"`
-     - 58 more
-7. ✓ `app.screenshot` `large-text-showcase-2` (1.5s) — `e2e/support/showcase.ts:174`
+     - `added text "Privacy mode"`
+     - 57 more
+7. ✓ `app.screenshot` `large-text-showcase-2` (1.4s) — `e2e/support/showcase.ts:204`
    - [screenshot](attempt-1/screenshots/002-large-text-showcase-2.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/002-large-text-showcase-2.png`
-8. ✓ `screen.scrollUntilVisible` `getByTestId("ds-picker")` (1.2s) — `e2e/support/showcase.ts:171`
-   - screen: 40 changes since step 6 at `com.budgetlens.offline`, 72 nodes
+8. ✓ `screen.scrollUntilVisible` `getByTestId("ds-picker")` (1.2s) — `e2e/support/showcase.ts:164`
+   - screen: 39 changes since step 6 at `com.budgetlens.offline`, 72 nodes
      - `added textbox "Every month" testid="ds-picker" value="Every month"`
      - `added text "Repeats"`
      - `added combobox`
@@ -62,10 +62,10 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added text "Show details"`
      - `added group testid="ds-open-alert"`
      - `added group testid="ds-menu"`
-     - 28 more
-9. ✓ `app.screenshot` `large-text-showcase-3` (1.4s) — `e2e/support/showcase.ts:174`
+     - 27 more
+9. ✓ `app.screenshot` `large-text-showcase-3` (1.4s) — `e2e/support/showcase.ts:204`
    - [screenshot](attempt-1/screenshots/003-large-text-showcase-3.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/003-large-text-showcase-3.png`
-10. ✓ `screen.scrollUntilVisible` `getByTestId("ds-section-lists")` (1.2s) — `e2e/support/showcase.ts:171`
+10. ✓ `screen.scrollUntilVisible` `getByTestId("ds-section-lists")` (1.2s) — `e2e/support/showcase.ts:164`
    - screen: 43 changes since step 8 at `com.budgetlens.offline`, 61 nodes
      - `added group testid="ds-section-lists"`
      - `added heading "Lists"`
@@ -80,10 +80,10 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added text "PLN 0.00" text="PLN 0.00" testid="ds-amount-zero"`
      - `added group testid="ds-section-typography"`
      - 31 more
-11. ✓ `app.screenshot` `large-text-showcase-4` (1.3s) — `e2e/support/showcase.ts:174`
+11. ✓ `app.screenshot` `large-text-showcase-4` (1.3s) — `e2e/support/showcase.ts:204`
    - [screenshot](attempt-1/screenshots/004-large-text-showcase-4.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/004-large-text-showcase-4.png`
-12. ✓ `screen.scrollUntilVisible` `getByTestId("ds-type-title-1")` (1.2s) — `e2e/support/showcase.ts:171`
-   - screen: 45 changes since step 10 at `com.budgetlens.offline`, 44 nodes
+12. ✓ `screen.scrollUntilVisible` `getByTestId("ds-type-title-1")` (1.2s) — `e2e/support/showcase.ts:164`
+   - screen: 47 changes since step 10 at `com.budgetlens.offline`, 44 nodes
      - `added group testid="ds-type-title-1"`
      - `added text "title-1"`
      - `added heading "Projected closing balance"`
@@ -96,12 +96,11 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added group testid="ds-type-headline"`
      - `added text "headline"`
      - `added text "Projected closing balance"`
-     - 33 more
-13. ✓ `app.screenshot` `large-text-showcase-5` (1.3s) — `e2e/support/showcase.ts:174`
+     - 35 more
+13. ✓ `app.screenshot` `large-text-showcase-5` (1.3s) — `e2e/support/showcase.ts:204`
    - [screenshot](attempt-1/screenshots/005-large-text-showcase-5.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/005-large-text-showcase-5.png`
-14. ✓ `screen.scrollUntilVisible` `getByTestId("ds-type-subheadline")` (1.2s) — `e2e/support/showcase.ts:171`
-   - screen: 29 changes since step 12 at `com.budgetlens.offline`, 51 nodes
-     - `added text "Projected closing balance"`
+14. ✓ `screen.scrollUntilVisible` `getByTestId("ds-type-subheadline")` (1.2s) — `e2e/support/showcase.ts:164`
+   - screen: 28 changes since step 12 at `com.budgetlens.offline`, 52 nodes
      - `added group testid="ds-type-callout"`
      - `added text "callout"`
      - `added text "Projected closing balance"`
@@ -113,46 +112,30 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added text "Projected closing balance"`
      - `added group testid="ds-type-caption"`
      - `added text "caption"`
-     - 17 more
-15. ✓ `app.screenshot` `large-text-showcase-6` (1.3s) — `e2e/support/showcase.ts:174`
+     - `added text "Projected closing balance"`
+     - 16 more
+15. ✓ `app.screenshot` `large-text-showcase-6` (1.3s) — `e2e/support/showcase.ts:204`
    - [screenshot](attempt-1/screenshots/006-large-text-showcase-6.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/006-large-text-showcase-6.png`
-16. ✓ `screen.scrollUntilVisible` `getByTestId("ds-swatches-light")` (1.2s) — `e2e/support/showcase.ts:171`
-   - screen: 34 changes since step 14 at `com.budgetlens.offline`, 49 nodes
-     - `added group testid="ds-swatches-light"`
-     - `added text "background"`
-     - `added text "foreground"`
-     - `added text "card"`
-     - `added text "card-foreground"`
-     - `added text "popover"`
-     - `added text "popover-foreground"`
+16. ✓ `screen.scrollUntilVisible` `getByTestId("ds-swatches-dark")` (2.3s) — `e2e/support/showcase.ts:164`
+   - screen: 55 changes since step 14 at `com.budgetlens.offline`, 47 nodes
      - `added text "primary"`
      - `added text "primary-foreground"`
      - `added text "secondary"`
      - `added text "secondary-foreground"`
      - `added text "muted"`
-     - 22 more
-17. ✓ `app.screenshot` `large-text-showcase-7` (1.3s) — `e2e/support/showcase.ts:174`
-   - [screenshot](attempt-1/screenshots/007-large-text-showcase-7.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/007-large-text-showcase-7.png`
-18. ✓ `screen.scrollUntilVisible` `getByTestId("ds-swatches-dark")` (1.3s) — `e2e/support/showcase.ts:171`
-   - screen: 21 changes since step 16 at `com.budgetlens.offline`, 46 nodes
+     - `added text "muted-foreground"`
+     - `added text "accent"`
+     - `added text "accent-foreground"`
+     - `added text "destructive"`
      - `added text "expense"`
      - `added text "income"`
      - `added text "border"`
-     - `added text "input"`
-     - `added text "ring"`
-     - `added text "Dark"`
-     - `added group testid="ds-swatches-dark"`
-     - `added text "card-foreground"`
-     - `added text "popover-foreground"`
-     - `removed group testid="ds-section-typography"`
-     - `removed group testid="ds-type-footnote"`
-     - `removed text "footnote"`
-     - 9 more
-19. ✓ `app.screenshot` `large-text-showcase-8` (1.3s) — `e2e/support/showcase.ts:174`
-   - [screenshot](attempt-1/screenshots/008-large-text-showcase-8.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/008-large-text-showcase-8.png`
+     - 43 more
+17. ✓ `app.screenshot` `large-text-showcase-7` (1.3s) — `e2e/support/showcase.ts:204`
+   - [screenshot](attempt-1/screenshots/007-large-text-showcase-7.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/007-large-text-showcase-7.png`
 
 ## Evidence
 
 - [screenshot](attempt-1/screenshots/001-large-text-showcase-1.png) `.e2e/android-large-text/results/large-text-captures-the-whole-showcase-at-9353a99368ba0caf/attempt-1/screenshots/001-large-text-showcase-1.png`
 
-<sub>e2e 0.21.2 · run `01a15a6b-d87a-7e87-a206-52de6f217819` · the whole run is in `report.json`</sub>
+<sub>e2e 0.21.2 · run `01a15a8e-9929-7ed3-99da-00a94114bc4d` · the whole run is in `report.json`</sub>

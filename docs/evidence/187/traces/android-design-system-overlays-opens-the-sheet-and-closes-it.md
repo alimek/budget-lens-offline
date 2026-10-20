@@ -1,20 +1,20 @@
 # ✓ opens the sheet and closes it with its button
 
-`e2e/design-system-overlays.e2e.ts` · target `android` · passed · 13.0s
+`e2e/design-system-overlays.e2e.ts` · target `android` · passed · 12.9s
 
 Ran on: platform `android` · device `BudgetLens-Android`
 
 ## Steps
 
-1. ✓ `app.open` (1.4s) — `e2e/support/showcase.ts:9`
-2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (3.2s) — `e2e/support/showcase.ts:10`
-   - expect passed after 19 reads in 3.2s: no node (0 matches) x18 -&gt; at 3213ms default states (1 match)
+1. ✓ `app.open` (1.3s) — `e2e/support/showcase.ts:9`
+2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (3.1s) — `e2e/support/showcase.ts:10`
+   - expect passed after 19 reads in 3.1s: no node (0 matches) x18 -&gt; at 3125ms default states (1 match)
    - screen: 54 nodes at `com.budgetlens.offline`
-3. ✓ `locator.tap` `getByTestId("tab-settings")` (242ms) — `e2e/support/showcase.ts:38`
-   - tap tab "Settings" (242ms)
+3. ✓ `locator.tap` `getByTestId("tab-settings")` (241ms) — `e2e/support/showcase.ts:38`
+   - tap tab "Settings" (241ms)
    - screen: unchanged since step 2 at `com.budgetlens.offline`
-4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (503ms) — `e2e/support/showcase.ts:38`
-   - tap button (503ms)
+4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (610ms) — `e2e/support/showcase.ts:38`
+   - tap button (610ms)
    - screen: 18 changes since step 3 at `com.budgetlens.offline`, 52 nodes
      - `added text "Settings"`
      - `added group testid="screen-settings"`
@@ -44,11 +44,11 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added progressbar`
      - `added text "Over budget: 120% used" testid="ds-progress-over-status"`
      - 60 more
-6. ✓ `locator.tap` `getByTestId("ds-open-sheet") >> getByRole("button")` (185ms) — `e2e/support/showcase.ts:38`
-   - tap button (185ms)
+6. ✓ `locator.tap` `getByTestId("ds-open-sheet") >> getByRole("button")` (187ms) — `e2e/support/showcase.ts:38`
+   - tap button (186ms)
    - screen: unchanged since step 5 at `com.budgetlens.offline`
-7. ✓ `locator.tap` `getByTestId("ds-sheet-done") >> getByRole("button")` (125ms) — `e2e/design-system-overlays.e2e.ts:32`
-   - tap button (125ms)
+7. ✓ `locator.tap` `getByTestId("ds-sheet-done") >> getByRole("button")` (117ms) — `e2e/design-system-overlays.e2e.ts:32`
+   - tap button (117ms)
    - screen: 74 changes since step 6 at `com.budgetlens.offline`, 24 nodes
      - `added group "Close sheet"`
      - `added group "Drag handle"`
@@ -63,7 +63,7 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `removed group testid="com.budgetlens.offline:id/action_bar_root"`
      - `removed group`
      - 62 more
-8. ✓ `expect.toHaveCount` `getByTestId("ds-sheet")` (165ms) — `e2e/design-system-overlays.e2e.ts:35`
+8. ✓ `expect.toHaveCount` `getByTestId("ds-sheet")` (179ms) — `e2e/design-system-overlays.e2e.ts:35`
    - screen: 74 changes since step 7 at `com.budgetlens.offline`, 84 nodes
      - `added group testid="com.budgetlens.offline:id/action_bar_root"`
      - `added button "Navigate up"`
@@ -78,8 +78,8 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added text "60% used" testid="ds-progress-status"`
      - `added progressbar "Eating out, Over budget: 120% used" testid="ds-progress-over"`
      - 62 more
-9. ✓ `locator.tap` `getByTestId("ds-open-sheet") >> getByRole("button")` (521ms) — `e2e/support/showcase.ts:38`
-   - tap button (521ms)
+9. ✓ `locator.tap` `getByTestId("ds-open-sheet") >> getByRole("button")` (486ms) — `e2e/support/showcase.ts:38`
+   - tap button (486ms)
    - screen: unchanged since step 8 at `com.budgetlens.offline`
 10. ✓ `app.screenshot` `sheet` (1.3s) — `e2e/design-system-overlays.e2e.ts:38`
    - [screenshot](attempt-1/screenshots/001-sheet.png) `.e2e/android/results/design-system-overlays-opens-the-sheet-and-closes-it-aaae46544b339820/attempt-1/screenshots/001-sheet.png`
@@ -88,4 +88,4 @@ Ran on: platform `android` · device `BudgetLens-Android`
 
 - [screenshot](attempt-1/screenshots/001-sheet.png) `.e2e/android/results/design-system-overlays-opens-the-sheet-and-closes-it-aaae46544b339820/attempt-1/screenshots/001-sheet.png`
 
-<sub>e2e 0.21.2 · run `01a15a66-5acb-721b-99db-d0468601074d` · the whole run is in `report.json`</sub>
+<sub>e2e 0.21.2 · run `01a15a89-0509-7b87-ba1d-1351665f42eb` · the whole run is in `report.json`</sub>
