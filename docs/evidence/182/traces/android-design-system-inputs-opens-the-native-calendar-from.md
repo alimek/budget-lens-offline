@@ -6,15 +6,15 @@ Ran on: platform `android` · device `BudgetLens-Android`
 
 ## Steps
 
-1. ✓ `app.open` (1.6s) — `e2e/support/showcase.ts:9`
-2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (1.8s) — `e2e/support/showcase.ts:10`
-   - expect passed after 9 reads in 1.8s: no node (0 matches) x8 -&gt; at 1765ms default states (1 match)
+1. ✓ `app.open` (1.7s) — `e2e/support/showcase.ts:9`
+2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (1.5s) — `e2e/support/showcase.ts:10`
+   - expect passed after 7 reads in 1.5s: no node (0 matches) x6 -&gt; at 1545ms default states (1 match)
    - screen: 53 nodes at `com.budgetlens.offline`
-3. ✓ `locator.tap` `getByTestId("tab-settings")` (286ms) — `e2e/support/showcase.ts:38`
-   - tap tab "Settings" (286ms)
+3. ✓ `locator.tap` `getByTestId("tab-settings")` (257ms) — `e2e/support/showcase.ts:38`
+   - tap tab "Settings" (257ms)
    - screen: unchanged since step 2 at `com.budgetlens.offline`
-4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (501ms) — `e2e/support/showcase.ts:38`
-   - tap button (501ms)
+4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (604ms) — `e2e/support/showcase.ts:38`
+   - tap button (604ms)
    - screen: 18 changes since step 3 at `com.budgetlens.offline`, 51 nodes
      - `added text "Settings"`
      - `added group testid="screen-settings"`
@@ -44,10 +44,11 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added progressbar`
      - `added text "Over budget: 120% used" testid="ds-progress-over-status"`
      - 51 more
-6. ✓ `locator.tap` `getByTestId("ds-date-picker")` (135ms) — `e2e/design-system-inputs.e2e.ts:63`
-   - tap button "Due date, Oct 10, 2026" (135ms)
+6. ✓ `locator.tap` `getByTestId("ds-date-picker")` (134ms) — `e2e/design-system-inputs.e2e.ts:63`
+   - tap button "Due date, Oct 10, 2026" (134ms)
    - screen: unchanged since step 5 at `com.budgetlens.offline`
-7. ✓ `expect.toBeVisible` `getByText("October 2026")` (386ms) — `e2e/design-system-inputs.e2e.ts:72`
+7. ✓ `expect.toBeVisible` `getByText("October 2026")` (385ms) — `e2e/design-system-inputs.e2e.ts:72`
+   - expect passed after 2 reads in 385ms: no node (0 matches) -&gt; at 385ms default states (1 match)
    - screen: 134 changes since step 6 at `com.budgetlens.offline`, 106 nodes
      - `added text "Select date"`
      - `added text "Current selection: Saturday, October 10, 2026" text="Oct 10, 2026"`
@@ -69,4 +70,4 @@ Ran on: platform `android` · device `BudgetLens-Android`
 
 - [screenshot](attempt-1/screenshots/001-date-picker.png) `.e2e/android/results/design-system-inputs-opens-the-native-calendar-from-7255a2c1bd88b978/attempt-1/screenshots/001-date-picker.png`
 
-<sub>e2e 0.21.2 · run `01a159b1-8fe8-7e30-9ff1-8be53825706b` · the whole run is in `report.json`</sub>
+<sub>e2e 0.21.2 · run `01a159c9-cc37-7f6c-a432-4039abd51cf8` · the whole run is in `report.json`</sub>

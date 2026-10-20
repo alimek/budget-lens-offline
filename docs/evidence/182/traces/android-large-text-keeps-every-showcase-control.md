@@ -1,20 +1,33 @@
 # ✓ keeps every showcase control reachable at 200% text size
 
-`e2e/large-text.e2e.ts` · target `android` · passed · 10.2s
+`e2e/large-text.e2e.ts` · target `android` · passed · 9.7s
 
 Ran on: platform `android` · device `BudgetLens-Android`
 
 ## Steps
 
-1. ✓ `app.open` (1.7s) — `e2e/support/showcase.ts:9`
-2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (1.6s) — `e2e/support/showcase.ts:10`
-   - expect passed after 9 reads in 1.6s: no node (0 matches) x8 -&gt; at 1648ms default states (1 match)
-   - screen: 53 nodes at `com.budgetlens.offline`
-3. ✓ `locator.tap` `getByTestId("tab-settings")` (309ms) — `e2e/support/showcase.ts:38`
-   - tap tab "Settings" (309ms)
-   - screen: unchanged since step 2 at `com.budgetlens.offline`
-4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (505ms) — `e2e/support/showcase.ts:38`
-   - tap button (505ms)
+1. ✓ `app.open` (1.5s) — `e2e/support/showcase.ts:9`
+2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (1.3s) — `e2e/support/showcase.ts:10`
+   - expect passed after 8 reads in 1.3s: no node (0 matches) x7 -&gt; at 1257ms default states (1 match)
+   - screen: 29 nodes at `com.budgetlens.offline`
+3. ✓ `locator.tap` `getByTestId("tab-settings")` (340ms) — `e2e/support/showcase.ts:38`
+   - tap tab "Settings" (340ms)
+   - screen: 24 changes since step 2 at `com.budgetlens.offline`, 53 nodes
+     - `added group`
+     - `added group`
+     - `added group`
+     - `added group`
+     - `added group testid="overview-open-savings"`
+     - `added text "Savings"`
+     - `added button`
+     - `added group`
+     - `added group`
+     - `added tab "Overview" testid="tab-overview" [selected]`
+     - `added image testid="com.budgetlens.offline:id/navigation_bar_item_icon_view" [selected]`
+     - `added text "Overview" testid="com.budgetlens.offline:id/navigation_bar_item_large_label_view" [selected]`
+     - 12 more
+4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (603ms) — `e2e/support/showcase.ts:38`
+   - tap button (603ms)
    - screen: 18 changes since step 3 at `com.budgetlens.offline`, 51 nodes
      - `added text "Settings"`
      - `added group testid="screen-settings"`
@@ -29,7 +42,7 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `removed group testid="overview-savings-card"`
      - `removed heading "Savings"`
      - 6 more
-5. ✓ `screen.scrollUntilVisible` `getByTestId("ds-primary-button")` (90ms) — `e2e/large-text.e2e.ts:39`
+5. ✓ `screen.scrollUntilVisible` `getByTestId("ds-primary-button")` (81ms) — `e2e/large-text.e2e.ts:39`
    - screen: 58 changes since step 4 at `com.budgetlens.offline`, 69 nodes
      - `added button "Navigate up"`
      - `added text "Design system"`
@@ -44,7 +57,7 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added text "Income"`
      - `added text "+PLN 12,345.67" text="+PLN 12,345.67" testid="ds-amount-income"`
      - 46 more
-6. ✓ `expect.toBeVisible` `getByTestId("ds-primary-button")` (56ms) — `e2e/large-text.e2e.ts:40`
+6. ✓ `expect.toBeVisible` `getByTestId("ds-primary-button")` (53ms) — `e2e/large-text.e2e.ts:40`
    - screen: unchanged since step 5 at `com.budgetlens.offline`
 7. ✓ `screen.scrollUntilVisible` `getByTestId("ds-text-field")` (1.2s) — `e2e/large-text.e2e.ts:39`
    - screen: 35 changes since step 6 at `com.budgetlens.offline`, 80 nodes
@@ -61,11 +74,11 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added textbox testid="ds-text-field"`
      - `added text "Name"`
      - 23 more
-8. ✓ `expect.toBeVisible` `getByTestId("ds-text-field")` (51ms) — `e2e/large-text.e2e.ts:40`
+8. ✓ `expect.toBeVisible` `getByTestId("ds-text-field")` (46ms) — `e2e/large-text.e2e.ts:40`
    - screen: unchanged since step 7 at `com.budgetlens.offline`
 9. ✓ `screen.scrollUntilVisible` `getByTestId("ds-amount-field")` (51ms) — `e2e/large-text.e2e.ts:39`
    - screen: unchanged since step 8 at `com.budgetlens.offline`
-10. ✓ `expect.toBeVisible` `getByTestId("ds-amount-field")` (46ms) — `e2e/large-text.e2e.ts:40`
+10. ✓ `expect.toBeVisible` `getByTestId("ds-amount-field")` (52ms) — `e2e/large-text.e2e.ts:40`
    - screen: unchanged since step 9 at `com.budgetlens.offline`
 11. ✓ `screen.scrollUntilVisible` `getByTestId("ds-picker")` (1.2s) — `e2e/large-text.e2e.ts:39`
    - screen: 47 changes since step 10 at `com.budgetlens.offline`, 63 nodes
@@ -82,11 +95,11 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `added group testid="ds-section-amounts"`
      - `added heading "Amounts"`
      - 35 more
-12. ✓ `expect.toBeVisible` `getByTestId("ds-picker")` (45ms) — `e2e/large-text.e2e.ts:40`
+12. ✓ `expect.toBeVisible` `getByTestId("ds-picker")` (43ms) — `e2e/large-text.e2e.ts:40`
    - screen: unchanged since step 11 at `com.budgetlens.offline`
 13. ✓ `screen.scrollUntilVisible` `getByTestId("ds-date-picker")` (48ms) — `e2e/large-text.e2e.ts:39`
    - screen: unchanged since step 12 at `com.budgetlens.offline`
-14. ✓ `expect.toBeVisible` `getByTestId("ds-date-picker")` (48ms) — `e2e/large-text.e2e.ts:40`
+14. ✓ `expect.toBeVisible` `getByTestId("ds-date-picker")` (51ms) — `e2e/large-text.e2e.ts:40`
    - screen: unchanged since step 13 at `com.budgetlens.offline`
 15. ✓ `app.screenshot` `large-text-inputs` (1.4s) — `e2e/large-text.e2e.ts:42`
    - [screenshot](attempt-1/screenshots/001-large-text-inputs.png) `.e2e/android-large-text/results/large-text-keeps-every-showcase-control-f610eda3af32fd60/attempt-1/screenshots/001-large-text-inputs.png`
@@ -95,4 +108,4 @@ Ran on: platform `android` · device `BudgetLens-Android`
 
 - [screenshot](attempt-1/screenshots/001-large-text-inputs.png) `.e2e/android-large-text/results/large-text-keeps-every-showcase-control-f610eda3af32fd60/attempt-1/screenshots/001-large-text-inputs.png`
 
-<sub>e2e 0.21.2 · run `01a159b4-47a0-7439-ab4a-020a9afe8511` · the whole run is in `report.json`</sub>
+<sub>e2e 0.21.2 · run `01a159cf-37cc-74cc-94fc-c6300a7f999f` · the whole run is in `report.json`</sub>

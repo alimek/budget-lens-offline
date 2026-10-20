@@ -1,20 +1,20 @@
 # ✓ keeps the showcase components readable at 200% text size
 
-`e2e/large-text.e2e.ts` · target `android` · passed · 7.4s
+`e2e/large-text.e2e.ts` · target `android` · passed · 7.5s
 
 Ran on: platform `android` · device `BudgetLens-Android`
 
 ## Steps
 
 1. ✓ `app.open` (1.9s) — `e2e/support/showcase.ts:9`
-2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (1.2s) — `e2e/support/showcase.ts:10`
-   - expect passed after 5 reads in 1.2s: no node (0 matches) x4 -&gt; at 1225ms default states (1 match)
+2. ✓ `expect.toBeVisible` `getByTestId("screen-home")` (1.5s) — `e2e/support/showcase.ts:10`
+   - expect passed after 7 reads in 1.5s: no node (0 matches) x6 -&gt; at 1480ms default states (1 match)
    - screen: 53 nodes at `com.budgetlens.offline`
-3. ✓ `locator.tap` `getByTestId("tab-settings")` (300ms) — `e2e/support/showcase.ts:38`
-   - tap tab "Settings" (300ms)
+3. ✓ `locator.tap` `getByTestId("tab-settings")` (313ms) — `e2e/support/showcase.ts:38`
+   - tap tab "Settings" (312ms)
    - screen: unchanged since step 2 at `com.budgetlens.offline`
-4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (527ms) — `e2e/support/showcase.ts:38`
-   - tap button (527ms)
+4. ✓ `locator.tap` `getByTestId("settings-open-design-system") >> getByRole("button")` (400ms) — `e2e/support/showcase.ts:38`
+   - tap button (400ms)
    - screen: 18 changes since step 3 at `com.budgetlens.offline`, 51 nodes
      - `added text "Settings"`
      - `added group testid="screen-settings"`
@@ -29,7 +29,7 @@ Ran on: platform `android` · device `BudgetLens-Android`
      - `removed group testid="overview-savings-card"`
      - `removed heading "Savings"`
      - 6 more
-5. ✓ `expect.toBeVisible` `getByTestId("ds-card")` (122ms) — `e2e/large-text.e2e.ts:21`
+5. ✓ `expect.toBeVisible` `getByTestId("ds-card")` (83ms) — `e2e/large-text.e2e.ts:21`
    - screen: 58 changes since step 4 at `com.budgetlens.offline`, 69 nodes
      - `added button "Navigate up"`
      - `added text "Design system"`
@@ -51,4 +51,4 @@ Ran on: platform `android` · device `BudgetLens-Android`
 
 - [screenshot](attempt-1/screenshots/001-large-text-components.png) `.e2e/android-large-text/results/large-text-keeps-the-showcase-components-e88d58bcea7a4bc6/attempt-1/screenshots/001-large-text-components.png`
 
-<sub>e2e 0.21.2 · run `01a159b4-47a0-7439-ab4a-020a9afe8511` · the whole run is in `report.json`</sub>
+<sub>e2e 0.21.2 · run `01a159cf-37cc-74cc-94fc-c6300a7f999f` · the whole run is in `report.json`</sub>
