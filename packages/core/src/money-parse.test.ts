@@ -94,4 +94,74 @@ describe("parseMoney", () => {
     expect(wholeYen).toEqual({ ok: true, value: 1234 });
     expect(fraction).toEqual({ ok: false, error: "too-many-fraction-digits" });
   });
+
+  it("reads a single comma or dot followed by 3 digits as thousands in currencies without minor digits (#164)", () => {
+    // Arrange
+    const inputs: readonly (readonly [string, "JPY" | "ISK" | "KRW" | "CLP"])[] = [
+      ["1,000", "JPY"],
+      ["1.000", "JPY"],
+      ["123,450", "ISK"],
+      ["999.999", "KRW"],
+      ["-123,450", "CLP"],
+      ["\u22121,000", "JPY"],
+      ["1,000,000", "JPY"],
+      [`1${NBSP}000`, "JPY"],
+    ];
+
+    // Act
+    const results = inputs.map(([input, currency]) => parseMoney(input, { currency }));
+
+    // Assert
+    expect(results).toEqual(
+      [1000, 1000, 123450, 999999, -123450, -1000, 1000000, 1000].map((value) => ({
+        ok: true,
+        value,
+      })),
+    );
+  });
+
+  it("still rejects fractions and malformed grouping in currencies without minor digits (#164)", () => {
+    // Arrange
+    const inputs = [
+      "1,00",
+      "1,0000",
+      "12,5",
+      "1234,567",
+      "1 000,000",
+      "1.000,000",
+      "1,000.",
+      "JP¥1,000",
+    ];
+
+    // Act
+    const errors = inputs.map((input) => {
+      const result = parseMoney(input, { currency: "JPY" });
+      return result.ok ? undefined : result.error;
+    });
+
+    // Assert
+    expect(errors).toEqual([
+      "too-many-fraction-digits",
+      "too-many-fraction-digits",
+      "too-many-fraction-digits",
+      "invalid-format",
+      "invalid-format",
+      "invalid-format",
+      "invalid-format",
+      "invalid-format",
+    ]);
+  });
+
+  it("keeps a single comma or dot as the decimal separator in currencies with minor digits (#2)", () => {
+    // Arrange
+    const inputs = ["1,000", "1.000", "-1,234"];
+
+    // Act
+    const pln = inputs.map((input) => parseMoney(input, { currency: "PLN" }));
+    const plnGroupedWithFraction = parseMoney("1,000.50", { currency: "PLN" });
+
+    // Assert
+    expect(pln).toEqual(inputs.map(() => ({ ok: false, error: "too-many-fraction-digits" })));
+    expect(plnGroupedWithFraction).toEqual({ ok: true, value: 100050 });
+  });
 });

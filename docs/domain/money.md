@@ -47,8 +47,13 @@ returns
 - Thousands grouping: spaces (U+0020, the no-break spaces U+00A0 and U+202F) or the separator that is not the
   decimal one; groups after the first must have 3 digits. Examples: `"1 234,56"`, `"1234.5"`, `"-12"`,
   `"1.234,56"`, `"1,234.56"`, `"1.234.567"`.
-- A single `,` or `.` is always the decimal separator, so `"1,234"` is rejected (`too-many-fraction-digits`) instead
-  of being guessed.
+- A single `,` or `.` is the decimal separator, so `"1,234"` is rejected (`too-many-fraction-digits`) instead of
+  being guessed.
+- Exception for currencies without minor digits (exponent 0: CLP, ISK, JPY, KRW; owner decision on
+  [#164](https://github.com/alimek/budget-lens-offline/issues/164)): a single `,` or `.` followed by exactly 3 digits is
+  a thousands separator, so `"1,000"` and `"1.000"` are 1000 JPY and the English output of `formatMoney`
+  (`JP¥123,450`) can be typed back. Any other fraction (`"12,5"`, `"1,0000"`) is still `too-many-fraction-digits`,
+  and the grouping rules below still apply (`"1234,567"` and `"1 000,000"` are `invalid-format`).
 - Currency symbols and letters (`"1 234,56 zł"`), a leading plus (`"+12"`), a missing integer part (`",5"`), a
   trailing separator (`"12,"`), tabs or line breaks inside the number (`"1\t234"`) and malformed grouping
   (`"1 23"`) are rejected (`invalid-format`). Whitespace around the number is trimmed.

@@ -109,14 +109,6 @@ const ALL_CURRENCIES: Record<CurrencyCode, true> = {
 const currencies = Object.keys(ALL_CURRENCIES).filter(isCurrencyCode);
 const currency = fc.constantFrom(...currencies);
 
-// Currencies without minor digits (CLP, ISK, JPY, KRW) are left out of the full round trip. In English
-// `formatMoney` groups thousands with a comma (`JP¥1,000`), and `parseMoney` reads a single `,` or `.` as the decimal
-// separator (#2), so it rejects an amount with exactly one thousands group (1 000 – 999 999) with
-// `too-many-fraction-digits` (counterexample `[1000]`, seed 1178002064). Whether `parseMoney` should accept it
-// partially reverses #2 and needs an owner decision, tracked in #164; until then that band is skipped for them.
-const decimalCurrencies = currencies.filter((code) => currencyExponent(code) > 0);
-const zeroDecimalCurrencies = currencies.filter((code) => currencyExponent(code) === 0);
-
 /**
  * The number the user sees and can type back, without the currency symbol: its spelling, spacing and position are
  * platform-specific (#131), so only the digits, grouping and decimal separator are compared.
@@ -151,25 +143,12 @@ const expectRoundTrip = (
 };
 
 describe("formatMoney and parseMoney (properties)", () => {
-  it("returns the same amount when a formatted amount is typed back, in currencies with minor digits", () => {
-    // Arrange
+  it("returns the same amount when a formatted amount is typed back, in every currency and both languages", () => {
+    // Arrange: every size band, including English amounts with one thousands group in currencies without minor
+    // digits (`JP¥1,000`, counterexample `[1000]` before #164).
     const property = fc.property(language, amount, (lang, value) => {
       // Act + Assert
-      expectRoundTrip(value, lang, decimalCurrencies);
-    });
-
-    fc.assert(property);
-  });
-
-  it("returns the same amount when typed back in currencies without minor digits, except English with one thousands group (#164)", () => {
-    // Arrange: Polish groups with spaces and parses in every band; English skips 1 000 – 999 999 (see above).
-    const languageAndAmount = fc.oneof(
-      fc.tuple(fc.constant("pl" as const), amount),
-      fc.tuple(fc.constant("en" as const), signedAmount(SMALL, LARGE, HUGE)),
-    );
-    const property = fc.property(languageAndAmount, ([lang, value]) => {
-      // Act + Assert
-      expectRoundTrip(value, lang, zeroDecimalCurrencies);
+      expectRoundTrip(value, lang, currencies);
     });
 
     fc.assert(property);

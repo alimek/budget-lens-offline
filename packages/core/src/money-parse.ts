@@ -33,8 +33,10 @@ export interface ParseMoneyOptions {
  * default, see {@link ParseMoneyOptions}) after a decimal comma or dot, and
  * thousands grouping with spaces (including no-break spaces) or with the separator that is not the decimal one:
  * `"1 234,56"`, `"1234.5"`, `"-12"`, `"1.234,56"`, `"1,234.56"`, `"1.234.567"`.
- * A single `,` or `.` is always the decimal separator, so `"1,234"` is rejected (3 fraction digits) instead of
- * being guessed. Currency symbols, letters, a leading `+`, a missing integer part (`",5"`), tabs or line breaks
+ * A single `,` or `.` is the decimal separator, so `"1,234"` is rejected (3 fraction digits) instead of being
+ * guessed. The exception is a currency without minor digits (exponent 0: CLP, ISK, JPY, KRW): there a single `,` or
+ * `.` followed by exactly 3 digits is a thousands separator (`"1,000"` is 1000 JPY, #164), since such a currency has
+ * no fraction digits at all. Currency symbols, letters, a leading `+`, a missing integer part (`",5"`), tabs or line breaks
  * inside the number and malformed grouping are rejected.
  */
 export function parseMoney(input: string, options: ParseMoneyOptions = {}): ParseMoneyResult {
@@ -57,7 +59,10 @@ export function parseMoney(input: string, options: ParseMoneyOptions = {}): Pars
   if (decimalSeparator === undefined) {
     return { ok: false, error: "invalid-format" };
   }
-  const decimalIndex = decimalSeparator === "" ? -1 : text.lastIndexOf(decimalSeparator);
+  const decimalIndex =
+    decimalSeparator === "" || isThousandsSeparator(text, decimalSeparator, maxFractionDigits)
+      ? -1
+      : text.lastIndexOf(decimalSeparator);
   const integerPart = decimalIndex === -1 ? text : text.slice(0, decimalIndex);
   const fractionPart = decimalIndex === -1 ? "" : text.slice(decimalIndex + 1);
 
@@ -91,6 +96,18 @@ function findDecimalSeparator(text: string): "," | "." | "" | undefined {
   if (commas === 1) return ",";
   if (dots === 1) return ".";
   return "";
+}
+
+/**
+ * Whether the single `,` or `.` of `text` groups thousands instead of starting the fraction: only in a currency
+ * without minor digits, and only when exactly 3 digits follow it (#164).
+ */
+function isThousandsSeparator(
+  text: string,
+  separator: "," | ".",
+  maxFractionDigits: number,
+): boolean {
+  return maxFractionDigits === 0 && /^\d{3}$/.test(text.slice(text.lastIndexOf(separator) + 1));
 }
 
 /** Digits of the integer part with valid thousands grouping removed, `undefined` for malformed grouping. */
