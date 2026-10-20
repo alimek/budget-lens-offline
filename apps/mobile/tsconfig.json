@@ -6,13 +6,6 @@
     "types": ["react", "react-native"],
     "customConditions": ["react-native"]
   },
-  "include": [
-    "app.config.ts",
-    "index.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "e2e.config.ts",
-    "e2e/**/*.ts"
-  ],
+  "include": ["index.ts", "src/**/*.ts", "src/**/*.tsx", "e2e.config.ts", "e2e/**/*.ts"],
   "exclude": ["node_modules", "ios", "android"]
 }

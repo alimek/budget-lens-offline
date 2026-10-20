@@ -16,5 +16,3 @@ apps/mobile/.e2e/*
 !apps/mobile/.e2e/cache/
 apps/mobile/.devices/
 
-# Local iOS release builds (archives, IPAs, export options)
-apps/mobile/build/

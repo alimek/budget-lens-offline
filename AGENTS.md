@@ -79,8 +79,8 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - [docs/features/](docs/features/) – short PRDs, one per MVP epic
 - [docs/testing.md](docs/testing.md) – testing strategy and rules
 - [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
-- [docs/release/testflight.md](docs/release/testflight.md) – local iOS release builds and internal TestFlight uploads
-  (`pnpm ios:build:unsigned`, `pnpm ios:release`), env vars and export compliance
+- [docs/release/testflight.md](docs/release/testflight.md) – iOS builds and internal TestFlight via EAS Build and EAS
+  Submit (`apps/mobile/eas.json`, `pnpm eas:build:ios`, `pnpm eas:submit:ios`), owner setup and export compliance
 - [docs/github-automation.md](docs/github-automation.md) – label sync from `.github/labels.tsv` and the per-label
   issue queue export (`scripts/github/`), token scopes and scheduling rules
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the

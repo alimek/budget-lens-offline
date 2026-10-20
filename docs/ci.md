@@ -105,6 +105,8 @@ no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow 
 - Native builds (iOS and Android development builds) and E2E tests run **locally on a dev machine** (macOS with
   Xcode for iOS, Android SDK for Android), only on **dedicated simulators/emulators** (see
   [mobile development](mobile-development.md#development-builds)).
+- iOS release builds for internal TestFlight run on **EAS Build** and are uploaded with **EAS Submit**, both started
+  manually (#178, [release/testflight.md](release/testflight.md)); no GitHub workflow triggers them.
 - The evidence on the PR is **screenshots** (iOS + Android, simulator/emulator named; a video is
   also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
   **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a
