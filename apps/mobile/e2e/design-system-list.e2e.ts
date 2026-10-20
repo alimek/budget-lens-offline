@@ -1,6 +1,6 @@
 import { test } from "@e2e-dev/mobile";
 import { expect } from "e2e";
-import { openListExample } from "./support/showcase";
+import { openListExample, tapUntilVisible } from "./support/showcase";
 
 test("shows grouped transaction rows and toggles the paid state", async (fixtures) => {
   // Arrange
@@ -31,10 +31,7 @@ test("adds a row with the add button", async (fixtures) => {
   const add = screen.getByTestId("ds-add-button");
   await expect(add).toHaveAccessibleName(/\S/);
 
-  // Act
-  await add.tap();
-
-  // Assert
-  await expect(screen.getByTestId("ds-row-new-1")).toBeVisible();
+  // Act / Assert
+  await tapUntilVisible(add, screen.getByTestId("ds-row-new-1"));
   await app.screenshot("list-added");
 });

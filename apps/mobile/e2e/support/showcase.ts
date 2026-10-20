@@ -2,27 +2,46 @@ import type { Device } from "@e2e-dev/mobile";
 import { expect, type TestFixtures } from "e2e";
 
 export type Fixtures = TestFixtures & { device: Device };
+type Locator = ReturnType<Fixtures["screen"]["getByTestId"]>;
 
 /** Opens the dev-only showcase from Settings; Expo UI on Android puts the test ID on a wrapper. */
 export async function openShowcase({ app, screen, platform }: Fixtures) {
   await app.open();
   await expect(screen.getByTestId("screen-home")).toBeVisible();
-  await screen.getByTestId("tab-settings").tap();
+  await tapUntilVisible(screen.getByTestId("tab-settings"), screen.getByTestId("screen-settings"));
   const open = screen.getByTestId("settings-open-design-system");
   // Below the fold only at large text sizes; a tap during scroll momentum would just stop the scroll.
   if (!(await open.isVisible())) {
     await screen.scrollUntilVisible(open);
     await settle();
   }
-  await (platform === "android" ? open.getByRole("button") : open).tap();
-  await expect(screen.getByTestId("screen-design-system")).toBeVisible();
+  await tapUntilVisible(
+    platform === "android" ? open.getByRole("button") : open,
+    screen.getByTestId("screen-design-system"),
+  );
   // Let the push transition finish: iOS ignores a scroll that starts while the screen is still sliding in.
   await settle();
 }
 
 /** Waits for animations (scroll momentum, navigation transitions) that the engine does not wait for. */
-function settle() {
-  return new Promise((resolve) => setTimeout(resolve, 600));
+function settle(ms = 600) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Taps `control` and waits for `result`. A loaded iOS simulator sometimes drops a tap that lands while the app is
+ * still settling (launch, deep link, transition); the tap is repeated once more in that case, never more, so a
+ * control that really does nothing still fails the test.
+ */
+export async function tapUntilVisible(control: Locator, result: Locator) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await control.tap();
+    for (let poll = 0; poll < 12; poll += 1) {
+      if (await result.isVisible()) return;
+      await settle(250);
+    }
+  }
+  await expect(result).toBeVisible();
 }
 
 /**
@@ -42,14 +61,11 @@ export async function openListExample({ app, screen, device, platform }: Fixture
  * iOS asks "Open in <app>?" the first time a simulator opens the app's own link; later opens go straight to the
  * app. Confirms (the alert's last button) if the alert shows before the target screen does.
  */
-async function confirmOpenInApp(
-  screen: Fixtures["screen"],
-  target: ReturnType<Fixtures["screen"]["getByTestId"]>,
-) {
+async function confirmOpenInApp(screen: Fixtures["screen"], target: Locator) {
   const alert = screen.getByRole("alert");
   for (let attempt = 0; attempt < 20; attempt += 1) {
     if (await target.isVisible()) return;
     if (await alert.isVisible()) return alert.getByRole("button").last().tap();
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await settle(250);
   }
 }
