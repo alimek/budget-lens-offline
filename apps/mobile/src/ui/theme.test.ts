@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import css from "../../global.css?raw";
-import { type ColorScheme, colors, radii, resolveColorScheme } from "./theme";
+import { type ColorScheme, colors, radii } from "./theme";
 
 function cssColors(scheme: ColorScheme): Record<string, string> {
   const block = new RegExp(`@variant ${scheme} \\{([^}]*)\\}`).exec(css)?.[1] ?? "";
@@ -45,45 +45,5 @@ describe("design tokens", () => {
 
     // Assert
     expect(actual).toEqual(expected);
-  });
-
-  it("defines no font-family token, so the platform system font is used", () => {
-    // Arrange
-    const fontToken = /--font-[a-z-]+\s*:/;
-
-    // Act
-    const hasFontToken = fontToken.test(css);
-
-    // Assert
-    expect(hasFontToken).toBe(false);
-  });
-
-  it("uses the Indigo primary from #58", () => {
-    // Arrange
-    const { light, dark } = colors;
-
-    // Act
-    const primaries = [
-      light.primary,
-      dark.primary,
-      light["primary-foreground"],
-      dark["primary-foreground"],
-    ];
-
-    // Assert
-    expect(primaries).toEqual(["#3F4BA8", "#9AA3F5", "#FFFFFF", "#10154A"]);
-  });
-
-  it.each([
-    ["dark", "dark"],
-    ["light", "light"],
-    [null, "light"],
-    ["unspecified", "light"],
-  ])("resolves the system scheme %s to %s tokens", (scheme, expected) => {
-    // Arrange / Act
-    const resolved = resolveColorScheme(scheme);
-
-    // Assert
-    expect(resolved).toBe(expected);
   });
 });

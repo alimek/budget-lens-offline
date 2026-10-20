@@ -35,8 +35,12 @@
       "privacyMode": "Tryb prywatności",
       "onlyThisMonth": "Tylko ten miesiąc",
       "fromThisMonth": "Od tego miesiąca",
-      "budgetUsed": "Wykorzystany budżet",
-      "overBudget": "Przekroczony budżet"
+      "groceries": "Zakupy spożywcze",
+      "eatingOut": "Jedzenie na mieście"
     }
+  },
+  "budget": {
+    "used": "Wykorzystano {{percent}}%",
+    "overBudget": "Przekroczony budżet: wykorzystano {{percent}}%"
   }
 }

@@ -5,11 +5,11 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { AmountText } from "@/ui/components/amount-text";
 import { Badge } from "@/ui/components/badge";
+import { BudgetProgress } from "@/ui/components/budget-progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/components/card";
 import { Screen } from "@/ui/components/screen";
 import { Separator } from "@/ui/components/separator";
 import { Text } from "@/ui/components/text";
-import { BudgetProgress } from "@/ui/native/budget-progress";
 import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
 import { SegmentedControl } from "@/ui/native/segmented-control";
 import { AppToggle } from "@/ui/native/toggle";
@@ -144,15 +144,15 @@ export default function DesignSystemScreen() {
               { value: "from-this-month", label: t("dev.designSystem.fromThisMonth") },
             ]}
           />
-          <Text variant="footnote">{t("dev.designSystem.budgetUsed")}</Text>
           <BudgetProgress
             testID="ds-progress"
+            label={t("dev.designSystem.groceries")}
             spent={toMinorUnits(60_000)}
             budget={toMinorUnits(100_000)}
           />
-          <Text variant="footnote">{t("dev.designSystem.overBudget")}</Text>
           <BudgetProgress
             testID="ds-progress-over"
+            label={t("dev.designSystem.eatingOut")}
             spent={toMinorUnits(120_000)}
             budget={toMinorUnits(100_000)}
           />

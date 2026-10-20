@@ -35,8 +35,12 @@
       "privacyMode": "Privacy mode",
       "onlyThisMonth": "Only this month",
       "fromThisMonth": "From this month",
-      "budgetUsed": "Budget used",
-      "overBudget": "Over budget"
+      "groceries": "Groceries",
+      "eatingOut": "Eating out"
     }
+  },
+  "budget": {
+    "used": "{{percent}}% used",
+    "overBudget": "Over budget: {{percent}}% used"
   }
 }

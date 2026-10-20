@@ -1,5 +1,3 @@
-import type { MinorUnits } from "@budget-lens/core";
-
 export interface ButtonProps {
   label: string;
   onPress: () => void;
@@ -8,6 +6,7 @@ export interface ButtonProps {
 }
 
 export interface ToggleProps {
+  /** Visible label; also the accessible name of the switch (VoiceOver / TalkBack read it with the state). */
   label: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
@@ -15,10 +14,11 @@ export interface ToggleProps {
   disabled?: boolean;
 }
 
-export interface BudgetProgressProps {
-  spent: MinorUnits;
-  budget: MinorUnits;
-  testID: string;
+export interface ProgressIndicatorProps {
+  /** 0..1 */
+  fraction: number;
+  color: string;
+  trackColor: string;
 }
 
 export interface SegmentOption<T extends string> {

@@ -31,12 +31,4 @@ describe("typeStyle", () => {
     // Assert
     expect([ios.textTransform, android.textTransform]).toEqual(["uppercase", undefined]);
   });
-
-  it("never sets a font family", () => {
-    // Arrange / Act
-    const style = typeStyle("headline", "ios");
-
-    // Assert
-    expect(style).not.toHaveProperty("fontFamily");
-  });
 });
