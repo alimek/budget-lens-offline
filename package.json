@@ -15,6 +15,7 @@
     "fallow": "fallow",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm fallow",
     "check:licenses": "node scripts/check-licenses.mjs",
+    "i18n:extract": "pnpm --filter @budget-lens/mobile i18n:extract",
     "e2e:ios": "pnpm --filter @budget-lens/mobile e2e:ios",
     "e2e:android": "pnpm --filter @budget-lens/mobile e2e:android",
     "eas:build:ios": "pnpm --filter @budget-lens/mobile eas:build:ios",

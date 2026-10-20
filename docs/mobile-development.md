@@ -73,7 +73,7 @@ design system showcase uses `screen-design-system`, opened by `settings-open-des
 The scaffold has bundled English/Polish strings, device-language initialization, light/dark system
 navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
 from locale resources. Screens are built from the [design system](design-system.md) (#119): Expo UI
-wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. DB boot, recovery, persistence, language preferences and onboarding are separate work.
+wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. DB boot, recovery, persistence (including of the language preference, [i18n](i18n.md)) and onboarding are separate work.
 
 ## Release builds (TestFlight)
 

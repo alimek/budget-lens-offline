@@ -79,6 +79,7 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - [docs/domain/](docs/domain/) – one file per domain area
 - [docs/features/](docs/features/) – short PRDs, one per MVP epic
 - [docs/testing.md](docs/testing.md) – testing strategy and rules
+- [docs/i18n.md](docs/i18n.md) – i18n: namespaces, English fallback, language override, extraction (no CI check)
 - [docs/ci.md](docs/ci.md) – CI quality gates and how to handle audit or license findings
 - [docs/release/testflight.md](docs/release/testflight.md) – iOS builds and internal TestFlight via EAS Build and EAS
   Submit (`apps/mobile/eas.json`, `pnpm eas:build:ios`, `pnpm eas:submit:ios`), linked project, release flow and export compliance
