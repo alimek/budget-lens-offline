@@ -43,7 +43,7 @@ test("confirms the alert", async (fixtures) => {
   const { app } = fixtures;
   const result = await openOverlays(fixtures);
   const before = await result.textContent();
-  const { alert, confirm } = appAlert(fixtures, "ds-alert", "Close October?");
+  const { alert, confirm } = appAlert(fixtures, "ds-alert", "Close October?", "Close month");
   await tapUntilVisible(nativeButton(fixtures, "ds-open-alert"), alert);
   await settle();
   await app.screenshot("alert");

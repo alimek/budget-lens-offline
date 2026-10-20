@@ -66,7 +66,7 @@ test("deletes a row with its swipe action after confirming", async (fixtures) =>
   await app.screenshot("list-swipe");
 
   // Act
-  const { alert, confirm } = appAlert(fixtures, "ds-delete-alert", "Delete “Rent”?");
+  const { alert, confirm } = appAlert(fixtures, "ds-delete-alert", "Delete “Rent”?", "Delete");
   await tapUntilVisible(remove, alert);
   await settle();
   await confirm.tap();
