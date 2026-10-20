@@ -48,14 +48,15 @@ pnpm --filter @budget-lens/mobile e2e:ios
 pnpm --filter @budget-lens/mobile e2e:android
 ```
 
-The e2e scripts disable telemetry. Tests use no agent steps, model provider or secrets. The Savings
-action targets the native button
-inside `screen-home`: Expo UI on Android exposes `overview-open-savings` on a wrapper.
+The root `pnpm e2e:ios` / `pnpm e2e:android` scripts run the same targets. The e2e scripts disable
+telemetry. Tests use no agent steps, model provider or secrets. The Savings action targets
+`overview-open-savings`; on Android, where Expo UI puts that ID on a wrapper, it taps the native button
+inside it ([testing](testing.md#e2e-smoke-tests-15)).
 Results, screenshots, traces and video are written under `apps/mobile/.e2e/<platform>/` (ignored); review the
 report before attaching evidence to a PR. UI PRs attach the iOS and Android screenshots (device named) and the
 e2e command in the Screenshots section of the [PR template](../.github/pull_request_template.md). A passing
-bundle export does not prove that a native build starts. The broader e2e setup remains in #15; the fast mobile
-CI gates (no native build) remain in #109.
+bundle export does not prove that a native build starts. The e2e setup is described in
+[testing](testing.md#e2e-smoke-tests-15); the fast mobile CI gates (no native build) remain in #109.
 
 ## Test IDs
 

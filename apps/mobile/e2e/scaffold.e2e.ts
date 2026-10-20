@@ -27,14 +27,16 @@ for (const tab of ["month", "forecast", "items", "settings"]) {
   });
 }
 
-test("opens Savings inside Overview", async ({ app, screen }) => {
+test("opens Savings inside Overview", async ({ app, screen, platform }) => {
   // Arrange
   await app.open();
   await expect(screen.getByTestId("screen-home")).toBeVisible();
+  const openSavings = screen.getByTestId("overview-open-savings");
+  // Expo UI on Android puts the test ID on a wrapper around the native button; iOS puts it on the button.
+  const savingsButton = platform === "android" ? openSavings.getByRole("button") : openSavings;
 
   // Act
-  // Expo UI Android puts the test ID on a wrapper; tap its native button.
-  await screen.getByTestId("screen-home").getByRole("button").tap();
+  await savingsButton.tap();
 
   // Assert
   await expect(screen.getByTestId("screen-savings")).toBeVisible();
