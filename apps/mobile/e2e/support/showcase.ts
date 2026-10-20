@@ -24,7 +24,7 @@ export async function openShowcase({ app, screen, platform }: Fixtures) {
 }
 
 /** Waits for animations (scroll momentum, navigation transitions) that the engine does not wait for. */
-function settle(ms = 600) {
+export function settle(ms = 600) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -68,4 +68,64 @@ async function confirmOpenInApp(screen: Fixtures["screen"], target: Locator) {
     if (await alert.isVisible()) return alert.getByRole("button").last().tap();
     await settle(250);
   }
+}
+
+/**
+ * Swipes a list row to the left to reveal its actions. The row's test ID sits on its paid control, which on iOS is
+ * only the small status button (a swipe there would be a tap), so the swipe runs across the list at the row's height.
+ */
+export async function swipeRowLeft(screen: Fixtures["screen"], row: Locator) {
+  await expect(row).toBeVisible();
+  const list = await screen.getByTestId("ds-list").boundingBox();
+  const box = await row.boundingBox();
+  if (!list || !box) throw new Error("the list or the row has no bounds");
+  const y = box.y + box.height / 2;
+  await screen.swipe({
+    from: { x: list.x + list.width * 0.85, y },
+    to: { x: list.x + list.width * 0.25, y },
+    duration: 400,
+  });
+  await settle();
+}
+
+/**
+ * The tappable node of an Expo UI button: on Android the test ID sits on a wrapper around the Compose button (see
+ * docs/testing.md), on iOS on the button itself.
+ */
+export function nativeButton(
+  { screen, platform }: Pick<Fixtures, "screen" | "platform">,
+  testID: string,
+) {
+  const node = screen.getByTestId(testID);
+  return platform === "android" ? node.getByRole("button") : node;
+}
+
+/**
+ * The node that carries a Compose `semantics` content description: Compose exposes it on a child of the test ID
+ * node when the control also has text (as with the paid checkbox, docs/evidence/182).
+ */
+export function describedNode(
+  { screen, platform }: Pick<Fixtures, "screen" | "platform">,
+  testID: string,
+) {
+  const node = screen.getByTestId(testID);
+  return platform === "android" ? node.getByRole("group").first() : node;
+}
+
+/**
+ * An `AppAlert` and its confirm button. On iOS it is the system alert (React Native `Alert`), which has no
+ * identifiers: XCUITest exposes it as a group named by its title, and the confirm button is its last. On Android the
+ * Compose dialog's confirm button carries `<testID>-confirm`.
+ */
+export function appAlert(
+  fixtures: Pick<Fixtures, "screen" | "platform">,
+  testID: string,
+  title: string,
+) {
+  if (fixtures.platform === "android") {
+    const confirm = nativeButton(fixtures, `${testID}-confirm`);
+    return { alert: confirm, confirm };
+  }
+  const alert = fixtures.screen.getByRole("group", title);
+  return { alert, confirm: alert.getByRole("button").last() };
 }

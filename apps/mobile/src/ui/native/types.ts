@@ -101,4 +101,57 @@ export interface TransactionRowProps {
   onPaidChange: (paid: boolean) => void;
   /** Test ID of the paid control (the row on Android, the status button on iOS). */
   testID: string;
+  /**
+   * Row actions revealed by swiping the row to the left (SwiftUI swipe actions on iOS, a gesture handler swipeable
+   * on Android). The first action is the trailing-most; a full swipe on iOS performs it.
+   */
+  actions?: readonly MenuAction<string>[] | undefined;
+  onAction?: ((key: string) => void) | undefined;
+}
+
+/** One action of a menu or a row (context menu items, swipe actions). */
+export interface MenuAction<K extends string> {
+  key: K;
+  label: string;
+  /** Styled as destructive (system red on iOS, `destructive` on Android). */
+  destructive?: boolean;
+}
+
+export interface ContextMenuProps<K extends string> {
+  /** Visible label and accessible name of the button that opens the menu. */
+  label: string;
+  actions: readonly MenuAction<K>[];
+  onAction: (key: K) => void;
+  /** Test ID of the trigger button; each item gets `<testID>-<key>` where the platform exposes it. */
+  testID: string;
+}
+
+export interface SheetProps {
+  visible: boolean;
+  /** Called when the sheet closes: swipe down, tap outside, back, or after `visible` turns false. */
+  onDismiss: () => void;
+  /** Sheet title (`title-2`), announced as a heading. */
+  title: string;
+  /** React Native content below the title. */
+  children: ReactNode;
+  /** Test ID of the sheet content. */
+  testID: string;
+}
+
+export interface AlertProps {
+  visible: boolean;
+  title: string;
+  message?: string | undefined;
+  confirmLabel: string;
+  cancelLabel: string;
+  /** Styles the confirm button as destructive (for example "Delete"). */
+  destructive?: boolean;
+  onConfirm: () => void;
+  /** Called whenever the alert closes, after a button or a dismiss gesture. */
+  onDismiss: () => void;
+  /**
+   * Buttons get `<testID>-confirm` / `<testID>-cancel` on Android. A SwiftUI alert is a system alert whose buttons
+   * carry no identifiers; tests find it by its `alert` role.
+   */
+  testID: string;
 }

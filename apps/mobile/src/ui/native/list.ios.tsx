@@ -6,6 +6,7 @@ import {
   List,
   Section,
   Spacer,
+  SwipeActions,
   Text,
   VStack,
 } from "@expo/ui/swift-ui";
@@ -18,6 +19,7 @@ import {
   foregroundStyle,
   listStyle,
   monospacedDigit,
+  tint,
 } from "@expo/ui/swift-ui/modifiers";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,7 +27,7 @@ import { formatAmount, toneColorToken } from "../amount";
 import { useLanguage } from "../use-language";
 import { useStackedRows } from "../use-stacked-rows";
 import { useThemeColors } from "../use-theme";
-import type { GroupedListProps, ListSectionProps, TransactionRowProps } from "./types";
+import type { GroupedListProps, ListSectionProps, MenuAction, TransactionRowProps } from "./types";
 
 /** SwiftUI inset grouped `List`; fills its parent, which scrolls it. */
 export function GroupedList({ testID, children }: GroupedListProps) {
@@ -58,7 +60,8 @@ export function ListSection({ title, testID, children }: ListSectionProps) {
 
 /**
  * A `List` row: the paid status button (SF Symbol `checkmark.circle.fill` / `circle`, `primary`), title and meta,
- * and the signed amount in `income` / `expense`. The status button is a toggle named "Paid: <title>".
+ * and the signed amount in `income` / `expense`. The status button is a toggle named "Paid: <title>". `actions`
+ * become SwiftUI trailing swipe actions (`<testID>-<key>`), which VoiceOver also offers as row actions.
  */
 export function TransactionRow({
   title,
@@ -68,6 +71,8 @@ export function TransactionRow({
   paid,
   onPaidChange,
   testID,
+  actions,
+  onAction,
 }: TransactionRowProps) {
   const theme = useThemeColors();
   const { t } = useTranslation();
@@ -79,7 +84,7 @@ export function TransactionRow({
   const amountText = (
     <Text modifiers={[monospacedDigit(), foregroundStyle(amountColor)]}>{formatted.text}</Text>
   );
-  return (
+  const row = (
     <HStack spacing={12}>
       <Button
         onPress={() => onPaidChange(!paid)}
@@ -97,6 +102,46 @@ export function TransactionRow({
       <Spacer />
       {stacked ? null : amountText}
     </HStack>
+  );
+  if (!actions?.length) return row;
+  return (
+    <SwipeActions>
+      {row}
+      <SwipeActions.Actions edge="trailing">
+        {actions.map((action) => (
+          <SwipeButton
+            key={action.key}
+            action={action}
+            testID={`${testID}-${action.key}`}
+            onPress={() => onAction?.(action.key)}
+          />
+        ))}
+      </SwipeActions.Actions>
+    </SwipeActions>
+  );
+}
+
+/** A swipe action: system destructive red, or `primary` for the others. */
+function SwipeButton({
+  action,
+  testID,
+  onPress,
+}: {
+  action: MenuAction<string>;
+  testID: string;
+  onPress: () => void;
+}) {
+  const theme = useThemeColors();
+  return (
+    <Button
+      label={action.label}
+      role={action.destructive ? "destructive" : "default"}
+      onPress={onPress}
+      modifiers={[
+        accessibilityIdentifier(testID),
+        ...(action.destructive ? [] : [tint(theme.primary)]),
+      ]}
+    />
   );
 }
 
