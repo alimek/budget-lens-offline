@@ -20,7 +20,10 @@ type LanguagePreferenceStore = {
 };
 
 type AppLanguage = {
-  /** The resolved UI language. */
+  /**
+   * The language i18next is currently rendering. It switches only after i18next has switched, so it never gets
+   * ahead of `t()`.
+   */
   readonly language: Language;
   readonly preference: LanguagePreference;
   /** Switches the UI language at runtime, without a restart. */
