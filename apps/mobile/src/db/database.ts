@@ -16,9 +16,13 @@ let opening: Promise<BudgetDatabase> | undefined;
 
 /**
  * The app database with its schema migrated to the latest version (first launch and upgrades alike). Opened once
- * per app session; later calls share the same connection, which has foreign keys enforced.
+ * per app session; later calls share the same connection, which has foreign keys enforced. A rejected open
+ * is cleared so a later caller can try again.
  */
 export function openAppDatabase(): Promise<BudgetDatabase> {
-  opening ??= open();
+  opening ??= open().catch((error: unknown) => {
+    opening = undefined;
+    throw error;
+  });
   return opening;
 }

@@ -116,7 +116,10 @@ No SQLite data is copied into Zustand. Onboarding and recovery belong to #59/#60
 calls `openAppDatabase()` (`src/db/database.ts`), which opens `budget-lens.db` with expo-sqlite (change listener
 on), wraps it with `createDatabase()` from `packages/db` and runs `runMigrations()`. The gate renders the screens only
 after that. This is the same path on first launch (creates schema v1) and after an upgrade (applies only new
-migrations). The connection is opened once per session. A failure is rethrown to the root error boundary. The
+migrations). The connection is opened once per session; a rejected open is cleared so a later call can retry.
+A failure is thrown during render and prevents data screens from mounting. No route exports an app-defined root
+error boundary yet: development uses the framework error overlay, and there is no custom failure/retry UI.
+A root error boundary is follow-up work with the recovery screens in #60/#75. The
 SQLCipher key (`PRAGMA key`), cipher guard, Android Auto Backup exclusion and recovery screen are added in
 `openAppDatabase()` by #75, before migrations run. Until then, development builds create an unencrypted file, which
 #75 must handle. No repository or screen reads the database yet (#81).

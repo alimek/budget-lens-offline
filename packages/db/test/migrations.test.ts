@@ -73,39 +73,23 @@ describe("runMigrations", () => {
     expect(foreignKeysEnabled(db)).toBe(true);
   });
 
-  it("keeps the current quote when upgrading the currency key", () => {
+  it("keeps both current rate sources for a currency across migrations", () => {
     // Arrange
     const db = openTestDatabase();
-    const initial = schemaMigrations.journal.entries[0];
-    if (initial === undefined) throw new Error("Missing initial migration");
-    runMigrations(db, {
-      journal: { entries: [initial] },
-      migrations: schemaMigrations.migrations,
-    });
-    db.insert(schema.exchangeRates)
-      .values({
-        currency: "EUR",
-        source: "manual",
-        mid: "4.25",
-        effectiveDate: "2026-10-20",
-        fetchedAt: new Date(1),
-      })
-      .run();
+    runMigrations(db);
+    const quote = { currency: "EUR" as const, effectiveDate: "2026-10-20", fetchedAt: new Date(1) };
+    const rates = [
+      { ...quote, source: "nbp" as const, mid: "4.25" },
+      { ...quote, source: "manual" as const, mid: "4.30" },
+    ];
+    db.insert(schema.exchangeRates).values(rates).run();
 
     // Act
-    const applied = runMigrations(db);
+    const applied = runMigrations(db, withMigration("0001_rebuild_items", REBUILD_ITEMS));
 
     // Assert
     expect(applied).toBe(1);
-    expect(db.select().from(schema.exchangeRates).all()).toEqual([
-      {
-        currency: "EUR",
-        source: "manual",
-        mid: "4.25",
-        effectiveDate: "2026-10-20",
-        fetchedAt: new Date(1),
-      },
-    ]);
+    expect(db.select().from(schema.exchangeRates).all()).toEqual(rates);
     expect(foreignKeysEnabled(db)).toBe(true);
   });
 
@@ -139,6 +123,30 @@ describe("runMigrations", () => {
     expect(applied).toBe(1);
     expect(db.select().from(schema.itemRuleVersions).all()).toHaveLength(1);
     expect(db.all(sql`PRAGMA foreign_key_check`)).toEqual([]);
+    expect(foreignKeysEnabled(db)).toBe(true);
+  });
+
+  it("rolls back every pending migration when a later statement fails", () => {
+    // Arrange
+    const db = openTestDatabase();
+    runMigrations(db);
+    const recorded = db.all(sql`SELECT * FROM __drizzle_migrations`);
+    const pending = withMigration(
+      "0001_failing",
+      `
+      INSERT INTO app_meta (key, value) VALUES ('upgrade', 'pending');
+      --> statement-breakpoint
+      INSERT INTO missing_table (value) VALUES ('fail');
+    `,
+    );
+
+    // Act
+    const migrate = () => runMigrations(db, pending);
+
+    // Assert
+    expect(migrate).toThrow();
+    expect(db.select().from(schema.appMeta).all()).toEqual([]);
+    expect(db.all(sql`SELECT * FROM __drizzle_migrations`)).toEqual(recorded);
     expect(foreignKeysEnabled(db)).toBe(true);
   });
 

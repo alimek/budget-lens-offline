@@ -269,8 +269,8 @@ export const savings = sqliteTable(
 );
 
 /**
- * Current rates only, no history (#35 Q7, #124): one row per currency. The repository chooses the newer
- * NBP or manual quote before writing it. PLN is implicit and never stored.
+ * Current rates only, no history (#35 Q7, #124): at most one row per (currency, source), the `RateStore` contract
+ * of core (#8), so "manual if newer" can compare NBP and manual. PLN is implicit and never stored.
  */
 export const exchangeRates = sqliteTable(
   "exchange_rates",
@@ -284,7 +284,7 @@ export const exchangeRates = sqliteTable(
     fetchedAt: timestamp("fetched_at").notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.currency] }),
+    primaryKey({ columns: [t.currency, t.source] }),
     check("exchange_rates_currency_chk", isCurrency(t.currency)),
     check("exchange_rates_source_chk", sql`${c(t.source)} IN ('nbp', 'manual')`),
     check("exchange_rates_date_chk", isDate(t.effectiveDate)),

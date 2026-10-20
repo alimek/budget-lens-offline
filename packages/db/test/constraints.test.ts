@@ -50,7 +50,7 @@ describe("schema v1 constraints", () => {
     );
   });
 
-  it("keeps only one current rate per currency across sources", () => {
+  it("keeps one current rate for each source in a currency", () => {
     // Arrange
     const quote = {
       currency: "EUR" as const,
@@ -59,19 +59,25 @@ describe("schema v1 constraints", () => {
       fetchedAt: new Date(1),
     };
     db.insert(schema.exchangeRates)
-      .values({ ...quote, source: "nbp" })
+      .values([
+        { ...quote, source: "nbp" },
+        { ...quote, source: "manual" },
+      ])
       .run();
 
     // Act
     const error = sqliteError(() =>
       db
         .insert(schema.exchangeRates)
-        .values({ ...quote, source: "manual" })
+        .values({ ...quote, source: "nbp", mid: "4.30" })
         .run(),
     );
 
     // Assert
-    expect(error).toContain("UNIQUE constraint failed: exchange_rates.currency");
+    expect(error).toContain(
+      "UNIQUE constraint failed: exchange_rates.currency, exchange_rates.source",
+    );
+    expect(db.select().from(schema.exchangeRates).all()).toHaveLength(2);
   });
 
   it("keeps settings a single row", () => {

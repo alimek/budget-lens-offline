@@ -7,7 +7,8 @@ type GateState =
 
 /**
  * Renders its children only after the database is open and migrated, so no screen reads a stale schema. A failure
- * is rethrown to the root error boundary; the recovery screens are #60/#75.
+ * is thrown during render and prevents data screens from mounting. There is no app-defined root error boundary
+ * yet; adding one is follow-up work with the recovery screens in #60/#75.
  */
 export function DatabaseGate({ children }: { readonly children: ReactNode }) {
   const [state, setState] = useState<GateState>({ status: "opening" });
