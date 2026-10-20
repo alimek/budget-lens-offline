@@ -53,11 +53,10 @@ test("deletes a row with its swipe action after confirming", async (fixtures) =>
   if (fixtures.platform === "android") {
     await expect(screen.getByRole("checkbox", "Paid: Rent")).toBeVisible();
     // TalkBack can reach both actions without the swipe, even though they are behind the row.
-    for (const action of ["delete", "edit"]) {
-      await expect(describedNode(fixtures, `ds-row-rent-${action}`)).toHaveAccessibleName(
-        `${action === "delete" ? "Delete" : "Edit"}: Rent`,
-      );
-    }
+    await expect(describedNode(fixtures, "ds-row-rent-delete")).toHaveAccessibleName(
+      "Delete: Rent",
+    );
+    await expect(describedNode(fixtures, "ds-row-rent-edit")).toHaveAccessibleName("Edit: Rent");
   }
   await swipeRowLeft(screen, rent);
   // SwiftUI moves its small paid control offscreen while open; Android keeps the row checkbox exposed.
