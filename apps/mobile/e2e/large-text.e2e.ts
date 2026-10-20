@@ -10,7 +10,7 @@ const options = {
     "set E2E_LARGE_TEXT=1 after raising the system text size",
 };
 
-test("keeps the showcase usable at 200% text size", options, async (fixtures) => {
+test("keeps the showcase components readable at 200% text size", options, async (fixtures) => {
   // Arrange
   const { app, screen } = fixtures;
 
@@ -18,10 +18,25 @@ test("keeps the showcase usable at 200% text size", options, async (fixtures) =>
   await openShowcase(fixtures);
 
   // Assert
-  await expect(screen.getByTestId("ds-primary-button")).toBeVisible();
+  await expect(screen.getByTestId("ds-card")).toBeVisible();
+  // Captures end each test: on iOS the first gesture right after a capture can be dropped.
   await app.screenshot("large-text-components");
-  await screen.scrollUntilVisible(screen.getByTestId("ds-date-picker"));
-  for (const id of ["ds-text-field", "ds-amount-field", "ds-picker"]) {
+});
+
+test("keeps every showcase control reachable at 200% text size", options, async (fixtures) => {
+  // Arrange
+  const { app, screen } = fixtures;
+  await openShowcase(fixtures);
+
+  // Act / Assert: the page grows with the text; each control is reached by scrolling.
+  for (const id of [
+    "ds-primary-button",
+    "ds-text-field",
+    "ds-amount-field",
+    "ds-picker",
+    "ds-date-picker",
+  ]) {
+    await screen.scrollUntilVisible(screen.getByTestId(id));
     await expect(screen.getByTestId(id)).toBeVisible();
   }
   await app.screenshot("large-text-inputs");

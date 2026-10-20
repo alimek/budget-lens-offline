@@ -9,6 +9,8 @@ export async function openShowcase({ app, screen, platform }: Fixtures) {
   await expect(screen.getByTestId("screen-home")).toBeVisible();
   await screen.getByTestId("tab-settings").tap();
   const open = screen.getByTestId("settings-open-design-system");
+  // Below the fold at large text sizes.
+  await screen.scrollUntilVisible(open);
   await (platform === "android" ? open.getByRole("button") : open).tap();
   await expect(screen.getByTestId("screen-design-system")).toBeVisible();
 }

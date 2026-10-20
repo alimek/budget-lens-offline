@@ -1,19 +1,15 @@
-import { Host, HStack, Picker, Spacer, Text } from "@expo/ui/swift-ui";
-import {
-  accessibilityHidden,
-  accessibilityIdentifier,
-  foregroundStyle,
-  pickerStyle,
-  tag,
-  tint,
-} from "@expo/ui/swift-ui/modifiers";
+import { Host, Picker, Text } from "@expo/ui/swift-ui";
+import { accessibilityIdentifier, pickerStyle, tag, tint } from "@expo/ui/swift-ui/modifiers";
+import { View } from "react-native";
+import { Text as AppText } from "../components/text";
 import { useThemeColors } from "../use-theme";
 import type { PickerProps } from "./types";
 
 /**
- * Label and a SwiftUI menu-style `Picker` (tint `primary`) in one row. The picker itself carries the label, so
- * VoiceOver reads "<label>, <selected option>, pop-up button" and activating it opens the menu; the visible label
- * text is hidden from accessibility.
+ * A SwiftUI menu-style `Picker` (tint `primary`) under its label, like the text fields. The picker itself carries
+ * the label, so VoiceOver reads "<label>, <selected option>, pop-up button" and activating it opens the menu; the
+ * visible label is hidden from accessibility. Stacking (not a label/value row) keeps both readable at the largest
+ * text sizes.
  */
 export function AppPicker<T extends string>({
   label,
@@ -24,12 +20,11 @@ export function AppPicker<T extends string>({
 }: PickerProps<T>) {
   const theme = useThemeColors();
   return (
-    <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
-      <HStack spacing={8}>
-        <Text modifiers={[foregroundStyle(theme.foreground), accessibilityHidden(true)]}>
-          {label}
-        </Text>
-        <Spacer />
+    <View className="items-start gap-1 self-stretch">
+      <AppText variant="footnote" className="text-muted-foreground" accessibilityElementsHidden>
+        {label}
+      </AppText>
+      <Host matchContents>
         <Picker<T>
           label={label}
           selection={value}
@@ -46,7 +41,7 @@ export function AppPicker<T extends string>({
             </Text>
           ))}
         </Picker>
-      </HStack>
-    </Host>
+      </Host>
+    </View>
   );
 }
