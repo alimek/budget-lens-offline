@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/ui/components/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/components/card";
 import { Screen } from "@/ui/components/screen";
 import { Text } from "@/ui/components/text";
 import { SecondaryButton } from "@/ui/native/button";
@@ -13,6 +13,15 @@ export default function SettingsScreen() {
       <Card>
         <CardContent>
           <Text>{t("scaffold.message")}</Text>
+        </CardContent>
+      </Card>
+      {/* Disclosure of the EAS Update check (ADR 0013); the onboarding privacy text reuses `privacy.updates`. */}
+      <Card testID="settings-privacy">
+        <CardHeader>
+          <CardTitle>{t("privacy.title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Text testID="settings-privacy-updates">{t("privacy.updates")}</Text>
         </CardContent>
       </Card>
       {__DEV__ ? (
