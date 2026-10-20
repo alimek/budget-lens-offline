@@ -7,7 +7,6 @@ agent:design	5319e7	Work item for the design track
 agent:developer	1d76db	Work item for the development track
 agent:marketing	5319e7	Work item for the website and marketing track
 agent:research	5319e7	Work item for the market research track
-agent:tester	5319e7	Work item for the QA and testing track (incl. local e2e)
 area:workflow	0052cc	Team process and repository workflow
 blocker	000000	Blocking review comment; merge is blocked until resolved
 bug	d73a4a	Something isn't working
@@ -30,7 +29,7 @@ good first issue	7057ff	Good for newcomers
 help wanted	008672	Extra attention is needed
 invalid	e4e669	This doesn't seem right
 mvp	1d76db	In scope for the first release
-needs:human	b60205	Touches Drizzle migrations, SQLCipher/encryption key or store releases; only the repo owner merges
+needs:human	b60205	Real blocker: the repo owner decides and merges
 phase:dev	dff3e4	Delivery phase D: development
 phase:research	e4e2f7	Delivery phase R: research
 phase:ui	fde8e1	Delivery phase U: UI/design
@@ -53,7 +52,6 @@ status:in-review	5319e7	PR opened, awaiting review
 status:postponed	bfd4f2	Deliberately deferred (e.g. shared wallet)
 status:proposed	ededed	Proposed; awaiting owner decision
 status:ready	c2e0c6	Refined with acceptance criteria and unblocked; can be picked up
-status:ready-for-test	fbca04	Merged/built; awaiting tester verification
 status:rejected	b60205	Declined by the owner; kept for history
 type:design	f9d0c4	UI/UX design task (screens, flows) to finish before development
 type:epic	3e4b9e	Product feature epic; parent of research, UI and dev issues
