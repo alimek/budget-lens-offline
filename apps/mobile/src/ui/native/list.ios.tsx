@@ -73,6 +73,7 @@ export function TransactionRow({ actions, onAction, ...row }: TransactionRowProp
           <SwipeButton
             key={action.key}
             action={action}
+            title={row.title}
             testID={`${row.testID}-${action.key}`}
             onPress={() => onAction?.(action.key)}
           />
@@ -123,17 +124,20 @@ function RowContent({
   );
 }
 
-/** A swipe action: system destructive red, or `primary` for the others. */
+/** A swipe action: system destructive red, or `primary` for the others, named "<action>: <title>". */
 function SwipeButton({
   action,
+  title,
   testID,
   onPress,
 }: {
   action: MenuAction<string>;
+  title: string;
   testID: string;
   onPress: () => void;
 }) {
   const theme = useThemeColors();
+  const { t } = useTranslation();
   return (
     <Button
       label={action.label}
@@ -141,6 +145,7 @@ function SwipeButton({
       onPress={onPress}
       modifiers={[
         accessibilityIdentifier(testID),
+        accessibilityLabel(t("transaction.actionLabel", { action: action.label, title })),
         ...(action.destructive ? [] : [tint(theme.primary)]),
       ]}
     />

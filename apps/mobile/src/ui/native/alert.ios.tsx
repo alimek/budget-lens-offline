@@ -18,27 +18,37 @@ export function AppAlert({
   onConfirm,
   onDismiss,
 }: AlertProps) {
-  // The latest callbacks, so the open alert never calls a stale closure.
-  const handlers = useRef({ onConfirm, onDismiss });
-  handlers.current = { onConfirm, onDismiss };
+  // The latest props, so the open alert never calls a stale closure and changing a prop while it is open does not
+  // present it again: only `visible` turning true presents it.
+  const latest = useRef({
+    title,
+    message,
+    confirmLabel,
+    cancelLabel,
+    destructive,
+    onConfirm,
+    onDismiss,
+  });
+  latest.current = { title, message, confirmLabel, cancelLabel, destructive, onConfirm, onDismiss };
   useEffect(() => {
     if (!visible) return;
+    const props = latest.current;
     Alert.alert(
-      title,
-      message,
+      props.title,
+      props.message,
       [
-        { text: cancelLabel, style: "cancel", onPress: () => handlers.current.onDismiss() },
+        { text: props.cancelLabel, style: "cancel", onPress: () => latest.current.onDismiss() },
         {
-          text: confirmLabel,
-          style: destructive ? "destructive" : "default",
+          text: props.confirmLabel,
+          style: props.destructive ? "destructive" : "default",
           onPress: () => {
-            handlers.current.onConfirm();
-            handlers.current.onDismiss();
+            latest.current.onConfirm();
+            latest.current.onDismiss();
           },
         },
       ],
-      { cancelable: true, onDismiss: () => handlers.current.onDismiss() },
+      { cancelable: true, onDismiss: () => latest.current.onDismiss() },
     );
-  }, [visible, title, message, confirmLabel, cancelLabel, destructive]);
+  }, [visible]);
   return null;
 }
