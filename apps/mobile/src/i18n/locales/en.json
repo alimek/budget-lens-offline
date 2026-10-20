@@ -13,6 +13,10 @@
     "message": "Your budget stays on this device.",
     "selectedMonth": "Selected month: {{month}}"
   },
+  "privacy": {
+    "title": "Privacy",
+    "updates": "Your budget data stays on this device and is never sent anywhere. Each time the app starts (store and TestFlight versions), it checks for app updates with Expo, the update service; this is the only connection the app makes. Each check sends a random installation ID stored on this device, technical details of the installed version (platform, runtime version, update channel, update IDs) and, after a crash, the error message. Deleting the app removes the ID, but restoring a device backup can bring it back. Expo also sees your IP address. The app does not track you and has no ads or analytics."
+  },
   "dev": {
     "designSystem": {
       "title": "Design system",

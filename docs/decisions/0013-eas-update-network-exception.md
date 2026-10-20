@@ -23,7 +23,8 @@ update servers and needed an explicit owner decision first.
   and, when an update is downloaded, requests for its files. Per the `expo-updates` 58.0.17 sources
   (`FileDownloader` on iOS and Android) and `expo-eas-client` 58.0.2, the headers are:
   - `EAS-Client-ID`: a random UUID created once per installation and stored on the device (iOS `UserDefaults`,
-    Android `SharedPreferences`), sent on every check;
+    Android `SharedPreferences`), sent on every check; device backups can restore it after a reinstall
+    ([storage](../release/updates.md#installation-id-storage));
   - `Expo-Fatal-Error`: the message of the fatal JavaScript error that ended the previous launch, truncated to 1024
     characters, only when there was one;
   - `Expo-Recent-Failed-Update-IDs`, `Expo-Current-Update-ID`, `Expo-Embedded-Update-ID` (and
@@ -41,7 +42,9 @@ update servers and needed an explicit owner decision first.
 - Updates reach installed builds without the App Store review or a new EAS build; native changes still need a build
   because the fingerprint changes.
 - Expo (the EAS project's account) receives a persistent per-installation identifier, crash messages and the IP
-  address. Privacy texts (onboarding, store privacy labels) must mention this request.
+  address. Privacy texts must mention this request: Settings → *Privacy* in the app (`privacy.updates`, #191), the
+  planned onboarding privacy explanation (reusing that text) and the App Store privacy label
+  ([app-store-privacy.md](../release/app-store-privacy.md)).
 - **Opt-out later, if required:** set `updates.enabled: false` in `app.json` (needs a new build), or add a user
   setting that skips `checkForUpdateInBackground` (JavaScript only). Either removes the request entirely.
 - Publishing stays manual and needs the owner's go-ahead; nothing is published on merge.

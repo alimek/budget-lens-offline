@@ -64,7 +64,7 @@ Use stable `kebab-case` IDs: `<area>-<element>[-<variant>]`. Never put translate
 data in an ID. Screen roots use `screen-<name>` with `collapsable={false}`. Overview uses `screen-home`
 for the #15 smoke contract; other roots are `screen-month`, `screen-forecast`, `screen-items`,
 `screen-settings`, and `screen-savings`. Native triggers use `tab-overview`, `tab-month`,
-`tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`. The dev-only
+`tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`. The Settings privacy card uses `settings-privacy` and its EAS Update disclosure text `settings-privacy-updates`. The dev-only
 design system showcase uses `screen-design-system`, opened by `settings-open-design-system`; its elements use the
 `ds-` prefix ([design system](design-system.md#showcase)).
 

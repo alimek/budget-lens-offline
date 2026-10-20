@@ -117,6 +117,9 @@ runtime version, publishing and rollback are described in [updates.md](updates.m
 
 Check the current numbers on the Expo pricing page before relying on them.
 
+**Privacy label:** not needed for internal TestFlight testing; before external testing or App Store submission the
+owner fills in App Store Connect → *App Privacy* from [app-store-privacy.md](app-store-privacy.md).
+
 ## Versions and build numbers
 
 - **Version** (`CFBundleShortVersionString`) is `expo.version` in `apps/mobile/app.json` (`0.1.0`, approved by the
