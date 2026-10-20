@@ -12,16 +12,20 @@ Telemetry was disabled. Every run below records `vcs.dirty: false`; the evidence
 | Full iOS suite | `364aa05` | 23 passed, 4 skipped | `01a15ab2-37bf-7265-955d-8a25db3d60fe` |
 | Android 200% text | `364aa05` | 4 passed | `01a15abd-2203-753e-b73c-b979e4048cd5` |
 | iOS 200% text | `364aa05` | 1 passed, 3 failed (Settings scrolling) | `01a15abe-2930-7128-957f-2fb7b915fe9d` |
+| Final focused android list suite | `42f6b7c` | 4 passed | `01a15ac2-71c4-71c8-b32c-db638749113b` |
+| Final focused ios list suite | `42f6b7c` | 4 passed | `01a15ac3-2cee-7714-807a-a1992c97be01` |
 
 The baseline functional test passed while its screenshot reproduced the stuck grey press indication. The final
 full suites include all four `design-system-list.e2e.ts` tests; the four large-text tests are opt-in and run
 separately. Android checks the exact checkbox name, both action names before swiping, unchanged unpaid/paid state
-after swiping, paid toggling, deletion and editing. The iOS implementation is unchanged.
+after swiping, paid toggling, deletion and editing. The iOS implementation is unchanged. The final focused runs cover the test-only simplification of the two
+action-name assertions; product code is identical to the full-suite commit. The swiped-row PNGs come from these
+final focused runs.
 
 - [Android before](android-before-list-swipe.png): sampled open-row RGB `(224, 224, 229)`, page `(242, 242, 247)`.
 - [Android after](android-list-swipe.png): sampled open-row and page RGB both `(242, 242, 247)`; no persistent highlight.
 - [iOS swipe](ios-list-swipe.png): native trailing actions remain unchanged.
-- [Raw traces and screenshots](traces/): full-suite list tests, baseline and 200% list checks. The three failed
+- [Raw traces and screenshots](traces/): full-suite list tests, final focused swipe tests, baseline and 200% list checks. The three failed
   iOS large-text showcase traces are retained too. Videos remain in the ignored runner output.
 
 All PNGs and `trace.md` files are raw runner artifacts, copied without edits. The three swiped-row PNGs were
