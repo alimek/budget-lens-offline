@@ -13,13 +13,16 @@ plan** is used; paid features need the owner's consent.
   - `build.base`: shared settings. Node.js `24.22.0` (as in `.nvmrc`) and pnpm `12.14.0` (as in `packageManager`),
     because the default EAS images ship older versions. `EXPO_NO_TELEMETRY=1`.
   - `build.development`: development client (`expo-dev-client`), internal distribution (ad hoc, registered devices).
-  - `build.preview`: Release build, internal distribution (ad hoc), for testing without TestFlight.
-  - `build.production`: Release build for App Store Connect (`distribution: store`), `autoIncrement: true`.
+  - `build.preview`: Release build, internal distribution (ad hoc), for testing without TestFlight, EAS Update
+    channel `preview`.
+  - `build.production`: Release build for App Store Connect (`distribution: store`), `autoIncrement: true`, EAS
+    Update channel `production`.
   - `submit.production.ios`: intentionally empty. It has no `ascAppId`, `appleTeamId` or Apple ID; those come from
     EAS credentials and the interactive `eas submit` (see [Release flow](#release-flow)).
 - `apps/mobile/app.json`: bundle identifier, version, icon, splash, export compliance (see
-  [Release configuration](#release-configuration)) and the EAS project link `extra.eas.projectId` (#183). It is
-  static; there is no `app.config.ts`.
+  [Release configuration](#release-configuration)), the EAS project link `extra.eas.projectId` (#183) and the EAS
+  Update settings `updates` and `runtimeVersion` ([updates.md](updates.md)). It is static; there is no
+  `app.config.ts`.
   - **The project is already linked.** `extra.eas.projectId` is committed; it is not a secret. EAS CLI identifies the
     project and its account by this ID alone (since SDK 53 it does not need `owner`; eas-cli #2835 and #3017).
   - **Never commit `owner`.** It is an Expo account name, and the repository stays account-agnostic (#171).
@@ -42,6 +45,9 @@ Run every command from a **clean working tree** of an up-to-date `main` (`git st
 working tree, and `eas` may write `owner` or `extra.router` into `apps/mobile/app.json` (see
 [Relinking](#relinking-the-project)); a clean tree shows such a change immediately, so it can be reverted and never
 ends up in a build or a commit.
+
+A change that only touches JavaScript or assets can reach an installed build as an EAS Update instead of a new build
+([updates.md](updates.md#update-or-new-build)).
 
 Prerequisites: a paid Apple Developer Program membership, and an Expo login with access to the account that owns the
 linked project (`pnpm --filter @budget-lens/mobile eas whoami`; Developer role or higher).
@@ -103,9 +109,8 @@ also writes `owner` (and `extra.router`, see above) into `app.json`. Before comm
 - **45-minute build timeout** and at most one macOS build at a time.
 - EAS Submit is included.
 
-**EAS Update (over-the-air updates) is not used.** `expo-updates` contacts Expo's update servers when the app starts,
-which conflicts with the offline, no-server rule (AGENTS.md). Adding it needs an explicit owner decision first; until
-then, every change reaches TestFlight through a new EAS build.
+**EAS Update** (over-the-air JavaScript and asset updates to installed builds) is configured (#184): channels,
+runtime version, publishing and rollback are described in [updates.md](updates.md).
 
 Check the current numbers on the Expo pricing page before relying on them.
 

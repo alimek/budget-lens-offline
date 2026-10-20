@@ -1,12 +1,14 @@
 import "../../global.css";
 import { DarkTheme, DefaultTheme, Stack, type Theme, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Updates from "expo-updates";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { StatusBar, useColorScheme } from "react-native";
 import { I18nProvider } from "../i18n";
 import { AppStoreProvider } from "../state/app-store";
 import { colors, resolveColorScheme } from "../ui/theme";
+import { checkForUpdateInBackground } from "../updates/update-check";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -47,6 +49,11 @@ export default function RootLayout() {
   const theme = useNavigationTheme();
   useEffect(() => {
     SplashScreen.hide();
+    // EAS Update: background check after the first render; never blocks startup or reloads the session.
+    void checkForUpdateInBackground(
+      { enabled: Updates.isEnabled, development: __DEV__, channel: Updates.channel },
+      { checkForUpdate: Updates.checkForUpdateAsync, fetchUpdate: Updates.fetchUpdateAsync },
+    );
   }, []);
   return (
     <I18nProvider>
