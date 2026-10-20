@@ -6,11 +6,17 @@ import {
   textFieldStyle,
   tint,
 } from "@expo/ui/swift-ui/modifiers";
-import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Text } from "../components/text";
 import { useThemeColors } from "../use-theme";
 import type { TextFieldProps } from "./types";
+import { useSyncedText } from "./use-synced-text";
+
+const FIELDS = {
+  text: { Field: TextField, keyboard: "default" },
+  decimal: { Field: TextField, keyboard: "decimal-pad" },
+  secure: { Field: SecureField, keyboard: "default" },
+} as const;
 
 /**
  * SwiftUI `TextField` (`SecureField` for `kind="secure"`) with the rounded border style and cursor `primary`. The
@@ -28,28 +34,16 @@ export function AppTextField({
 }: TextFieldProps) {
   const theme = useThemeColors();
   const text = useNativeState(value);
-  // The native field owns the text while typing; push the prop only when it differs from what the field last
-  // reported, so a re-render that lags behind fast input never overwrites newer keystrokes.
-  const reported = useRef(value);
-  useEffect(() => {
-    if (value !== reported.current) {
-      reported.current = value;
-      text.set(value);
-    }
-  }, [text, value]);
-  const handleChange = (next: string) => {
-    reported.current = next;
-    onChangeText(next);
-  };
+  const handleChange = useSyncedText(text, value, onChangeText);
   const modifiers = [
     textFieldStyle("roundedBorder"),
     tint(theme.primary),
     accessibilityLabel(label),
     // Always present (empty without an error): changing the modifier list mid-typing resets the field's focus.
     accessibilityHint(error ?? ""),
-    ...(kind === "decimal" ? [keyboardType("decimal-pad")] : []),
+    keyboardType(FIELDS[kind].keyboard),
   ];
-  const Field = kind === "secure" ? SecureField : TextField;
+  const { Field } = FIELDS[kind];
   return (
     <View className="gap-1 self-stretch">
       <Text variant="footnote" className="text-muted-foreground" accessibilityElementsHidden>
@@ -64,11 +58,16 @@ export function AppTextField({
           modifiers={modifiers}
         />
       </Host>
-      {error ? (
-        <Text variant="footnote" className="text-expense" testID={`${testID}-error`}>
-          {error}
-        </Text>
-      ) : null}
+      <FieldError error={error} testID={`${testID}-error`} />
     </View>
+  );
+}
+
+function FieldError({ error, testID }: { error: string | undefined; testID: string }) {
+  if (!error) return null;
+  return (
+    <Text variant="footnote" className="text-expense" testID={testID}>
+      {error}
+    </Text>
   );
 }

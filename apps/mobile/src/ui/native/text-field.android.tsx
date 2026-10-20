@@ -1,8 +1,8 @@
 import { Host, OutlinedTextField, Text, useNativeState } from "@expo/ui/jetpack-compose";
 import { fillMaxWidth, testID as testIDModifier } from "@expo/ui/jetpack-compose/modifiers";
-import { useEffect, useRef } from "react";
 import { useThemeColors } from "../use-theme";
 import type { TextFieldProps } from "./types";
+import { useSyncedText } from "./use-synced-text";
 
 const KEYBOARD = { text: "text", decimal: "decimal", secure: "password" } as const;
 
@@ -21,19 +21,7 @@ export function AppTextField({
 }: TextFieldProps) {
   const theme = useThemeColors();
   const text = useNativeState(value);
-  // The native field owns the text while typing; push the prop only when it differs from what the field last
-  // reported, so a re-render that lags behind fast input never overwrites newer keystrokes.
-  const reported = useRef(value);
-  useEffect(() => {
-    if (value !== reported.current) {
-      reported.current = value;
-      text.set(value);
-    }
-  }, [text, value]);
-  const handleChange = (next: string) => {
-    reported.current = next;
-    onChangeText(next);
-  };
+  const handleChange = useSyncedText(text, value, onChangeText);
   return (
     <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
       <OutlinedTextField
