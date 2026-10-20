@@ -2,6 +2,7 @@
 // data (machine names, home paths, local scheduler jobs, device serials) or references to a specific agent setup.
 // Anyone must be able to clone the repo and work with it. Policy: AGENTS.md (Hard rules).
 import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 
 /** Leading word boundary that works in both POSIX ERE (`git grep -E`) and JavaScript regular expressions. */
 const START = "(^|[^a-z0-9])";
@@ -69,6 +70,27 @@ const LABEL = {
   misses: ["`agent.act()`", "agent-device"],
 };
 
+/**
+ * The Expo app config must not name an Expo account: `eas init` writes `expo.owner`, but since SDK 53 EAS identifies
+ * the project by `extra.eas.projectId` alone (docs/release/testflight.md). A key check, because the word "owner" is
+ * fine elsewhere. `hits` and `misses` are self-tested like the patterns above.
+ */
+const APP_CONFIG = {
+  label: "Expo account name (expo.owner)",
+  file: "apps/mobile/app.json",
+  hits: [{ expo: { name: "App", owner: "some-account" } }, { expo: { owner: "" } }],
+  misses: [
+    {
+      expo: { name: "App", extra: { eas: { projectId: "00000000-0000-0000-0000-000000000000" } } },
+    },
+    { expo: { name: "App" } },
+  ],
+};
+
+function hasExpoOwner(config) {
+  return Object.hasOwn(config?.expo ?? {}, "owner");
+}
+
 const ALWAYS_EXCLUDED = [
   ":(exclude)scripts/check-machine-agnostic.mjs",
   ":(exclude)pnpm-lock.yaml",
@@ -86,10 +108,17 @@ function mismatches({ label, pattern }, samples, expected) {
 }
 
 function selfTest() {
-  return [...PATTERNS, LABEL].flatMap((entry) => [
-    ...mismatches(entry, entry.hits, true),
-    ...mismatches(entry, entry.misses, false),
-  ]);
+  const appConfigFailures = [
+    ...APP_CONFIG.hits.filter((sample) => !hasExpoOwner(sample)).map((s) => ["expected a hit", s]),
+    ...APP_CONFIG.misses.filter((sample) => hasExpoOwner(sample)).map((s) => ["unexpected hit", s]),
+  ].map(([problem, sample]) => `${APP_CONFIG.label}: ${problem} for ${JSON.stringify(sample)}`);
+  return [
+    ...[...PATTERNS, LABEL].flatMap((entry) => [
+      ...mismatches(entry, entry.hits, true),
+      ...mismatches(entry, entry.misses, false),
+    ]),
+    ...appConfigFailures,
+  ];
 }
 
 function grep(pattern, extraExcludes) {
@@ -134,6 +163,15 @@ for (const { label, pattern } of PATTERNS) {
 }
 for (const line of grep(LABEL.pattern, [":(exclude).github/**"]).split("\n").filter(Boolean)) {
   findings.push(`${LABEL.label}: ${line}`);
+}
+
+if (
+  existsSync(APP_CONFIG.file) &&
+  hasExpoOwner(JSON.parse(readFileSync(APP_CONFIG.file, "utf8")))
+) {
+  findings.push(
+    `${APP_CONFIG.label}: ${APP_CONFIG.file} sets "owner"; commit only extra.eas.projectId`,
+  );
 }
 
 if (findings.length > 0) {

@@ -6,7 +6,6 @@ coverage/
 .DS_Store
 .fallow/
 .env*
-!.env.example
 
 # Expo development builds and local test artifacts
 apps/mobile/.expo/

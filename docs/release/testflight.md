@@ -20,7 +20,8 @@ features need the owner's consent.
     EAS credentials and the interactive `eas submit` (see [Owner setup](#owner-setup-one-time)).
 - `apps/mobile/app.json`: bundle identifier, version, icon, splash and export compliance (see
   [Release configuration](#release-configuration)). It is static. There is no `app.config.ts`, so `eas init` can write
-  `extra.eas.projectId` and `owner` into `app.json` itself.
+  `extra.eas.projectId` into `app.json` itself. `app.json` never contains `owner` (an Expo account name, #171);
+  `pnpm lint` rejects it (`scripts/check-machine-agnostic.mjs`).
 - The root `prepare` script skips `lefthook install` when `EAS_BUILD=true` (set on EAS builders), so the install step
   does not depend on Git hooks. Locally, `pnpm install` still installs the hooks.
 - EAS uploads the repository without the files ignored by `.gitignore`. It installs dependencies with pnpm from the
@@ -36,8 +37,12 @@ account.
 2. **Expo:** create an Expo account (free plan) and log in on the machine that starts builds:
    `pnpm --filter @budget-lens/mobile eas login`.
 3. **Link the project:** `pnpm --filter @budget-lens/mobile eas init`. This creates the EAS project and writes
-   `extra.eas.projectId` (and `owner`) into `apps/mobile/app.json`. Commit that change in a small PR. The project ID
-   is not a secret, but it stays out of the repository until the owner's project exists.
+   `extra.eas.projectId` and `owner` into `apps/mobile/app.json`. **Commit only `extra.eas.projectId`**: delete the
+   `owner` line before committing, because it is an Expo account name and the repository stays account-agnostic
+   (#171; `pnpm lint` fails while it is there). EAS does not need it: since SDK 53, EAS CLI identifies the project by
+   `extra.eas.projectId` alone, and `owner` is only required for SDK 52 and older (eas-cli changelog, "No longer
+   require owner field for SDK >= 53", eas-cli #2835 and #3017). The project ID is not a secret; it stays out of the
+   repository until the owner's project exists. Commit it in a small PR.
 4. **Credentials and first build:** `pnpm eas:build:ios` (production profile). On the first run EAS CLI asks for the
    Apple Developer login and offers to create and store the distribution certificate and provisioning profile.
    Let EAS manage them. `pnpm --filter @budget-lens/mobile eas credentials --platform ios` shows or changes them later.
@@ -73,14 +78,18 @@ to the internal group (or enable automatic distribution for the group) and insta
 - Up to **15 iOS builds** (and 15 Android builds) per month, on the medium worker only (`resourceClass: large` is paid).
 - **Low-priority queue:** at peak times the wait can be 90+ minutes before a build starts.
 - **45-minute build timeout** and at most one macOS build at a time.
-- EAS Submit is included. EAS Update (over-the-air JS updates) is a possible follow-up and is not configured here.
+- EAS Submit is included.
+
+**EAS Update (over-the-air updates) is not used.** `expo-updates` contacts Expo's update servers when the app starts,
+which conflicts with the offline, no-server rule (AGENTS.md). Adding it needs an explicit owner decision first; until
+then, every change reaches TestFlight through a new EAS build.
 
 Check the current numbers on the Expo pricing page before relying on them.
 
 ## Versions and build numbers
 
-- **Version** (`CFBundleShortVersionString`) is `expo.version` in `apps/mobile/app.json` (`0.1.0`). Bump it in a PR
-  for a new release line.
+- **Version** (`CFBundleShortVersionString`) is `expo.version` in `apps/mobile/app.json` (`0.1.0`, approved by the
+  owner for the first TestFlight build). Bump it in a PR for a new release line.
 - **Build number** (`CFBundleVersion`) is managed by EAS (`appVersionSource: remote`). Every production build
   increments it on EAS servers (`autoIncrement`), starting at 1 for a new project, and EAS writes it into the native
   project during the build. Nothing is committed per build, two machines cannot produce the same number, and a
@@ -93,18 +102,22 @@ commit each time, which is why it was not chosen.
 
 ## Release configuration
 
-- **Bundle identifier:** `com.budgetlens.offline` (`ios.bundleIdentifier`, same as the Android package), pending the
-  owner's confirmation. It cannot be changed after the App Store Connect record exists.
+Owner decision (2026-10-20, [#177 comment](https://github.com/alimek/budget-lens-offline/pull/177#issuecomment-6289624873)): the bundle identifier `com.budgetlens.offline`,
+`ITSAppUsesNonExemptEncryption = NO` and version `0.1.0` for the first TestFlight build are approved.
+
+- **Bundle identifier:** `com.budgetlens.offline` (`ios.bundleIdentifier`, same as the Android package), approved by
+  the owner. It cannot be changed after the App Store Connect record exists.
 - **Display name:** `Budget Lens`. **Icon and splash:** placeholders in `apps/mobile/assets/` (`icon.png`,
   1024×1024 without alpha as App Store Connect requires; `splash-icon.png` on `#0F766E`), to be replaced by the
   design work.
 - **Export compliance:** `ios.config.usesNonExemptEncryption: false` sets `ITSAppUsesNonExemptEncryption = NO`, so
-  App Store Connect does not ask the compliance question for every build. Reasoning (pending owner confirmation):
+  App Store Connect does not ask the compliance question for every build. Approved by the owner, who treats the
+  on-device SQLCipher encryption as exempt. Reasoning:
   the app has no encryption of its own except HTTPS through Apple's OS networking and, once #75 lands, SQLCipher
   (AES) that only protects the user's own data at rest on the device. The app's primary function is personal
   budgeting, not information security, communication or networking, so this falls under the exemptions Apple lists
-  for encryption that is not the primary function (EAR Category 5 Part 2, Note 4). If the owner or an adviser
-  concludes otherwise, set it to `true` and answer the export compliance questions in App Store Connect.
+  for encryption that is not the primary function (EAR Category 5 Part 2, Note 4). If this assessment changes, set
+  it to `true` and answer the export compliance questions in App Store Connect.
 - **Usage strings:** none are needed today. The app requests no protected resources (camera, photos, location,
   contacts, motion activity, Face ID, tracking). Expo and React Native link system frameworks such as CoreMotion and
   CryptoKit, but no code path calls an API that needs an `NS*UsageDescription` key; if App Store Connect reports a
