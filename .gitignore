@@ -6,7 +6,6 @@ coverage/
 .DS_Store
 .fallow/
 .env*
-!.env.example
 
 # Expo development builds and local test artifacts
 apps/mobile/.expo/
@@ -16,5 +15,3 @@ apps/mobile/.e2e/*
 !apps/mobile/.e2e/cache/
 apps/mobile/.devices/
 
-# Local iOS release builds (archives, IPAs, export options)
-apps/mobile/build/

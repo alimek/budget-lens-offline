@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "prepare": "lefthook install",
+    "prepare": "[ \"$EAS_BUILD\" = true ] || lefthook install",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "lint": "biome check --error-on-warnings . && node scripts/check-machine-agnostic.mjs",
@@ -17,10 +17,8 @@
     "check:licenses": "node scripts/check-licenses.mjs",
     "e2e:ios": "pnpm --filter @budget-lens/mobile e2e:ios",
     "e2e:android": "pnpm --filter @budget-lens/mobile e2e:android",
-    "ios:build": "bash scripts/ios/testflight.sh build",
-    "ios:build:unsigned": "bash scripts/ios/testflight.sh build --unsigned",
-    "ios:upload": "bash scripts/ios/testflight.sh upload",
-    "ios:release": "bash scripts/ios/testflight.sh release"
+    "eas:build:ios": "pnpm --filter @budget-lens/mobile eas:build:ios",
+    "eas:submit:ios": "pnpm --filter @budget-lens/mobile eas:submit:ios"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

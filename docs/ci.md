@@ -24,7 +24,7 @@ status check. Making checks required in the `main` ruleset is the repository own
 
 | Job | Fails when |
 | --- | --- |
-| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or host-, user- or agent-setup-specific content (`scripts/check-machine-agnostic.mjs`, see [AGENTS.md](../AGENTS.md)) |
+| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or host-, user- or agent-setup-specific content, including an Expo account name (`expo.owner`) in `apps/mobile/app.json` (`scripts/check-machine-agnostic.mjs`, see [AGENTS.md](../AGENTS.md)) |
 | `typecheck` | Any TypeScript 7 error with the strict options in `tsconfig.base.json` |
 | `test` | Any failing Vitest test (coverage is reported, no thresholds) |
 | `fallow` | Any unused file, export, type or dependency (dev dependencies too), unlisted dependency, cycle or stale suppression |
@@ -105,6 +105,8 @@ no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow 
 - Native builds (iOS and Android development builds) and E2E tests run **locally on a dev machine** (macOS with
   Xcode for iOS, Android SDK for Android), only on **dedicated simulators/emulators** (see
   [mobile development](mobile-development.md#development-builds)).
+- iOS release builds for internal TestFlight run on **EAS Build** and are uploaded with **EAS Submit**, both started
+  manually (#178, [release/testflight.md](release/testflight.md)); no GitHub workflow triggers them.
 - The evidence on the PR is **screenshots** (iOS + Android, simulator/emulator named; a video is
   also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
   **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a

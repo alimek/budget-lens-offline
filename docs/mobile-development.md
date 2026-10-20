@@ -75,9 +75,10 @@ components. DB boot, recovery, persistence, language preferences and onboarding 
 
 ## Release builds (TestFlight)
 
-Release builds for internal TestFlight testing are made locally with `pnpm ios:build:unsigned` (compile check,
-no Apple account) and `pnpm ios:release` (signed build and upload with an App Store Connect API key from env vars).
-Prerequisites, env vars, versioning and the export compliance setting: [release/testflight.md](release/testflight.md).
+Release builds for internal TestFlight testing are built and submitted with EAS (`apps/mobile/eas.json`):
+`pnpm eas:build:ios` and `pnpm eas:submit:ios`. Signing credentials and the App Store Connect API key stay in EAS.
+Profiles, owner setup, versioning, free-plan limits and the export compliance setting:
+[release/testflight.md](release/testflight.md).
 
 ## Native permissions and network
 

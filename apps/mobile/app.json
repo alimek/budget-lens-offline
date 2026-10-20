@@ -8,7 +8,6 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.budgetlens.offline",
-      "buildNumber": "1",
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
