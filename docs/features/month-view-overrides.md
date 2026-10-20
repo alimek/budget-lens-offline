@@ -1,6 +1,6 @@
 # PRD: Month view, payment status & overrides (E4)
 
-Epic: [#26](https://github.com/alimek/budget-lens-offline/issues/26) · Status: proposed (open: [#42](https://github.com/alimek/budget-lens-offline/issues/42)) · decisions: [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950) · MVP
+Epic: [#26](https://github.com/alimek/budget-lens-offline/issues/26) · Status: proposed (open: [#42](https://github.com/alimek/budget-lens-offline/issues/42)) · decisions: [#80 edit flow](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151), [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950) · MVP
 
 ## Problem
 
@@ -11,7 +11,8 @@ breaking the recurring rule.
 
 One screen for the active month (the **Month** tab) lists every resolved occurrence, with its original currency and the base-currency
 equivalent. Users mark occurrences paid or received, change the amount for one month, or skip it. Totals are in the
-base currency.
+base currency. A change here is **always a one-off change for that month** (an override); the month view has no
+"from this month on" choice. Future changes are made in the items screen ([E3](budget-items-recurrence.md), [owner decision #80](https://github.com/alimek/budget-lens-offline/issues/80#issuecomment-6299720151)).
 
 ## Scope
 
@@ -43,6 +44,8 @@ base currency.
   ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)).
 - Totals equal the sum of resolved occurrences converted to the base currency, each row rounded before summing.
 - Past (closed) months are read-only and show snapshotted rates.
+- The occurrence detail sheet saves amount changes only as overrides for that month. It never changes the item's rule
+  versions and offers no scope choice.
 
 ## Success criteria
 
@@ -52,7 +55,8 @@ base currency.
 
 - Core: [#5](https://github.com/alimek/budget-lens-offline/issues/5), [#138](https://github.com/alimek/budget-lens-offline/issues/138); conversion [#140](https://github.com/alimek/budget-lens-offline/issues/140).
 - DB: [#83](https://github.com/alimek/budget-lens-offline/issues/83).
-- UI: [#65](https://github.com/alimek/budget-lens-offline/issues/65), [#64](https://github.com/alimek/budget-lens-offline/issues/64).
+- UI: [#65](https://github.com/alimek/budget-lens-offline/issues/65). (The [#64](https://github.com/alimek/budget-lens-offline/issues/64) choice dialog moved to the items screen as the "Applies from" picker:
+  [#82](https://github.com/alimek/budget-lens-offline/issues/82), [#63](https://github.com/alimek/budget-lens-offline/issues/63).)
 - E3 items: [#81](https://github.com/alimek/budget-lens-offline/issues/81).
 
 ## Open questions

@@ -8,8 +8,9 @@ the [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/
 - **English only**: code, identifiers, comments, docs, test names, commit messages, PR titles and descriptions,
   issues. Legacy user-facing data quoted verbatim in characterization tests is the only exception
   ([ADR 0009](decisions/0009-english-and-i18n.md)).
-- **No hardcoded UI strings.** The app ships in **Polish and English** via i18n (separate issue). Domain code
-  returns data and codes (e.g. warning codes with parameters), never translated messages.
+- **No hardcoded UI strings.** The app ships in **Polish and English** via i18n ([i18n](i18n.md)): add keys to
+  English first; Polish may lag and falls back to English. Domain code returns data and codes (e.g. warning codes
+  with parameters), never translated messages.
 
 ## Code
 

@@ -11,6 +11,7 @@ What exists today in `packages/core`:
   [ADR 0012](decisions/0012-native-intl-money-formatting.md));
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
 - occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
+- rule versions and the pure rule-edit planner (#80, see [domain/rule-versions.md](domain/rule-versions.md));
 - the `Settings` model (#76);
 - injected NBP table-A client, current-rate store contract, shared rate selection and app-open refresh (#8);
 - balance forecast, warning codes and exact cross-currency conversion (#6, see [domain/forecast.md](domain/forecast.md));
@@ -79,7 +80,7 @@ implemented and what is still planned:
 | Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) | Planned (#75) |
 | App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
-| i18n | Polish and English; no hardcoded UI strings | Implemented (#73): bundled PL/EN locale files, device-language initialization |
+| i18n | Polish and English; no hardcoded UI strings | Implemented (#73, #77): i18next + react-i18next, bundled PL/EN resources per namespace, English source and runtime fallback, typed keys, system language with an in-app override API, i18next-cli for extraction only, no CI translation check ([i18n](i18n.md)) |
 | Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) | Planned (#30) |
 | App updates | EAS Update (`expo-updates`) for JavaScript and asset changes, fingerprint runtime version, background check that never blocks startup, applied on the next launch | Implemented (#184): [release/updates.md](release/updates.md), [ADR 0013](decisions/0013-eas-update-network-exception.md) |
 | Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests run locally on a dev machine on dedicated simulators/emulators (not in CI, [ci.md](ci.md#native-builds-and-e2e-local)); setup in #15 |
@@ -104,7 +105,9 @@ pnpm workspaces + Turborepo, TypeScript 7 (`tsc`), Vitest, Biome, Fallow, Leftho
 ## Mobile scaffold (#73)
 
 `apps/mobile` uses a custom entry for the English/Polish plural-rules polyfill and Expo Router.
-Bundled i18n initializes synchronously from the device locale before navigation. The root contains
+Bundled i18n initializes synchronously before navigation, from the stored language preference when a store is
+injected, otherwise from the device language (unsupported languages fall back to English); see [i18n](i18n.md).
+The root contains
 `I18nProvider` → `AppStoreProvider` → Router `ThemeProvider` → Stack. The Zustand vanilla store is
 created once per provider with an injectable clock; it currently holds only the selected month.
 No SQLite data is copied into Zustand. Onboarding and recovery belong to #59/#60.

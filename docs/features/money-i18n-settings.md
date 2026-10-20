@@ -19,7 +19,7 @@ that blurs amounts.
 - Money parsing and formatting per currency exponent (done in [#2](https://github.com/alimek/budget-lens-offline/issues/2)).
 - `Settings` model (done in [#76](https://github.com/alimek/budget-lens-offline/issues/76)).
 - Base-currency lock ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
-- i18n infrastructure ([#77](https://github.com/alimek/budget-lens-offline/issues/77)).
+- i18n infrastructure (done in [#77](https://github.com/alimek/budget-lens-offline/issues/77); [i18n](../i18n.md)).
 - Settings persistence and screen ([#78](https://github.com/alimek/budget-lens-offline/issues/78)).
 - Privacy mode ([#79](https://github.com/alimek/budget-lens-offline/issues/79)).
 - Amount input with currency selection ([#61](https://github.com/alimek/budget-lens-offline/issues/61)).

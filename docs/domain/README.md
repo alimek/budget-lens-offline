@@ -7,6 +7,7 @@ decided in the linked issue. Update the file in the same PR that changes the beh
 - [money.md](money.md) – `MinorUnits`, parsing, formatting (#2)
 - [recurrence.md](recurrence.md) – recurring and one-time items (#4)
 - [occurrence-overrides.md](occurrence-overrides.md) – per-month overrides (#5)
+- [rule-versions.md](rule-versions.md) – rule versions, edit scopes and the closed-month invariant (#80)
 - [forecast.md](forecast.md) – balance forecast and warnings (#6)
 - [month-closing.md](month-closing.md) – closing a month (#84)
 - [settings.md](settings.md) – `Settings` model, defaults and warning thresholds (#76)

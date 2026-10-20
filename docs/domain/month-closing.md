@@ -99,8 +99,9 @@ remain isolated while the remaining [#40 discussion](https://github.com/alimek/b
    to `closed_occurrences` in the same transaction as closing and creating the next month. Item names remain
    item-level metadata, as proposed in #40.
 2. **Closed months are immutable.** `validateMonthEditable(month)` is the one policy guard and returns
-   `month-closed`; `updateBalance` uses it and closing uses `updateBalance`. Future override/payment/rule write
-   paths must apply this guard or the equivalent closed-history validation before persisting. Reopening or
+   `month-closed`; `updateBalance` uses it and closing uses `updateBalance`. Rule and override edits go through
+   `planRuleEdit` ([rule versions](rule-versions.md), #80), which rejects any edit that changes a closed month;
+   payment write paths must apply this guard or the equivalent closed-history validation before persisting. Reopening or
    correcting closed history is outside MVP. Database writes still need transactional enforcement (#83/#85).
 
 ## Errors

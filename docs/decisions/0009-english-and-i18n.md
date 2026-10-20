@@ -8,3 +8,8 @@ comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-625
 not messages.
 
 **Consequences.** Legacy Polish strings appear only as verbatim legacy data in characterization tests.
+
+**Update (#37, #77).** i18n uses i18next + react-i18next with bundled JSON resources per namespace. English is the
+source language and the runtime fallback for missing Polish keys; there are no translation checks in CI
+([final owner decision](https://github.com/alimek/budget-lens-offline/issues/37#issuecomment-6263102054)). The app
+follows the device language with an in-app override. Details: [i18n](../i18n.md).

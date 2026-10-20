@@ -126,6 +126,9 @@ The properties we have (#122 completes the set deferred from #18):
 - `src/recurrence.property.test.ts`: occurrences stay inside the requested range, from the anchor up to the end
   month; the list is every month of the item's rhythm, with no gaps and no duplicates; the day of month is clamped
   to the last day of each month.
+- `src/rule-versions.property.test.ts` (#80): random versions, overrides, active months and edits. Every accepted
+  edit leaves every closed month unchanged; "from month M on" never changes a month before M; no override is left
+  behind in an open month the new rule no longer schedules.
 
 ## Characterization tests
 
@@ -149,6 +152,9 @@ line):
   validation (`it.each` tables).
 - `src/occurrence-overrides.test.ts` (#5): resolving occurrence overrides, their validation (including malformed
   stored data) and orphaned overrides.
+- `src/rule-versions.test.ts` (#80): version lookup at boundaries (before the first version, year rollover, end
+  month), anchors and day-of-month inside versions, every edit scope, scheduled changes kept or replaced, orphaned
+  vs kept overrides and the closed-month rejections.
 - `src/forecast.test.ts` and the `convertViaPln` block of `src/money.test.ts` (#6): rolling balances, payment filtering, warning boundaries,
   overrides and currency conversion; the forecast characterization compares rolling totals and warning severities
   with legacy at legacy thresholds.
