@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   type MigrationBundle,
   MigrationIntegrityError,
+  MigrationRestoreError,
   type MigrationSafetyCopy,
   runMigrations,
   runMigrationsWithSafetyCopy,
@@ -149,5 +150,31 @@ describe("runMigrationsWithSafetyCopy", () => {
     expect(reopenedRows(file, "items")).toHaveLength(1);
     expect(reopenedRows(file, "itemRuleVersions")).toHaveLength(1);
     expect(bookkeeping(file)).toHaveLength(schemaMigrations.journal.entries.length);
+  });
+
+  it("keeps the copy and says so when putting it back fails", () => {
+    // Arrange
+    const file = databaseFile();
+    runMigrations(file.connect());
+    const { copy, calls } = file;
+    const failing = withMigration(
+      "0001_failing",
+      "INSERT INTO `missing_table` (`value`) VALUES ('fail');",
+    );
+    const stuckCopy: MigrationSafetyCopy = {
+      create: () => copy.create(),
+      discard: () => copy.discard(),
+      restore: () => {
+        throw new Error("The copy could not be moved into place");
+      },
+    };
+
+    // Act
+    const migrate = () => runMigrationsWithSafetyCopy(file.connect(), stuckCopy, failing);
+
+    // Assert
+    expect(migrate).toThrow(MigrationRestoreError);
+    // The copy is the only state left worth keeping, so nothing here may discard it (#75 R1).
+    expect(calls).toEqual({ created: 1, restored: 0, discarded: 0 });
   });
 });

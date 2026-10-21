@@ -19,6 +19,22 @@ export class MigrationIntegrityError extends Error {
   }
 }
 
+/**
+ * The migrations failed and the copy could not be put back in its place. The live file is the one the failed
+ * migration left behind, so the copy must be kept: a caller must not describe the database as restored (#75 R1).
+ */
+export class MigrationRestoreError extends Error {
+  readonly migrationError: unknown;
+  readonly restoreError: unknown;
+
+  constructor(migrationError: unknown, restoreError: unknown) {
+    super("Migrations failed and the pre-migration copy could not be restored");
+    this.name = "MigrationRestoreError";
+    this.migrationError = migrationError;
+    this.restoreError = restoreError;
+  }
+}
+
 /** The bundle in the form `SQLiteSyncDialect.migrate` takes, as Drizzle's expo migrator builds it. */
 function toMigrationMeta({ journal, migrations }: MigrationBundle): MigrationMeta[] {
   return journal.entries.map((entry) => {
@@ -79,9 +95,15 @@ function countPendingMigrations(
  * the SQLCipher key; this package only decides when each step happens.
  */
 export interface MigrationSafetyCopy {
-  /** Replace the copy from an earlier launch with an encrypted copy of the database as it is now. */
+  /**
+   * Make sure an encrypted copy of the database as it is now is being kept. A copy left by an earlier launch is
+   * the older state and the more valuable one, so it is kept rather than replaced (#75 R1).
+   */
   create(): void;
-  /** Put that copy back in place of the live database file. */
+  /**
+   * Put that copy back in place of the live database file, atomically enough that a crash leaves either the old
+   * file or the full copy, never half of either. Throws when it could not.
+   */
   restore(): void;
   /** Delete a copy left by an earlier launch: the schema is current, so it is no longer needed. */
   discard(): void;
@@ -94,7 +116,8 @@ export interface MigrationSafetyCopy {
  * discarded. On any failure the copy is restored and the error is rethrown, so the caller shows the recovery
  * screen instead of querying a connection that no longer matches the file on disk. The copy is encrypted with
  * the database key, so restoring it cannot expose anything, and a `MigrationIntegrityError` raised after the
- * commit is undone by it – the check itself cannot roll back (#35 §2).
+ * commit is undone by it – the check itself cannot roll back (#35 §2). When putting the copy back also fails, the
+ * error is a `MigrationRestoreError` and the copy is left alone.
  */
 export function runMigrationsWithSafetyCopy(
   db: SyncDatabase,
@@ -111,8 +134,10 @@ export function runMigrationsWithSafetyCopy(
   } catch (error) {
     try {
       safetyCopy.restore();
-    } catch {
-      // The recovery screen is shown either way: a failed restore must not hide why the migration failed.
+    } catch (restoreError) {
+      // A failed restore changes what the user may be told: the live file was not put back, so the copy has to
+      // stay where it is and the screen must not claim the budget was restored (#75 R1).
+      throw new MigrationRestoreError(error, restoreError);
     }
     throw error;
   }

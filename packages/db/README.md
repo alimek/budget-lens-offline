@@ -60,9 +60,13 @@ same key, #35 §2); this package only decides when each step happens:
 
 - nothing is pending: no copy is taken and a copy left by an earlier launch is discarded, so a copy never outlives
   the migration it protects (#35 Q3: copy whenever migrations are pending, not on every start);
-- something is pending: the copy is created first, and any failure – including `MigrationIntegrityError`, which is
-  raised after the transaction has committed and so cannot roll itself back – restores it and rethrows, so the app
-  can put the file back and show the recovery screen (#75).
+- something is pending: the copy is created first – unless an earlier launch is already keeping one, because the
+  older state is the more valuable one and is never replaced (#75 R1) – and any failure, including
+  `MigrationIntegrityError` (raised after the transaction has committed and so cannot roll itself back), restores
+  it and rethrows, so the app can put the file back and show the recovery screen (#75);
+- putting the copy back fails: the error is `MigrationRestoreError`, which carries both the migration error and the
+  error of the failed restore. The copy stays where it is: it is the only intact state left, the app must not
+  discard or replace it, and its screen may not claim the database was restored (#75 R1).
 
 `runMigrations(db)` applies pending migrations and returns how many it applied. Use it instead of Drizzle's
 `useMigrations`/`migrate`. Drizzle runs all pending migrations in one transaction, and inside a transaction
@@ -152,8 +156,9 @@ only the decisions above. Covered:
 - a rebuild upgrade that keeps child rows;
 - the integrity error;
 - the encrypted pre-migration copy: no copy while the schema is current (a leftover one is discarded), a copy on
-  the launch that has migrations, and the data back in place after a failing statement or a committed migration
-  that leaves rows without their parent (`test/migration-copy.test.ts`);
+  the launch that has migrations, the data back in place after a failing statement or a committed migration that
+  leaves rows without their parent, and a failed restore reported as `MigrationRestoreError` with the copy left
+  alone (`test/migration-copy.test.ts`);
 - the constraints that encode business rules.
 
 `test/items-repository.test.ts` covers the repository's business rules: the base-currency default and whole minor

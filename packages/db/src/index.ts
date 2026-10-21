@@ -22,6 +22,7 @@ export {
 export type { MigrationBundle } from "./migration-bundle";
 export {
   MigrationIntegrityError,
+  MigrationRestoreError,
   type MigrationSafetyCopy,
   runMigrations,
   runMigrationsWithSafetyCopy,
