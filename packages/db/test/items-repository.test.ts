@@ -298,3 +298,71 @@ describe("items repository", () => {
     expect(db.select().from(schema.occurrenceOverrides).all()).toEqual([]);
   });
 });
+
+it("cancels a scheduled change, deleting the scheduled version and keeping the one in force", () => {
+  // Arrange: core plans a cancel-scheduled as a delete with nothing to write.
+  seed();
+  createItem(
+    db,
+    {
+      ...rent,
+      versions: [
+        version("2026-01", 250_000, monthly("2026-01")),
+        version("2027-01", 270_000, monthly("2026-01")),
+      ],
+    },
+    deps,
+  );
+  const stored = readItems(db).items[0];
+  const result = planRuleEdit(
+    {
+      item: { id: "rent", itemType: "expense", currency: "PLN", versions: stored?.versions ?? [] },
+      overrides: [],
+    },
+    { kind: "cancel-scheduled", versionFrom: ym("2027-01") },
+    { activeMonth: ym("2026-04") },
+  );
+  if (!result.ok) throw new Error(`Rejected: ${result.error.code}`);
+
+  // Act
+  expect(applyRuleVersionPlan(db, "rent", result.plan, deps)).toEqual({ ok: true });
+
+  // Assert: the scheduled version is gone, the rule in force is untouched and the item stays active.
+  const { items, invalidItems } = readItems(db);
+  expect(invalidItems).toEqual([]);
+  expect(items).toHaveLength(1);
+  expect(items[0]?.archivedAt).toBeNull();
+  expect(items[0]?.versions).toEqual([
+    { effectiveFrom: "2026-01", amount: 250_000, schedule: monthly("2026-01") },
+  ]);
+});
+
+it("archives the item when a plan leaves it with no versions at all", () => {
+  // Arrange: stopping an item from its own first month deletes its only version (core's no-versions-left).
+  seed();
+  createItem(db, { ...rent, versions: [version("2026-04", 250_000, monthly("2026-04"))] }, deps);
+  const result = planRuleEdit(
+    {
+      item: {
+        id: "rent",
+        itemType: "expense",
+        currency: "PLN",
+        versions: readItems(db).items[0]?.versions ?? [],
+      },
+      overrides: [],
+    },
+    { kind: "stop-from", from: ym("2026-04") },
+    { activeMonth: ym("2026-04") },
+  );
+  if (!result.ok) throw new Error(`Rejected: ${result.error.code}`);
+
+  // Act
+  expect(applyRuleVersionPlan(db, "rent", result.plan, deps)).toEqual({ ok: true });
+
+  // Assert: archived, not deleted, so history keeps the item; the deleted version itself is gone.
+  expect(readItems(db).items).toEqual([]);
+  const [archived] = readItems(db, { includeArchived: true }).items;
+  expect(archived?.id).toBe("rent");
+  expect(archived?.archivedAt).toEqual(new Date(Date.UTC(2026, 9, 21)));
+  expect(archived?.versions).toEqual([]);
+});

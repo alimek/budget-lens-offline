@@ -90,7 +90,9 @@ The plan (`RuleEditPlan`):
   which are deleted.
 - `notices`: `scheduled-change-kept` (a later scheduled version stays in force from `month`; the UI offers to replace
   it with `replaceScheduled: true`, Q2), `scheduled-change-replaced` (a later version is deleted on request) and
-  `no-versions-left` (the edit deletes every version, so the repository can delete or archive the item).
+  `no-versions-left` (the edit deletes every version: #81 archives the item in the same transaction as the last
+  delete, never hard-deletes it, and an archived item is not checked for having versions, since its rule is history
+  and never reaches the forecast).
 
 `applyRuleEditPlan(state, plan)` returns the state after the plan is applied, as the repository writes it (for checks
 and live state).

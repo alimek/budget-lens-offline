@@ -107,13 +107,21 @@ and return `{ ok } | { ok: false, error }` with codes:
   ([#81 owner decision](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
 - `archiveItem` – sets `archived_at` and keeps the item row and every version. Nothing here deletes an item.
 - `applyRuleVersionPlan` – the version part of a core `RuleEditPlan` (#80): `upsertVersions` UPSERTed by
-  `(item_id, effective_from)` and `deleteVersions` deleted by `effective_from`, in one transaction. The plan's
-  `upsertOverrides`, `orphanedOverrides` and `resetOverrides` are occurrence overrides, which belong to #83: this
-  repository does not write them, so the caller writes or confirms them itself.
+  `(item_id, effective_from)` and `deleteVersions` deleted by `effective_from`, in one transaction. What is
+  validated is the item's **resulting** version list (kept versions minus the deleted months plus the written
+  ones), not the subset the plan writes: a plan can delete versions and write none, and validating the subset would
+  reject every `cancel-scheduled` with `no-versions`. When the plan leaves the item with no versions (core's
+  `no-versions-left` notice), the item is archived in the same transaction rather than left active with an empty
+  rule (#81: archive, never delete). The plan's `upsertOverrides`, `orphanedOverrides` and `resetOverrides` are
+  occurrence overrides, which belong to #83: this repository does not write them, so the caller writes or confirms
+  them itself. #83 can pass a Drizzle transaction handle and write the versions and the overrides of one plan
+  together, as [#40 Q4](https://github.com/alimek/budget-lens-offline/issues/40) expects.
 
 `readItems(db)` returns `{ items, invalidItems }`: every item with its versions in `effectiveFrom` order, plus the
 items that were left out and the core error codes that say why (`unsupported-currency`, `invalid-item-type`, or
-codes from `validateRuleVersions` and `validateSchedule`). Like the rate store (#92) and the versioned resolver
+codes from `validateRuleVersions` and `validateSchedule`). Versions are validated for active items only: a plan that
+deletes every version archives its item, and that item's rule is history rather than damage. Like the rate store
+(#92) and the versioned resolver
 (#80), a malformed row is skipped **and** reported: one damaged row never loses the list and never throws, and #88
 filters and reports those items before calling `forecast()`, which fails as a whole on invalid versions.
 
@@ -135,6 +143,7 @@ only in tests. Covered:
 
 `test/items-repository.test.ts` covers the repository's business rules: the base-currency default and whole minor
 units, the currency that cannot change, archiving instead of deleting, both schedule shapes round-tripping through
-the columns, several versions of one item resolving per month, and a damaged row being reported instead of dropped.
+the columns, several versions of one item resolving per month, a damaged row being reported instead of dropped, a
+`cancel-scheduled` plan that writes no versions, and the item a plan empties being archived.
 
 The SQLCipher-specific path (key, cipher guard) is covered on devices by #75 and e2e.

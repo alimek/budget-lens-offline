@@ -144,8 +144,12 @@ function toItem(row: ItemRow, versions: readonly RuleVersion[]): StoredItem | In
   if (!isCurrencyCode(row.currency)) {
     errors.add("unsupported-currency");
   }
-  for (const error of validateRuleVersions(versions)) {
-    errors.add(error);
+  // A plan that deletes every version archives its item, so an archived item may legitimately have none: its
+  // versions are history and never reach the forecast, and only active items are checked (#81, #88).
+  if (row.archivedAt === null) {
+    for (const error of validateRuleVersions(versions)) {
+      errors.add(error);
+    }
   }
   if (errors.size > 0) {
     for (const version of versions) {
@@ -216,6 +220,29 @@ export function readItems(
 
 function findItem(db: Database, id: string): ItemRow | undefined {
   return db.select().from(schema.items).where(eq(schema.items.id, id)).get();
+}
+
+/** The item's own versions, in `effectiveFrom` order. */
+function storedVersions(db: Database, itemId: string): RuleVersion[] {
+  return db
+    .select()
+    .from(schema.itemRuleVersions)
+    .where(eq(schema.itemRuleVersions.itemId, itemId))
+    .orderBy(asc(schema.itemRuleVersions.effectiveFrom))
+    .all()
+    .map(toVersion);
+}
+
+/** The versions an item has left after a plan: what core's `applyRuleEditPlan` computes (#80). */
+function resultingVersions(
+  stored: readonly RuleVersion[],
+  plan: RuleVersionChanges,
+): RuleVersion[] {
+  const deleted = new Set<string>(plan.deleteVersions);
+  const upserted = new Set<string>(plan.upsertVersions.map(({ effectiveFrom }) => effectiveFrom));
+  return stored
+    .filter(({ effectiveFrom }) => !deleted.has(effectiveFrom) && !upserted.has(effectiveFrom))
+    .concat(plan.upsertVersions);
 }
 
 /** The base currency of the `settings` singleton, or `undefined` when it is missing or unreadable (#139). */
@@ -341,8 +368,9 @@ export function archiveItem(db: Database, id: string, deps: ItemsRepositoryDeps)
   if (stored.archivedAt !== null) {
     return { ok: true };
   }
+  const archivedAt = new Date(deps.now());
   db.update(schema.items)
-    .set({ archivedAt: new Date(deps.now()), updatedAt: new Date(deps.now()) })
+    .set({ archivedAt, updatedAt: archivedAt })
     .where(eq(schema.items.id, id))
     .run();
   return { ok: true };
@@ -351,6 +379,12 @@ export function archiveItem(db: Database, id: string, deps: ItemsRepositoryDeps)
 /**
  * Persists the version part of a core `RuleEditPlan` (#80) in one transaction: `upsertVersions` by
  * `(item_id, effective_from)` with an UPSERT, `deleteVersions` by `effective_from`.
+ *
+ * What is validated is the item's **resulting** version list, not the subset the plan writes: a plan may delete
+ * versions and write none (core's `cancel-scheduled` and a `stop-from` that empties the item), and validating the
+ * subset would reject every such plan with `no-versions`. When the plan leaves the item with no versions at all
+ * (core's `no-versions-left` notice), the item is archived in the same transaction: #81 archives instead of
+ * deleting, and an active item without versions would be a versionless rule rather than an unused one.
  *
  * The plan's `upsertOverrides`, `orphanedOverrides` and `resetOverrides` are occurrence overrides, which belong
  * to #83: this repository does not write them, so the caller writes or confirms them itself.
@@ -365,7 +399,9 @@ export function applyRuleVersionPlan(
   if (stored === undefined) {
     return rejected({ code: "item-not-found" });
   }
-  const versionErrors = validateRuleVersions(plan.upsertVersions);
+  const remaining = resultingVersions(storedVersions(db, itemId), plan);
+  const emptied = remaining.length === 0;
+  const versionErrors = emptied ? [] : validateRuleVersions(remaining);
   if (versionErrors.length > 0) {
     return rejected({ code: "invalid-versions", errors: versionErrors });
   }
@@ -396,6 +432,13 @@ export function applyRuleVersionPlan(
             endMonth: values.endMonth,
           },
         })
+        .run();
+    }
+    // The last version is gone: archive the item instead of leaving it active with an empty rule (#81).
+    if (emptied && stored.archivedAt === null) {
+      tx.update(schema.items)
+        .set({ archivedAt: createdAt, updatedAt: createdAt })
+        .where(eq(schema.items.id, itemId))
         .run();
     }
   });
