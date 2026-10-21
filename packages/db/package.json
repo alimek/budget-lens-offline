@@ -14,10 +14,10 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p test"
   },
   "dependencies": {
+    "@budget-lens/core": "workspace:*",
     "drizzle-orm": "0.45.4"
   },
   "devDependencies": {
-    "@budget-lens/core": "workspace:*",
     "@types/node": "24.19.2",
     "@types/sql.js": "1.4.11",
     "@vitest/coverage-v8": "5.0.5",

@@ -7,8 +7,8 @@ Drizzle ORM schema and migrations for the on-device SQLite database (#74). The d
 pinned exactly. Stay on 0.45.x until the Drizzle 1.0 upgrade gate in #35 §6 is met.
 
 The package is TypeScript source with no build step. It does not open, key or locate the database file: the app
-does that (`apps/mobile/src/db/database.ts`; SQLCipher key and cipher guard: #75). Repositories (#81) and the
-month-close transaction (#85) are not here yet.
+does that (`apps/mobile/src/db/database.ts`; SQLCipher key and cipher guard: #75). The items and rule-version
+repository is here (#81, below); the month-close transaction (#85) is not here yet.
 
 ## Schema v1 (`src/schema.ts`)
 
@@ -79,6 +79,57 @@ Foreign keys are a per-connection setting, so the app uses this one migrated con
 Any migration that rebuilds a table (`__new_<table>`) needs a test that seeds rows first; see
 `test/migrations.test.ts`.
 
+## Items and rule-version repository (`src/items-repository.ts`, #81)
+
+Rows in, `@budget-lens/core` types out. Picking the version in force per month stays in core
+(`versionInForce`, [domain/rule-versions.md](../../docs/domain/rule-versions.md)): the repository never resolves or
+merges versions. Core has no id or timestamp on a rule version, so the row-to-core mapping is defined here:
+
+| Column | Core | Notes |
+| --- | --- | --- |
+| `items.kind` | `itemType` | Fixed after creation (#40). |
+| `items.currency` | `currency` | Required `CurrencyCode`, no SQL default (#35 Q5). Created item without a currency → the base currency of the `settings` singleton (#138). Fixed after creation (#81). |
+| `items.name`, `note`, `sort_order` | same names | Item-level, never versioned. |
+| `items.archived_at` | `archivedAt` | Archive instead of hard delete (#81); archived items are read only with `{ includeArchived: true }`. |
+| `effective_from` | `effectiveFrom` | One version per `(item_id, effective_from)`. |
+| `amount_minor` | `amount` | Minor units **of the item's currency**: JPY 123 is ¥123 (exponent 0), PLN 123 is 1,23 zł. |
+| `interval_months` `NULL` | `schedule.kind: "one-time"` | The month of a one-time schedule is `target_month`. |
+| `interval_months >= 1` | `schedule.kind: "recurring"` | `intervalMonths`, `anchor` from `anchor_month`, optional `endMonth` from `end_month`. |
+| `day_of_month` | `dayOfMonth` | 1–31; `NULL` is absent. |
+| `id`, `created_at` | – | Row metadata; `RuleVersion` in core has neither. New ids come from the injected `newId`. |
+
+Writes take `{ now, newId }` (an injected clock and id source; the repository reads neither the clock nor an RNG)
+and return `{ ok } | { ok: false, error }` with codes:
+
+- `createItem` – the item and its versions in one transaction.
+- `updateItem` – rename, note and sort order. `currency` and `kind` are accepted only when unchanged: both are
+  fixed after creation, so every rule version stays an amount in the item's currency
+  ([#81 owner decision](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
+- `archiveItem` – sets `archived_at` and keeps the item row and every version. Nothing here deletes an item.
+- `applyRuleVersionPlan` – the version part of a core `RuleEditPlan` (#80): `upsertVersions` UPSERTed by
+  `(item_id, effective_from)` and `deleteVersions` deleted by `effective_from`, in one transaction. What is
+  validated is the item's **resulting** version list (kept versions minus the deleted months plus the written
+  ones), not the subset the plan writes: a plan can delete versions and write none, and validating the subset would
+  reject every `cancel-scheduled` with `no-versions`. When the plan leaves the item with no versions (core's
+  `no-versions-left` notice), the item is archived in the same transaction rather than left active with an empty
+  rule (#81: archive, never delete). The plan's `upsertOverrides`, `orphanedOverrides` and `resetOverrides` are
+  occurrence overrides, which belong to #83: this repository does not write them, so the caller writes or confirms
+  them itself. #83 can pass a Drizzle transaction handle and write the versions and the overrides of one plan
+  together, as [#40 Q4](https://github.com/alimek/budget-lens-offline/issues/40) expects.
+
+`readItems(db)` returns `{ items, invalidItems }`: every item with its versions in `effectiveFrom` order, plus the
+items that were left out and the core error codes that say why (`unsupported-currency`, `invalid-item-type`, or
+codes from `validateRuleVersions` and `validateSchedule`). Versions are validated for active items only: a plan that
+deletes every version archives its item, and that item's rule is history rather than damage. Like the rate store
+(#92) and the versioned resolver
+(#80), a malformed row is skipped **and** reported: one damaged row never loses the list and never throws, and #88
+filters and reports those items before calling `forecast()`, which fails as a whole on invalid versions.
+
+Live reads (#35 §4): the list is two single-table selects, never a join, and `ITEM_LIST_TABLES` names the tables it
+depends on. The app subscribes to `addDatabaseChangeListener` once and re-runs `readItems` when the changed table is
+one of those; the hook itself lives in the app, because `addDatabaseChangeListener` and React do too (this package
+imports no React). Statements are synchronous Drizzle: microseconds each at this size (#35 §3).
+
 ## Tests
 
 `pnpm --filter @budget-lens/db test` runs Vitest on Node with sql.js (SQLite in WebAssembly) as the driver, used
@@ -89,5 +140,10 @@ only in tests. Covered:
 - a rebuild upgrade that keeps child rows;
 - the integrity error;
 - the constraints that encode business rules.
+
+`test/items-repository.test.ts` covers the repository's business rules: the base-currency default and whole minor
+units, the currency that cannot change, archiving instead of deleting, both schedule shapes round-tripping through
+the columns, several versions of one item resolving per month, a damaged row being reported instead of dropped, a
+`cancel-scheduled` plan that writes no versions, and the item a plan empties being archived.
 
 The SQLCipher-specific path (key, cipher guard) is covered on devices by #75 and e2e.

@@ -22,6 +22,9 @@ A `Schedule` decides in which months an item (expense **or** income – both use
 - `dayOfMonth` (1–31) is clamped to the last day of each month: 31 → 30 in April, 29/30/31 → 28 in February
   (29 in leap years). An `Occurrence` is `{ month, day? }`; `day` is present only when the schedule has a
   `dayOfMonth`.
+- A schedule says **when**, never **how much** and not **in which currency**: an item's amounts come from its rule
+  versions and are `MinorUnits` of the item's own currency (`VersionedItem.currency`, #138), which is fixed after
+  the item is created ([rule versions](rule-versions.md), [money](money.md)).
 
 Functions (pure, the month range is always passed in):
 
