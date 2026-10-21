@@ -1,3 +1,4 @@
+import type { CurrencyCode } from "./currency";
 import { isMinorUnits, type MinorUnits } from "./money";
 import {
   type ItemType,
@@ -26,12 +27,18 @@ export interface RuleVersion {
 }
 
 /**
- * An item with all its rule versions, at most one per `effectiveFrom`. Item-level fields (name, currency, note) are
- * not versioned; extra fields of `T` are carried into {@link ItemInForce}.
+ * An item with all its rule versions, at most one per `effectiveFrom`. Item-level fields (name, note) are not
+ * versioned; extra fields of `T` are carried into {@link ItemInForce}.
  */
 export interface VersionedItem {
   readonly id: string;
   readonly itemType: ItemType;
+  /**
+   * ISO 4217 code of the item's currency: every `amount` of every version is in its minor units (#138).
+   * Fixed when the item is created; a different currency means a new item
+   * ([#81 owner decision](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
+   */
+  readonly currency: CurrencyCode;
   readonly versions: readonly RuleVersion[];
 }
 

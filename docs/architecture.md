@@ -4,14 +4,16 @@
 
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` now contains the Expo development-client scaffold (#73). `packages/db` holds the Drizzle
-schema v1 and its migrations, which the app runs at startup (#74).
+schema v1 and its migrations, which the app runs at startup (#74), plus the items and rule-version repository with
+the list reads the item screens and the forecast hook will use (#81).
 What exists today in `packages/core`:
 - money in integer minor units: the `MinorUnits` type, exact operations, parsing and native `Intl.NumberFormat`
   currency formatting for `pl` and `en`, always showing full amounts (#2/#131, see [domain/money.md](domain/money.md) and
   [ADR 0012](decisions/0012-native-intl-money-formatting.md));
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
 - occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
-- rule versions and the pure rule-edit planner (#80, see [domain/rule-versions.md](domain/rule-versions.md));
+- rule versions and the pure rule-edit planner (#80, see [domain/rule-versions.md](domain/rule-versions.md)), with
+  the required per-item `currency` on a versioned item (#138, landed with #81);
 - the `Settings` model (#76);
 - injected NBP table-A client, current-rate store contract, shared rate selection and app-open refresh (#8);
 - balance forecast, warning codes and exact cross-currency conversion (#6, see [domain/forecast.md](domain/forecast.md));
@@ -23,7 +25,7 @@ What exists today in `packages/core`:
 ```
 apps/mobile/             # Expo development client, Router, i18n, provider-scoped Zustand
 packages/core/           # pure TypeScript domain logic, tested with Vitest
-packages/db/             # Drizzle schema v1, drizzle-kit migrations and runMigrations() (#74, see its README)
+packages/db/             # Drizzle schema v1, migrations, runMigrations() and the items repository (#74/#81)
   src/index.ts           # public API – everything exported from here
   test/                  # legacy characterization tests (#3): fixtures, legacy reference, snapshots, LEGACY.md
 docs/                    # architecture, conventions, glossary, domain, decisions (ADRs), testing
@@ -77,7 +79,7 @@ implemented and what is still planned:
 | Navigation | Expo Router | Implemented (#73) |
 | UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73, #119): Expo UI wrappers in `src/ui/native`, Indigo tokens in `global.css` + `src/ui/lib/theme.ts`, React Native Reusables components in `src/ui/components` ([design system](design-system.md)) |
 | Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Partly implemented (#74): expo-sqlite 58.0.13, `packages/db` schema v1 with drizzle-orm 0.45.4 / drizzle-kit 0.31.11, migrations applied by `runMigrations()` on every start ([packages/db/README.md](../packages/db/README.md)). SQLCipher, key storage and the cipher guard: planned (#75) |
-| Reactive reads | Drizzle `useLiveQuery` (simple single-table queries) | Planned (#75) |
+| Reactive reads | A small in-house hook on expo-sqlite's `addDatabaseChangeListener` declaring the tables a query reads (#35 §4); Drizzle `useLiveQuery` only where one table suffices | Planned (#75); `packages/db` exposes the item list reads with the tables they depend on (#81) |
 | App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
 | i18n | Polish and English; no hardcoded UI strings | Implemented (#73, #77): i18next + react-i18next, bundled PL/EN resources per namespace, English source and runtime fallback, typed keys, system language with an in-app override API, i18next-cli for extraction only, no CI translation check ([i18n](i18n.md)) |

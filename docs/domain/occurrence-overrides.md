@@ -1,7 +1,8 @@
 # Occurrence overrides
 
-Status: **implemented** in `packages/core/src/occurrence-overrides.ts` (#5). The database table is a sketch for
-Stage 1 (`packages/db` does not exist yet).
+Status: **implemented** in `packages/core/src/occurrence-overrides.ts` (#5). The `occurrence_overrides` table exists
+in schema v1 (#74); writing overrides in the repository is #83, so `packages/db` reads items and rule versions only
+(#81) and leaves a plan's override fields to the caller.
 
 ## Model
 
@@ -11,7 +12,8 @@ An `OccurrenceOverride` changes **one occurrence of one recurring item in one mo
 { id, itemType: "expense" | "income", itemId, month: YearMonth, amount?: MinorUnits, skipped?: boolean, note? }
 ```
 
-- Override amounts use the item's own currency; closing converts the effective occurrence into the locked base
+- Override amounts are `MinorUnits` in the **item's own** currency (#138: `VersionedItem.currency`, fixed after
+  creation); closing converts the effective occurrence into the locked base
   currency and snapshots the rate ([month-closing.md](month-closing.md), #84).
 - Either `amount` (the occurrence uses this amount instead of the item's) or `skipped: true` (the occurrence is left
   out). Unique per `(itemType, itemId, month)`.

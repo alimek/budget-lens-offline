@@ -3,8 +3,9 @@
 Status: **implemented** in `packages/core/src/rule-versions.ts` (#80), per the
 [#40 research](https://github.com/alimek/budget-lens-offline/issues/40) and its
 [owner review](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627) (all defaults
-Q1–Q8 accepted). Storage and the transaction that applies a plan belong to `packages/db` (#74) and the items
-repository (#81).
+Q1–Q8 accepted). Storage, the list reads and the transaction that writes a plan's versions are the items repository
+in `packages/db` (#81, see its
+[README](../../packages/db/README.md#items-and-rule-version-repository-srcitems-repositoryts-81)).
 
 ## Model
 
@@ -12,7 +13,7 @@ An item keeps one stable identity (`id`, `itemType`, and item-level fields such 
 list of **rule versions** (Q1: versions under one item, not split items):
 
 ```ts
-VersionedItem = { id, itemType, versions: RuleVersion[] }
+VersionedItem = { id, itemType, currency: CurrencyCode, versions: RuleVersion[] }
 RuleVersion   = { effectiveFrom: YearMonth, amount: MinorUnits, schedule: Schedule }
 ```
 
@@ -26,8 +27,10 @@ RuleVersion   = { effectiveFrom: YearMonth, amount: MinorUnits, schedule: Schedu
 - `amount` is integer minor units of the **item's** currency. The currency is fixed per item and is not part of a
   version; a different currency means a new item
   ([#81 owner decision](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
-  `VersionedItem` carries no currency yet: per-item currency in the core item model is #138, and any extra
-  item-level field (such as a required `currency`) is passed through to the item in force.
+  `VersionedItem` carries that required `currency` (#138, landed with #81), so a version's `amount` and the item in
+  force always have one interpretation. The repository rejects a later change of it
+  (`immutable-field`), and a created item without an explicit currency takes the base currency of the
+  `settings` singleton (#35 Q5 keeps a SQL default out of the column).
 - Item-level fields are not versioned: a rename shows the new name in history too. `itemType` is fixed.
 
 ## Resolving occurrences
@@ -37,7 +40,7 @@ RuleVersion   = { effectiveFrom: YearMonth, amount: MinorUnits, schedule: Schedu
   `invalid-amount` (not whole minor units ≥ 0), `invalid-schedule` (see `validateSchedule`).
 - `versionInForce(versions, month)` and `itemInForce(item, month)`: the item as a `ScheduledItem` with the amount and
   schedule of the version in force (`undefined` before the first version). Extra fields of the item are kept, so an
-  item with a `currency` is a `ClosingItem` for `closeMonth` in that month.
+  item is a `ClosingItem` for `closeMonth` in that month, with its own currency.
 - `resolveVersionedOccurrences(items, overrides, month)` – the version in force of each item, then
   `resolveOccurrences` ([occurrence overrides](occurrence-overrides.md), #5). Overrides stay keyed by
   `(itemType, itemId, month)` and are independent of versions. Items with invalid versions are reported in
@@ -126,7 +129,7 @@ after an edit.
 ## Not covered yet
 
 - Loading versions from storage and passing them to the forecast belongs to the forecast data hook (#88).
-- Per-item currency in the core item model is #138.
+- Occurrence overrides in storage belong to #83: `applyRuleVersionPlan` writes a plan's versions only.
 
 ## Legacy behaviour
 

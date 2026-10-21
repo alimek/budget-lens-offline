@@ -33,6 +33,7 @@ const version = (effectiveFrom: string, amount: number, schedule: Schedule): Rul
 const rent = (...versions: RuleVersion[]): VersionedItem => ({
   id: "rent",
   itemType: "expense",
+  currency: "PLN",
   versions,
 });
 

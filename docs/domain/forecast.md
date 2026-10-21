@@ -12,9 +12,10 @@ returns `{ ok: true, currency, forecast, warnings, ratesUsed, rejectedOverrides 
 - `fromMonth` is the **active** month, passed explicitly. This API projects open and future months; it does not read
   or recalculate closed history. `months` includes the active month, defaults to `Settings.forecastHorizonMonths`
   and must be an integer from 1 to `MAX_FORECAST_HORIZON_MONTHS`, within the supported calendar range.
-- Each `ForecastItem` accepts a `VersionedItem` with required `currency: CurrencyCode`, or a single-rule
-  `ClosingItem` for compatibility. Currency stays fixed per item; amount and schedule belong to each version. A resolved occurrence retains its currency through `occurrence.item`;
-  its override amount is in that same currency. Items must have valid identifiers and unique `(itemType, id)` keys
+- Each `ForecastItem` is a `VersionedItem` (which carries the required `currency: CurrencyCode`, #138) or a
+  single-rule `ClosingItem` for compatibility. Currency stays fixed per item; amount and schedule belong to each
+  version. A resolved occurrence retains its currency through `occurrence.item`; its override amount is in that same
+  currency. Items must have valid identifiers and unique `(itemType, id)` keys
   on load; payment statuses must be unique per `(itemType, itemId, month)`.
 - Each month uses `resolveVersionedOccurrences`: it selects the version with the greatest `effectiveFrom` no later
   than that month, then enumerates its schedule, replaces overridden amounts and removes skipped occurrences.
@@ -89,7 +90,8 @@ Forecast does not call month closing; both use `settled` for paid expenses and r
 After closing, the caller can start the next forecast with the new active month and its current balance.
 Closed-month charts must read stored totals and per-occurrence FX snapshots from #84, never this live-rate forecast.
 #141 can extend rate metadata and use decimal-string conversion without changing the rounding policy.
-#138 can later move currency onto the shared item/occurrence model. #140 can reuse the conversion and rate evidence
+#138's currency is on `VersionedItem` (#81); a currency-carrying single-rule item and occurrence model can follow.
+#140 can reuse the conversion and rate evidence
 here when integrating the rates cache and forecast hook (#88); #8/#92/#93 own fetching, storage and freshness.
 
 ## Legacy behaviour and evidence

@@ -83,7 +83,12 @@ const state: fc.Arbitrary<RuleEditState> = fc
     overrides: fc.uniqueArray(override, { maxLength: 6, selector: (override) => override.month }),
   })
   .map(({ versions, overrides }) => ({
-    item: { id: "item", itemType: "expense" as const, versions },
+    item: {
+      id: "item",
+      itemType: "expense" as const,
+      currency: "PLN" as const,
+      versions,
+    },
     overrides,
   }));
 
@@ -135,7 +140,12 @@ const closedMonthRisk = fc
       anchor: addMonths(activeMonth, anchorAfter),
     };
     const state: RuleEditState = {
-      item: { id: "item", itemType: "expense", versions: [{ effectiveFrom, amount, schedule }] },
+      item: {
+        id: "item",
+        itemType: "expense",
+        currency: "PLN",
+        versions: [{ effectiveFrom, amount, schedule }],
+      },
       overrides,
     };
     return patch(effectiveFrom).map((patch) => ({
