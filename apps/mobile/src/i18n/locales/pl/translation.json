@@ -78,6 +78,20 @@
       "deleteMessage": "Pozycja zostanie usunięta ze wszystkich miesięcy.",
       "editing": "Edycja: {{title}}",
       "editBody": "Tutaj otworzy się edytor pozycji."
+    },
+    "bootScreen": {
+      "title": "Ekrany startowe",
+      "unknown": "Nieznany ekran startowy „{{screen}}”."
+    },
+    "storageCheck": {
+      "title": "Kontrola pamięci",
+      "cipherVersion": "Szyfrowanie",
+      "cipherStatus": "Zakluczona",
+      "database": "Baza danych",
+      "copy": "Kopia przed migracją",
+      "encrypted": "zaszyfrowany",
+      "plaintext": "jawny",
+      "missing": "brak"
     }
   },
   "budget": {
@@ -86,7 +100,8 @@
   },
   "common": {
     "ok": "OK",
-    "cancel": "Anuluj"
+    "cancel": "Anuluj",
+    "retry": "Spróbuj ponownie"
   },
   "transaction": {
     "paidLabel": "Zapłacone: {{title}}",
@@ -97,5 +112,25 @@
     "invalidFormat": "Wpisz liczbę, np. 1 234,56",
     "tooManyFractionDigits": "Użyj najwyżej 2 miejsc po przecinku",
     "outOfRange": "Ta kwota jest za duża"
+  },
+  "boot": {
+    "encryptionUnavailable": {
+      "title": "Ta wersja nie szyfruje",
+      "body": "Budget Lens przechowuje każdy budżet na tym urządzeniu i odmawia zapisu bez szyfrowania, więc ta wersja nie otworzy Twojego budżetu. Zainstaluj wersję zawierającą SQLCipher."
+    },
+    "recovery": {
+      "title": "Nie możemy otworzyć Twojego budżetu",
+      "keyMissing": "Klucz szyfrowania tego budżetu nie ma na tym urządzeniu. Klucz nigdy nie opuszcza telefonu, na którym powstał, więc przywrócenie kopii telefonu lub ponowna instalacja aplikacji może sprawić, że budżet będzie nieczytelny.",
+      "migrationFailed": "Nie udało się dokończyć aktualizacji budżetu. Został on przywrócony do wersji sprzed aktualizacji.",
+      "keepsFile": "Nic nie zostało usunięte: plik budżetu zostaje na tym urządzeniu, nadal zaszyfrowany.",
+      "startOver": "Zacznij od nowa",
+      "confirmTitle": "Zacząć od nowa?",
+      "confirmBody": "Aplikacja zacznie od pustego budżetu, a bieżący plik zostanie na tym urządzeniu. Przywracanie z własnej kopii pojawi się razem z funkcją kopii zapasowej.",
+      "confirmAction": "Zacznij od nowa"
+    },
+    "storageUnreachable": {
+      "title": "Pamięć zabezpieczona jest niedostępna",
+      "body": "Budget Lens nie mógł odczytać zabezpieczonej pamięci tego urządzenia, więc nie może otworzyć Twojego budżetu. Nic nie zostało zmienione ani usunięte."
+    }
   }
 }

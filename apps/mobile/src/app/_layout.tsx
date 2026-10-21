@@ -41,6 +41,22 @@ function RootStack() {
           title: t("dev.designSystem.listTitle"),
         }}
       />
+      <Stack.Screen
+        name="dev/boot-screen"
+        options={{
+          headerShown: true,
+          headerBackButtonDisplayMode: "minimal",
+          title: t("dev.bootScreen.title"),
+        }}
+      />
+      <Stack.Screen
+        name="dev/storage-check"
+        options={{
+          headerShown: true,
+          headerBackButtonDisplayMode: "minimal",
+          title: t("dev.storageCheck.title"),
+        }}
+      />
     </Stack>
   );
 }
