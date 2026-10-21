@@ -34,12 +34,21 @@ as a launch argument; Android uses an explicit development-client VIEW intent to
 tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
 prompt required to connect the development client to Metro. All application data stays local; the app opens
 and migrates its local SQLite database, encrypted with SQLCipher, before rendering data screens (#74, #75). A
-development build can also show the boot screens and check that this build really encrypts, on deep links that
-redirect away in a release build: `budget-lens:///dev/boot-screen?screen=recovery` (also `migration-failed`,
+development build can also show the boot screens and check that this build really encrypts, on deep links:
+`budget-lens:///dev/boot-screen?screen=recovery` (also `migration-failed`,
 `restore-failed`, `state-unrecognized`, `encryption-unavailable`, `storage-unreachable`) and
 `budget-lens:///dev/storage-check`, which reports the cipher pragmas, the encryption state of the database file and
 of the copy, and the files a "start over" kept. `budget-lens:///dev/forget-key` (#75 R6) forgets the stored key, so
 a cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.
+
+**The screens under `src/app/dev` never run in a release build (#75 R7).** Forgetting the key of a database that is
+still on the device makes that budget unreadable for good, so this is guarded in three places: those routes are
+registered inside `<Stack.Protected guard={__DEV__}>`, so a release build does not mount them and a deep link to one
+redirects to Overview; their effects go through `useDevEffect` (`src/dev/use-dev-effect.ts`), which checks `__DEV__`
+inside the effect, where a `return` placed before a hook cannot be forgotten; and `forgetDatabaseKey` refuses
+outside `__DEV__` itself. `pnpm lint` runs `scripts/check-dev-routes.mjs`, which fails if a development screen is
+registered outside the guard, reaches for `useEffect` instead of `useDevEffect`, renders without an `__DEV__`
+check, or deletes the key before one.
 
 ## Checks and smoke evidence
 

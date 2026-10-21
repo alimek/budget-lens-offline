@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FileEncryption } from "@/db/database-files";
 import {
@@ -6,6 +6,7 @@ import {
   type EncryptedStorageCheck,
   type StorageCheckOutcome,
 } from "@/db/encrypted-database";
+import { useDevEffect } from "@/dev/use-dev-effect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/components/card";
 import { Screen } from "@/ui/components/screen";
 import { Text } from "@/ui/components/text";
@@ -85,17 +86,18 @@ function CheckOutcome({ outcome }: { readonly outcome: StorageCheckOutcome }) {
 /**
  * Development-only check (#75) that this build really encrypts: it reads `PRAGMA cipher_version`, looks at the
  * first bytes of the database file, takes a real pre-migration copy when none is being kept, and lists the files
- * the app is keeping besides the live one. Open it with `budget-lens:///dev/storage-check`; the route renders
- * nothing in a release build.
+ * the app is keeping besides the live one. Open it with `budget-lens:///dev/storage-check`; a release build
+ * cannot reach the route and the effect runs only under `useDevEffect` (#75 R7).
  */
 export default function DevStorageCheck() {
   const { t } = useTranslation();
   const [outcome, setOutcome] = useState<StorageCheckOutcome>();
-  useEffect(() => {
+  // Opens a second keyed connection and takes a copy: development only (#75 R7).
+  useDevEffect(() => {
     void checkEncryptedStorage().then(setOutcome, (error: unknown) =>
       setOutcome({ kind: "storage_unreachable", error }),
     );
-  }, []);
+  });
 
   if (!__DEV__) {
     return null;

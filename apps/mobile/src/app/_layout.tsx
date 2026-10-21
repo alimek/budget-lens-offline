@@ -25,38 +25,50 @@ function RootStack() {
   const { t } = useTranslation();
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="dev/design-system"
-        options={{
-          headerShown: true,
-          headerBackButtonDisplayMode: "minimal",
-          title: t("dev.designSystem.title"),
-        }}
-      />
-      <Stack.Screen
-        name="dev/design-system-list"
-        options={{
-          headerShown: true,
-          headerBackButtonDisplayMode: "minimal",
-          title: t("dev.designSystem.listTitle"),
-        }}
-      />
-      <Stack.Screen
-        name="dev/boot-screen"
-        options={{
-          headerShown: true,
-          headerBackButtonDisplayMode: "minimal",
-          title: t("dev.bootScreen.title"),
-        }}
-      />
-      <Stack.Screen
-        name="dev/storage-check"
-        options={{
-          headerShown: true,
-          headerBackButtonDisplayMode: "minimal",
-          title: t("dev.storageCheck.title"),
-        }}
-      />
+      {/* Development screens (#75): a release build does not register these routes and a link to one lands on
+          the Overview tab instead of mounting them, so nothing they do can run outside a development build. */}
+      <Stack.Protected guard={__DEV__} redirectTo="/(tabs)/overview">
+        <Stack.Screen
+          name="dev/design-system"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.designSystem.title"),
+          }}
+        />
+        <Stack.Screen
+          name="dev/design-system-list"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.designSystem.listTitle"),
+          }}
+        />
+        <Stack.Screen
+          name="dev/boot-screen"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.bootScreen.title"),
+          }}
+        />
+        <Stack.Screen
+          name="dev/storage-check"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.storageCheck.title"),
+          }}
+        />
+        <Stack.Screen
+          name="dev/forget-key"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.forgetKey.title"),
+          }}
+        />
+      </Stack.Protected>
     </Stack>
   );
 }

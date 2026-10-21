@@ -72,10 +72,14 @@ export async function moveDatabaseKeyAside(stamp: number): Promise<void> {
  * Forget the key of the database on this device, as if it had never been stored.
  *
  * Development only (#75 R6): it exists so a development build can reach the recovery screen through a real
- * unreadable database file instead of a rendered mock, and the route that calls it renders nothing in a release
- * build. Nothing in the app itself ever removes a key.
+ * unreadable database file instead of a rendered mock. Deleting the key of a database that is still on the device
+ * makes that budget unreadable for good, so this refuses outside `__DEV__` even though the route that calls it is
+ * already unreachable in a release build (#75 R7). Nothing in the app itself ever removes a key.
  */
 export async function forgetDatabaseKey(): Promise<boolean> {
+  if (!__DEV__) {
+    return false;
+  }
   const key = await readDatabaseKey();
   if (key === null) {
     return false;
