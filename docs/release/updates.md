@@ -21,7 +21,8 @@ accepted exception to the offline rule: [ADR 0013](../decisions/0013-eas-update-
   have no channel and load the bundle from Metro.
 - `apps/mobile/src/updates/update-check.ts`, called from the root layout after the first render on **every launch**: if
   the binary has `expo-updates` enabled, is not a development bundle and has a channel, it asks the update server for a newer update
-  of that channel and downloads it in the background. Every error (offline, server, download) is swallowed and the app
+  of that channel and downloads it in the background; a `roll-back-to-embedded` directive is stored the same way
+  ([Rollback](#rollback)). Every error (offline, server, download) is swallowed and the app
   keeps running the current bundle. Nothing is reloaded during a session: a downloaded update is applied on the
   **next launch** (after the app is closed and started again).
 
@@ -132,6 +133,15 @@ Two options, both published as a new update and applied on the phone after a rel
   pnpm --filter @budget-lens/mobile eas update:roll-back-to-embedded --channel production --platform ios \
     --message "<reason>"
   ```
+
+**Builds up to and including build 6** (`0.1.0 (6)`, runtime `417c1c6b1ccf3f03ee93162076f4fc6821cc80d8`) cannot apply
+either rollback to the embedded bundle: their JavaScript check stopped at `isAvailable: false` and never called
+`fetchUpdateAsync`, so the directive was never stored on the device ([#212](https://github.com/alimek/budget-lens-offline/issues/212)).
+On those builds, roll back by **republishing the previous commit** as a normal update with the same fingerprint (the
+update group published before the bad one, with `eas update` from that commit or `eas update:republish --group
+<update-group-id>`); the same applies when `eas update:rollback` would fall back to the embedded bundle. Builds that
+contain the #212 fix apply `roll-back-to-embedded` directives normally. Since only JavaScript changed, the fix itself
+can ship as an update to those builds before a rollback is needed.
 
 A fix forward (a new `eas update` with the corrected code) is the third option. If an update crashes on launch,
 `expo-updates` itself falls back to the previous working bundle on the next start.
