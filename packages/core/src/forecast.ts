@@ -20,8 +20,8 @@ import {
 import { MAX_FORECAST_HORIZON_MONTHS, type Settings, updateSettings } from "./settings";
 import { addMonths, daysInMonth, isYearMonth, type YearMonth } from "./year-month";
 
-/** Currency stays fixed per item; single-rule inputs remain supported. */
-export type ForecastItem = ClosingItem | (VersionedItem & { readonly currency: CurrencyCode });
+/** Single-rule inputs (a `ClosingItem`) and versioned items both carry their own currency (#138). */
+export type ForecastItem = ClosingItem | VersionedItem;
 
 /** Current cached candidate, quoted as 1 currency = mid PLN. Freshness is supplied by the cache (#8/#93). */
 export interface ForecastRate {
