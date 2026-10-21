@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FileEncryption } from "@/db/database-files";
-import { checkEncryptedStorage, type StorageCheckOutcome } from "@/db/encrypted-database";
+import {
+  checkEncryptedStorage,
+  type EncryptedStorageCheck,
+  type StorageCheckOutcome,
+} from "@/db/encrypted-database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/components/card";
 import { Screen } from "@/ui/components/screen";
 import { Text } from "@/ui/components/text";
@@ -18,6 +22,14 @@ function Row({
   return <Text testID={testID}>{`${label}: ${String(value)}`}</Text>;
 }
 
+function stateKey(state: FileEncryption) {
+  return state === "encrypted"
+    ? "dev.storageCheck.encrypted"
+    : state === "plaintext"
+      ? "dev.storageCheck.plaintext"
+      : "dev.storageCheck.missing";
+}
+
 function FileRow({
   testID,
   label,
@@ -28,13 +40,16 @@ function FileRow({
   readonly state: FileEncryption;
 }) {
   const { t } = useTranslation();
-  const key =
-    state === "encrypted"
-      ? "dev.storageCheck.encrypted"
-      : state === "plaintext"
-        ? "dev.storageCheck.plaintext"
-        : "dev.storageCheck.missing";
-  return <Row testID={testID} label={label} value={t(key)} />;
+  return <Row testID={testID} label={label} value={t(stateKey(state))} />;
+}
+
+/** The files kept besides the live one, each with its encryption state (#75 R6). */
+function KeptRow({ files }: { readonly files: EncryptedStorageCheck["kept"] }) {
+  const { t } = useTranslation();
+  const value =
+    files.map((file) => `${file.name} ${t(stateKey(file.state))}`).join(", ") ||
+    t("dev.storageCheck.missing");
+  return <Row testID="storage-check-kept" label={t("dev.storageCheck.kept")} value={value} />;
 }
 
 function CheckOutcome({ outcome }: { readonly outcome: StorageCheckOutcome }) {
@@ -42,7 +57,7 @@ function CheckOutcome({ outcome }: { readonly outcome: StorageCheckOutcome }) {
   if (outcome.kind !== "ready") {
     return <Text testID="storage-check-result">{outcome.kind}</Text>;
   }
-  const { cipherVersion, cipherStatus, database, copy } = outcome.check;
+  const { cipherVersion, cipherStatus, database, copy, kept } = outcome.check;
   const none = t("dev.storageCheck.missing");
   return (
     <>
@@ -62,14 +77,16 @@ function CheckOutcome({ outcome }: { readonly outcome: StorageCheckOutcome }) {
         state={database}
       />
       <FileRow testID="storage-check-copy" label={t("dev.storageCheck.copy")} state={copy} />
+      <KeptRow files={kept} />
     </>
   );
 }
 
 /**
  * Development-only check (#75) that this build really encrypts: it reads `PRAGMA cipher_version`, looks at the
- * first bytes of the database file, and takes and discards a real pre-migration copy. Open it with
- * `budget-lens:///dev/storage-check`; the route renders nothing in a release build.
+ * first bytes of the database file, takes a real pre-migration copy when none is being kept, and lists the files
+ * the app is keeping besides the live one. Open it with `budget-lens:///dev/storage-check`; the route renders
+ * nothing in a release build.
  */
 export default function DevStorageCheck() {
   const { t } = useTranslation();
@@ -87,7 +104,7 @@ export default function DevStorageCheck() {
     <Screen testID="screen-storage-check">
       <Card>
         <CardHeader>
-          <CardTitle>{t("dev.storageCheck.title")}</CardTitle>
+          <CardTitle accessibilityRole="header">{t("dev.storageCheck.title")}</CardTitle>
         </CardHeader>
         <CardContent>
           {outcome === undefined ? (

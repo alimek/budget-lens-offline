@@ -12,8 +12,16 @@ import { Text } from "@/ui/components/text";
 const doNothing = () => undefined;
 
 const PREVIEWS: Record<string, ReactNode> = {
-  recovery: <RecoveryScreen reason="key_missing" onStartOver={doNothing} />,
-  "migration-failed": <RecoveryScreen reason="migration_failed" onStartOver={doNothing} />,
+  recovery: <RecoveryScreen reason="key_missing" onRetry={doNothing} onStartOver={doNothing} />,
+  "migration-failed": (
+    <RecoveryScreen reason="migration_failed" onRetry={doNothing} onStartOver={doNothing} />
+  ),
+  "restore-failed": (
+    <RecoveryScreen reason="restore_failed" onRetry={doNothing} onStartOver={doNothing} />
+  ),
+  "state-unrecognized": (
+    <RecoveryScreen reason="state_unrecognized" onRetry={doNothing} onStartOver={doNothing} />
+  ),
   "encryption-unavailable": <EncryptionUnavailableScreen />,
   "storage-unreachable": <StorageUnreachableScreen onRetry={doNothing} />,
 };
@@ -34,7 +42,8 @@ function BootScreenPreview({ screen }: { readonly screen: string }) {
 /**
  * Development-only preview of the boot screens (#75), which a normal launch shows only when the database refuses
  * to open. Open one with `budget-lens:///dev/boot-screen?screen=recovery` so a state can be seen and
- * screenshotted; in a release build the route redirects away.
+ * screenshotted; in a release build the route redirects away. A real unreadable database is reached through
+ * `/dev/forget-key` instead (#75 R6).
  */
 export default function DevBootScreen() {
   const { screen } = useLocalSearchParams<{ readonly screen?: string }>();

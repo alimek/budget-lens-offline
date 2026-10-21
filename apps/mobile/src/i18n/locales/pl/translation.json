@@ -91,7 +91,16 @@
       "copy": "Kopia przed migracją",
       "encrypted": "zaszyfrowany",
       "plaintext": "jawny",
-      "missing": "brak"
+      "missing": "brak",
+      "kept": "Zachowane pliki",
+      "none": "brak"
+    },
+    "forgetKey": {
+      "title": "Zapomnij klucz",
+      "waiting": "Zapominam klucza…",
+      "forgotten": "Klucz zniknął; plik bazy danych został nietknięty.",
+      "absent": "Nie było klucza do zapomnienia.",
+      "failed": "Pamięć zabezpieczona odmówiła odpowiedzi."
     }
   },
   "budget": {
@@ -120,13 +129,15 @@
     },
     "recovery": {
       "title": "Nie możemy otworzyć Twojego budżetu",
-      "keyMissing": "Klucz szyfrowania tego budżetu nie ma na tym urządzeniu. Klucz nigdy nie opuszcza telefonu, na którym powstał, więc przywrócenie kopii telefonu lub ponowna instalacja aplikacji może sprawić, że budżet będzie nieczytelny.",
+      "keyMissing": "Klucz szyfrowania tego budżetu nie ma na tym urządzeniu albo plik, do którego należy, już tu nie jest. Klucz nigdy nie opuszcza telefonu, na którym powstał, więc przywrócenie kopii telefonu lub ponowna instalacja aplikacji może sprawić, że budżet będzie nieczytelny.",
       "migrationFailed": "Nie udało się dokończyć aktualizacji budżetu. Został on przywrócony do wersji sprzed aktualizacji.",
       "keepsFile": "Nic nie zostało usunięte: plik budżetu zostaje na tym urządzeniu, nadal zaszyfrowany.",
       "startOver": "Zacznij od nowa",
       "confirmTitle": "Zacząć od nowa?",
       "confirmBody": "Aplikacja zacznie od pustego budżetu, a bieżący plik zostanie na tym urządzeniu. Przywracanie z własnej kopii pojawi się razem z funkcją kopii zapasowej.",
-      "confirmAction": "Zacznij od nowa"
+      "confirmAction": "Zacznij od nowa",
+      "restoreFailed": "Nie udało się dokończyć aktualizacji budżetu i nie udało się też przywrócić wersji sprzed aktualizacji. Na urządzeniu nadal jest nieuszkodzona kopia, nadal zaszyfrowana, i nic nowego nie zostało na niej zapisane.",
+      "stateUnrecognized": "Część plików budżetu jest na tym urządzeniu w stanie, którego Budget Lens nie rozpoznaje, więc aplikacja niczego nie otworzyła i niczego nie zmieniła. Nowy budżet potrzebowałby klucza, którego te pliki mogą jeszcze używać, więc żaden klucz nie został zastąpiony."
     },
     "storageUnreachable": {
       "title": "Pamięć zabezpieczona jest niedostępna",

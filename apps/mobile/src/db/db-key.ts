@@ -9,6 +9,9 @@ import * as SecureStore from "expo-secure-store";
  */
 const KEY_NAME = "bl.db.key.v1";
 
+/** Where the key of a database a "start over" kept is moved, so the kept file can still be opened by E8 (#75 R2). */
+const KEPT_KEY_PREFIX = "bl.db.key.orphan-";
+
 // `*_THIS_DEVICE_ONLY` keeps the key out of iCloud and Google backups (owner decision, #34 2026-10-19). No
 // `requireAuthentication`: an entry protected that way becomes unreadable when the user changes their biometrics,
 // which for us would mean the budget is gone forever.
@@ -47,4 +50,36 @@ export async function storeDatabaseKey(key: string): Promise<void> {
 /** Whether a value read from SecureStore can be used as the raw key at all. */
 export function isDatabaseKey(value: unknown): value is string {
   return typeof value === "string" && DATABASE_KEY.test(value);
+}
+
+/**
+ * Move the current key to the name of a kept database before a new one takes its place (#75 R2). Overwriting it
+ * would leave the file that was kept openable by nobody: E8 (#96/#97) is meant to read such files again.
+ *
+ * The copy is written before the original is deleted, so a failure in between leaves the key twice rather than
+ * not at all, and a "start over" that cannot move the key does not write a new one.
+ */
+export async function moveDatabaseKeyAside(stamp: number): Promise<void> {
+  const key = await readDatabaseKey();
+  if (key === null) {
+    return;
+  }
+  await SecureStore.setItemAsync(`${KEPT_KEY_PREFIX}${String(stamp)}`, key, KEY_OPTIONS);
+  await SecureStore.deleteItemAsync(KEY_NAME, KEY_OPTIONS);
+}
+
+/**
+ * Forget the key of the database on this device, as if it had never been stored.
+ *
+ * Development only (#75 R6): it exists so a development build can reach the recovery screen through a real
+ * unreadable database file instead of a rendered mock, and the route that calls it renders nothing in a release
+ * build. Nothing in the app itself ever removes a key.
+ */
+export async function forgetDatabaseKey(): Promise<boolean> {
+  const key = await readDatabaseKey();
+  if (key === null) {
+    return false;
+  }
+  await SecureStore.deleteItemAsync(KEY_NAME, KEY_OPTIONS);
+  return true;
 }
