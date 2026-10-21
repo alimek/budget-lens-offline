@@ -25,9 +25,11 @@
     - `helpers.ts` – fixed time zone and frozen clock;
     - [`LEGACY.md`](../packages/core/test/LEGACY.md) – the list of `LEGACY:` behaviours.
 - **Database tests:** Vitest in `packages/db/test/` on Node with sql.js (SQLite in WebAssembly, tests only). They
-  cover migrating forward, re-running migrations, table rebuilds that keep child rows, and the constraints that
-  encode business rules (one active month, one rule version per item and month, singleton settings, required item
-  currency, RESTRICT foreign keys). SQLCipher itself is covered on devices (#75, e2e); see
+  cover migrating forward, re-running migrations, table rebuilds that keep child rows, the encrypted pre-migration
+  copy (taken only when a migration is pending and restored when a migration or the post-commit integrity check
+  fails, #75), and the constraints that encode business rules (one active month, one rule version per item and
+  month, singleton settings, required item currency, RESTRICT foreign keys). SQLCipher itself (the key, the cipher
+  guard, an encrypted copy on disk) is covered on devices (#75, e2e); see
   [packages/db](../packages/db/README.md#tests).
 - **Typecheck of tests:** a separate TypeScript project.
   - `packages/core/tsconfig.json` covers `src` only, with `types: []`, so no Node.js types are available in core.

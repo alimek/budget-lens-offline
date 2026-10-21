@@ -48,6 +48,77 @@ function appliedCount(db: SyncDatabase): number {
 }
 
 /**
+ * When the last applied migration was generated, as Drizzle reads it: the newest row of its bookkeeping table,
+ * or 0 when nothing has been applied yet. Drizzle applies entries newer than this and nothing older
+ * ([drizzle-orm #5769](https://github.com/drizzle-team/drizzle-orm/issues/5769)).
+ */
+function lastAppliedWhen(db: SyncDatabase): number {
+  const [table] = db.all(
+    sql`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = '__drizzle_migrations'`,
+  );
+  if (table === undefined) {
+    return 0;
+  }
+  const [row] = db.all<{ created_at: number }>(
+    sql`SELECT created_at FROM __drizzle_migrations ORDER BY created_at DESC LIMIT 1`,
+  );
+  return row?.created_at ?? 0;
+}
+
+/** How many migrations of the bundle are still to be applied (0 when the schema is current). */
+function countPendingMigrations(
+  db: SyncDatabase,
+  bundle: MigrationBundle = schemaMigrations,
+): number {
+  const lastApplied = lastAppliedWhen(db);
+  return bundle.journal.entries.filter((entry) => entry.when > lastApplied).length;
+}
+
+/**
+ * An encrypted copy of the database file, kept while migrations run (#35 Q3, #75). The app owns the files and
+ * the SQLCipher key; this package only decides when each step happens.
+ */
+export interface MigrationSafetyCopy {
+  /** Replace the copy from an earlier launch with an encrypted copy of the database as it is now. */
+  create(): void;
+  /** Put that copy back in place of the live database file. */
+  restore(): void;
+  /** Delete a copy left by an earlier launch: the schema is current, so it is no longer needed. */
+  discard(): void;
+}
+
+/**
+ * Apply pending migrations with an encrypted copy taken first, and put that copy back if anything fails.
+ *
+ * A copy is taken only when migrations are pending (#35 Q3); when none are, a copy left by an earlier launch is
+ * discarded. On any failure the copy is restored and the error is rethrown, so the caller shows the recovery
+ * screen instead of querying a connection that no longer matches the file on disk. The copy is encrypted with
+ * the database key, so restoring it cannot expose anything, and a `MigrationIntegrityError` raised after the
+ * commit is undone by it – the check itself cannot roll back (#35 §2).
+ */
+export function runMigrationsWithSafetyCopy(
+  db: SyncDatabase,
+  safetyCopy: MigrationSafetyCopy,
+  bundle: MigrationBundle = schemaMigrations,
+): number {
+  if (countPendingMigrations(db, bundle) === 0) {
+    safetyCopy.discard();
+    return 0;
+  }
+  safetyCopy.create();
+  try {
+    return runMigrations(db, bundle);
+  } catch (error) {
+    try {
+      safetyCopy.restore();
+    } catch {
+      // The recovery screen is shown either way: a failed restore must not hide why the migration failed.
+    }
+    throw error;
+  }
+}
+
+/**
  * Applies pending migrations and returns how many were applied (0 when the schema is current).
  *
  * Use this instead of Drizzle's `useMigrations`/`migrate` (#35): Drizzle runs all pending migrations in one
@@ -55,7 +126,8 @@ function appliedCount(db: SyncDatabase): number {
  * foreign keys. Foreign keys are therefore switched off outside the transaction, checked with
  * `PRAGMA foreign_key_check` after it, and always switched back on.
  *
- * Call it after the database is opened (and, from #75, keyed) and before any other query.
+ * Call it after the database is opened and keyed, and before any other query; the app calls it through
+ * `runMigrationsWithSafetyCopy`, which keeps an encrypted copy of the file (#35 Q3).
  */
 export function runMigrations(
   db: SyncDatabase,

@@ -7,8 +7,9 @@ Drizzle ORM schema and migrations for the on-device SQLite database (#74). The d
 pinned exactly. Stay on 0.45.x until the Drizzle 1.0 upgrade gate in #35 §6 is met.
 
 The package is TypeScript source with no build step. It does not open, key or locate the database file: the app
-does that (`apps/mobile/src/db/database.ts`; SQLCipher key and cipher guard: #75). Repositories (#81) and the
-month-close transaction (#85) are not here yet.
+does that (`apps/mobile/src/db/encrypted-database.ts` opens `budget-lens.db` with `PRAGMA cipher_version`,
+`PRAGMA key` and the device key from expo-secure-store). Repositories (#81) and the month-close transaction (#85)
+are not here yet.
 
 ## Schema v1 (`src/schema.ts`)
 
@@ -53,6 +54,16 @@ writes `src/migrations.generated.ts`, a TS module with the `{ journal, migration
 reads. The app needs no Babel inline-import plugin and no `.sql` Metro extension. Commit all three. Never edit
 generated files by hand. Drizzle has no down-migrations: roll forward only.
 
+`runMigrationsWithSafetyCopy(db, safetyCopy)` is what the app calls on every start. `safetyCopy` is the caller's
+encrypted copy of the database file (the app writes it with `sqlcipher_export` into a database attached with the
+same key, #35 §2); this package only decides when each step happens:
+
+- nothing is pending: no copy is taken and a copy left by an earlier launch is discarded, so a copy never outlives
+  the migration it protects (#35 Q3: copy whenever migrations are pending, not on every start);
+- something is pending: the copy is created first, and any failure – including `MigrationIntegrityError`, which is
+  raised after the transaction has committed and so cannot roll itself back – restores it and rethrows, so the app
+  can put the file back and show the recovery screen (#75).
+
 `runMigrations(db)` applies pending migrations and returns how many it applied. Use it instead of Drizzle's
 `useMigrations`/`migrate`. Drizzle runs all pending migrations in one transaction, and inside a transaction
 `PRAGMA foreign_keys` is a no-op, so drizzle-kit's table rebuilds would fail on RESTRICT foreign keys. The wrapper:
@@ -82,12 +93,17 @@ Any migration that rebuilds a table (`__new_<table>`) needs a test that seeds ro
 ## Tests
 
 `pnpm --filter @budget-lens/db test` runs Vitest on Node with sql.js (SQLite in WebAssembly) as the driver, used
-only in tests. Covered:
+only in tests. sql.js has no SQLCipher, so the safety-copy tests inject a copy of the file bytes instead and cover
+only the decisions above. Covered:
 
 - migrating from an empty database;
 - re-running migrations as a no-op;
 - a rebuild upgrade that keeps child rows;
 - the integrity error;
+- the encrypted pre-migration copy: no copy while the schema is current (a leftover one is discarded), a copy on
+  the launch that has migrations, and the data back in place after a failing statement or a committed migration
+  that leaves rows without their parent (`test/migration-copy.test.ts`);
 - the constraints that encode business rules.
 
-The SQLCipher-specific path (key, cipher guard) is covered on devices by #75 and e2e.
+The SQLCipher-specific path (key, cipher guard, a copy that is really ciphertext) is covered on devices by e2e
+(#75).
