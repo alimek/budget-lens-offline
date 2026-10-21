@@ -118,20 +118,34 @@ No SQLite data is copied into Zustand. Onboarding and recovery belong to #59/#60
 calls `bootAppDatabase()` (`src/db/database.ts`), which opens `budget-lens.db` encrypted (change listener on), wraps
 it with `createDatabase()` from `packages/db` and migrates it. The gate renders the screens only after that, and
 shows a boot screen (`src/db/boot-screens.tsx`) instead of the app while the database stays closed; nothing here
-throws during render or deletes the database file. `openEncryptedDatabase()` (`src/db/encrypted-database.ts`) keeps
-the order #34 requires: `PRAGMA cipher_version` first — in a build without SQLCipher `PRAGMA key` silently does
-nothing, so such a build stops rather than write plaintext — then `PRAGMA key` with the device key, then a read of
-`sqlite_master`, because a wrong key is only reported when a page is read. The key is 32 random bytes as lowercase
+throws during render, and the only file it ever deletes is one expo-sqlite created for a launch that a build
+without SQLCipher must not keep. `openEncryptedDatabase()` (`src/db/encrypted-database.ts`) keeps the order #34
+requires: `PRAGMA cipher_version` first — in a build without SQLCipher `PRAGMA key` silently does nothing, so such
+a build stops rather than write plaintext — then `PRAGMA key` with the device key, then a read of `sqlite_master`,
+because a wrong key is only reported when a page is read. Only the error saying the file is not a database is read
+as a key that does not open it: a busy device, an I/O error or a full disk goes to the retry screen instead, and
+never to a screen offering to start over (`src/db/open-error.ts`, #75 R3). The key is 32 random bytes as lowercase
 hex in expo-secure-store under `bl.db.key.v1`, `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, written and read back before the
 file is created; a new file always gets a new key because the iOS Keychain survives an uninstall. A read that
-SecureStore refuses is its own screen with a retry, never "key missing" (#34 §2). Before migrations the app takes
-an encrypted copy (`sqlcipher_export` into a database attached with the same key) whenever one is pending, keeps it
-until the next successful boot, and puts it back if a migration or the post-commit integrity check fails; the user
-then sees the recovery screen. "Start over" renames the old file and keeps it: deleting such files and restoring a
-backup are E8 work (#96, #97). Android Auto Backup and device transfer are excluded by explicit rules from
-`plugins/withBackupRules.js` (not `allowBackup=false`); the iOS device backup keeps the ciphertext file (owner
-review #34). A root error boundary is follow-up work with the final #60 screens. No repository or screen reads the
-database yet (#81).
+SecureStore refuses is its own screen with a retry, never "key missing" (#34 §2).
+
+What a launch may do with the files it finds is decided by `planBoot()` (`src/db/boot-plan.ts`) from that listing
+alone, so the rule is testable: only a launch that found no file of a budget writes a key or creates a file
+(#75 R2); a launch that finds the live file gone while the pre-migration copy or the temporary file of an
+interrupted restore is still here finishes that restore with the key already stored, and never generates one
+(#75 R1). Before migrations the app takes an encrypted copy (`sqlcipher_export` into a database attached with the
+same key) whenever one is pending, keeps it until the next successful boot, and puts it back if a migration or the
+post-commit integrity check fails. Putting it back copies the copy to `budget-lens.restoring.db` and moves that
+over the live file, so the live name always holds either the old file or the whole copy; the copy itself is kept,
+and a restore that fails is reported as `MigrationRestoreError` and shown as such rather than as "restored" (#75
+R1). expo-sqlite runs in rollback-journal mode, so `-journal`, `-wal` and `-shm` move with the file they belong to
+and are never left behind for another file to adopt (#75 R5). "Start over" renames the old file and its side files
+aside and moves the key that may open them to a name of its own, so the kept file can still be opened by E8;
+deleting such files and restoring a backup are E8 work (#96, #97). Android Auto Backup and device transfer are
+excluded by explicit rules from `plugins/withBackupRules.js` (not `allowBackup=false`); the iOS device backup keeps
+the ciphertext file (owner review #34), and the EAS Update installation ID stays backed up, as the privacy text
+already discloses ([updates.md](release/updates.md#installation-id-storage)). A root error boundary is follow-up
+work with the final #60 screens. No repository or screen reads the database yet (#81).
 
 The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
 Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,
