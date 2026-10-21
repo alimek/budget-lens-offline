@@ -1,19 +1,24 @@
 import { type Device, test } from "@e2e-dev/mobile";
 import { expect, type TestFixtures } from "e2e";
+import { appAlert, nativeButton, settle, tapUntilVisible } from "./support/showcase";
 
 type Fixtures = TestFixtures & { device: Device };
 type Locator = ReturnType<Fixtures["screen"]["getByTestId"]>;
 
-/** iOS asks "Open in <app>?" the first time a simulator opens the app's own link; later ones go straight in. */
+/**
+ * iOS asks "Open in <app>?" the first time a simulator opens the app's own link; later ones go straight in.
+ * Either the target or the alert is the answer, so the two are raced instead of sleeping between polls.
+ */
 async function confirmOpenInApp(screen: Fixtures["screen"], target: Locator) {
   const alert = screen.getByRole("alert");
   for (let attempt = 0; attempt < 20; attempt += 1) {
-    if (await target.isVisible()) return;
-    if (await alert.isVisible()) {
-      await alert.getByRole("button").last().tap();
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    const winner = await Promise.race([
+      target.isVisible().then((visible) => (visible ? ("target" as const) : undefined)),
+      alert.isVisible().then((visible) => (visible ? ("alert" as const) : undefined)),
+    ]);
+    if (winner === "target") return;
+    if (winner === "alert") return alert.getByRole("button").last().tap();
+    await settle(250);
   }
 }
 
@@ -31,18 +36,36 @@ async function openDevScreen(fixtures: Fixtures, route: string, testID: string) 
 interface BootScreenCase {
   name: string;
   screen: string;
-  /** The one control the screen leaves the user, when it leaves one at all. */
-  action: string | null;
+  /** The controls the screen leaves the user. */
+  actions: string[];
 }
 
 const bootScreens: BootScreenCase[] = [
-  { name: "recovery", screen: "screen-recovery", action: "recovery-start-over" },
-  { name: "migration-failed", screen: "screen-recovery", action: "recovery-start-over" },
-  { name: "encryption-unavailable", screen: "screen-encryption-unavailable", action: null },
+  {
+    name: "recovery",
+    screen: "screen-recovery",
+    actions: ["recovery-start-over", "recovery-retry"],
+  },
+  {
+    name: "migration-failed",
+    screen: "screen-recovery",
+    actions: ["recovery-retry", "recovery-start-over"],
+  },
+  {
+    name: "restore-failed",
+    screen: "screen-recovery",
+    actions: ["recovery-retry", "recovery-start-over"],
+  },
+  {
+    name: "state-unrecognized",
+    screen: "screen-recovery",
+    actions: ["recovery-start-over", "recovery-retry"],
+  },
+  { name: "encryption-unavailable", screen: "screen-encryption-unavailable", actions: [] },
   {
     name: "storage-unreachable",
     screen: "screen-storage-unreachable",
-    action: "storage-unreachable-retry",
+    actions: ["storage-unreachable-retry"],
   },
 ];
 
@@ -84,9 +107,43 @@ for (const boot of bootScreens) {
     await openDevScreen(fixtures, `boot-screen?screen=${boot.name}`, boot.screen);
 
     // Assert
-    if (boot.action !== null) {
-      await expect(screen.getByTestId(boot.action)).toBeVisible();
+    for (const action of boot.actions) {
+      await expect(screen.getByTestId(action)).toBeVisible();
     }
     await app.screenshot(`boot-screen-${boot.name}`);
   });
 }
+
+/**
+ * The acceptance criterion of #75 on a device: a real encrypted database file whose key this device no longer
+ * has leads to the recovery screen, and "Start over" keeps that file (#34, #60). `/dev/forget-key` is
+ * development-only and forgets the stored key; nothing in a release build can do that.
+ */
+test("recovers from a real unreadable database and keeps its file", async (fixtures) => {
+  // Arrange
+  const { app, device, screen } = fixtures;
+  await openDevScreen(fixtures, "forget-key", "screen-forget-key");
+  await expect(screen.getByTestId("forget-key-result")).toHaveText(/key is gone/);
+
+  // Act: a cold start over a file the forgotten key cannot open
+  await device.closeApp();
+  await app.open();
+
+  // Assert
+  await expect(screen.getByTestId("screen-recovery")).toBeVisible();
+  await app.screenshot("recovery-unreadable-database");
+  const { confirm } = appAlert(fixtures, "recovery-start-over-alert", "Start over?", "Start over");
+  await tapUntilVisible(nativeButton(fixtures, "recovery-start-over"), confirm);
+
+  // Act: start over, and look at what the device kept
+  await confirm.tap();
+  await expect(screen.getByTestId("screen-home")).toBeVisible();
+  await openDevScreen(fixtures, "storage-check", "screen-storage-check");
+
+  // Assert: the budget that could not be opened is still here, still ciphertext, and its key went with it
+  await expect(screen.getByTestId("storage-check-kept")).toHaveText(
+    /budget-lens\.orphan-\d+\.db encrypted/,
+  );
+  await expect(screen.getByTestId("storage-check-database")).toHaveText("Database: encrypted");
+  await app.screenshot("storage-check-kept-file");
+});

@@ -109,6 +109,9 @@ test("keeps the open Android row background unchanged", {
   // Assert
   await expect(rent).toHaveScreenshot("android-rent-open", {
     threshold: 0,
-    maxDiffPixels: 0,
+    // Glyph anti-aliasing only, from the SQLCipher dev client of #75 onwards: the pixels that differ change by
+    // at most 5/255 and lie inside the amount text alone. A wrong row background is a whole-region colour
+    // change, thousands of pixels, so this budget still catches what the #195 baseline guards.
+    maxDiffPixels: 150,
   });
 });
