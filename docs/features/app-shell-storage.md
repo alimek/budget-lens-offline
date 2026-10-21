@@ -21,7 +21,10 @@ no sign-up, and the first launch guides the user through a short onboarding.
   migrations and the boot/recovery screens.
 - SQLCipher with a device-only random key (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), a cipher guard, and a recovery screen
   for "database present, key missing" (interim UI until the #60 mockups). "Start over" keeps the orphaned DB — it is
-  renamed, not deleted; deleting it after 30 days or the first successful backup and restoring a backup are E8 work
+  renamed, not deleted, and its key moves to `bl.db.key.orphan-<stamp>` beside it — a kept file's key does not always
+  carry the same stamp, because the rename and the key move are two steps, so E8 reads every
+  `bl.db.key.orphan-*` entry rather than matching names; deleting it after 30 days or the first successful backup and
+  restoring a backup are E8 work
   ([#96](https://github.com/alimek/budget-lens-offline/issues/96), [#97](https://github.com/alimek/budget-lens-offline/issues/97)). The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
 - Schema per [#35](https://github.com/alimek/budget-lens-offline/issues/35): one `items` table with `kind`, rule versions as rows, payment status as its own table, no SQL
   default for `items.currency`, an encrypted copy before every pending migration, Drizzle 0.45.x ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
