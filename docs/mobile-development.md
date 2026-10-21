@@ -33,7 +33,22 @@ or attach to another project's server if 8073 is occupied. The iOS smoke target 
 as a launch argument; Android uses an explicit development-client VIEW intent to the same port after `adb -s <BudgetLens-emulator-serial> reverse
 tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
 prompt required to connect the development client to Metro. All application data stays local; the app opens
-and migrates its local SQLite database before rendering data screens (#74).
+and migrates its local SQLite database, encrypted with SQLCipher, before rendering data screens (#74, #75). A
+development build can also show the boot screens and check that this build really encrypts, on deep links:
+`budget-lens:///dev/boot-screen?screen=recovery` (also `migration-failed`,
+`restore-failed`, `state-unrecognized`, `encryption-unavailable`, `storage-unreachable`) and
+`budget-lens:///dev/storage-check`, which reports the cipher pragmas, the encryption state of the database file and
+of the copy, and the files a "start over" kept. `budget-lens:///dev/forget-key` (#75 R6) forgets the stored key, so
+a cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.
+
+**The screens under `src/app/dev` never run in a release build (#75 R7).** Forgetting the key of a database that is
+still on the device makes that budget unreadable for good, so this is guarded in three places: those routes are
+registered inside `<Stack.Protected guard={__DEV__}>`, so a release build does not mount them and a deep link to one
+redirects to Overview; their effects go through `useDevEffect` (`src/dev/use-dev-effect.ts`), which checks `__DEV__`
+inside the effect, where a `return` placed before a hook cannot be forgotten; and `forgetDatabaseKey` refuses
+outside `__DEV__` itself. `pnpm lint` runs `scripts/check-dev-routes.mjs`, which fails if a development screen is
+registered outside the guard, reaches for `useEffect` instead of `useDevEffect`, renders without an `__DEV__`
+check, or deletes the key before one.
 
 ## Checks and smoke evidence
 
@@ -66,15 +81,20 @@ for the #15 smoke contract; other roots are `screen-month`, `screen-forecast`, `
 `screen-settings`, and `screen-savings`. Native triggers use `tab-overview`, `tab-month`,
 `tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`. The Settings privacy card uses `settings-privacy` and its EAS Update disclosure text `settings-privacy-updates`. The dev-only
 design system showcase uses `screen-design-system`, opened by `settings-open-design-system`; its elements use the
-`ds-` prefix ([design system](design-system.md#showcase)).
+`ds-` prefix ([design system](design-system.md#showcase)). The boot screens (#75) use
+`screen-encryption-unavailable`, `screen-recovery` (with `recovery-start-over` and its
+`recovery-start-over-alert`) and `screen-storage-unreachable` (with `storage-unreachable-retry`). The dev-only
+storage check uses `screen-storage-check` and its `storage-check-*` rows.
 
 ## Scope
 
 The scaffold has bundled English/Polish strings, device-language initialization, light/dark system
 navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
 from locale resources. Screens are built from the [design system](design-system.md) (#119): Expo UI
-wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. Database boot and migrations are implemented in #74. SQLCipher key setup, encrypted pre-migration copies
-and recovery remain #75; repositories, language preference persistence ([i18n](i18n.md)) and onboarding are separate work.
+wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. Database boot and
+migrations are implemented in #74, and the SQLCipher key, cipher guard, encrypted pre-migration copies and boot
+screens in #75; the recovery screen is an interim UI until the #60 mockups land. Repositories, language preference
+persistence ([i18n](i18n.md)) and onboarding are separate work.
 
 ## Release builds (TestFlight)
 

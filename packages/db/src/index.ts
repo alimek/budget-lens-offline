@@ -20,5 +20,11 @@ export {
   updateItem,
 } from "./items-repository";
 export type { MigrationBundle } from "./migration-bundle";
-export { MigrationIntegrityError, runMigrations } from "./run-migrations";
+export {
+  MigrationIntegrityError,
+  MigrationRestoreError,
+  type MigrationSafetyCopy,
+  runMigrations,
+  runMigrationsWithSafetyCopy,
+} from "./run-migrations";
 export * as schema from "./schema";

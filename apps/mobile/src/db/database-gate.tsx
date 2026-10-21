@@ -1,25 +1,35 @@
-import { type ReactNode, useEffect, useState } from "react";
-import { openAppDatabase } from "./database";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { BootScreen } from "./boot-screens";
+import { bootAppDatabase, type DatabaseBoot, startOverAppDatabase } from "./database";
 
-type GateState =
-  | { readonly status: "opening" | "ready" }
-  | { readonly status: "failed"; readonly error: unknown };
+type GateState = DatabaseBoot | { readonly kind: "opening" };
 
 /**
- * Renders its children only after the database is open and migrated, so no screen reads a stale schema. A failure
- * is thrown during render and prevents data screens from mounting. There is no app-defined root error boundary
- * yet; adding one is follow-up work with the recovery screens in #60/#75.
+ * Shows the app only once the encrypted database is open and its schema is migrated, so no screen reads a stale
+ * or unkeyed database (#74, #75).
+ *
+ * While the database stays closed, a boot screen of #60 stands in for the app: a build without SQLCipher stops, a
+ * budget whose key is gone offers only "start over" (which keeps the old file), and anything the device refused to
+ * answer offers a retry. No path here deletes data.
  */
 export function DatabaseGate({ children }: { readonly children: ReactNode }) {
-  const [state, setState] = useState<GateState>({ status: "opening" });
-  useEffect(() => {
-    openAppDatabase().then(
-      () => setState({ status: "ready" }),
-      (error: unknown) => setState({ status: "failed", error }),
-    );
+  const [state, setState] = useState<GateState>({ kind: "opening" });
+  const start = useCallback((open: () => Promise<DatabaseBoot>) => {
+    setState({ kind: "opening" });
+    void open().then(setState);
   }, []);
-  if (state.status === "failed") {
-    throw state.error;
+  useEffect(() => {
+    start(bootAppDatabase);
+  }, [start]);
+
+  if (state.kind === "ready") {
+    return children;
   }
-  return state.status === "ready" ? children : null;
+  return (
+    <BootScreen
+      state={state}
+      onRetry={() => start(bootAppDatabase)}
+      onStartOver={() => start(startOverAppDatabase)}
+    />
+  );
 }

@@ -17,10 +17,15 @@ no sign-up, and the first launch guides the user through a short onboarding.
 **In:**
 - `apps/mobile` scaffold, navigation skeleton, design-system component layer.
 - `packages/db` (Drizzle schema + migrations): implemented in #74, with a database gate before data screens render.
-  SQLCipher key setup, encrypted copies before pending migrations and recovery remain #75.
+  Implemented in #75: the device key, the `PRAGMA cipher_version` guard, the encrypted copy taken before pending
+  migrations and the boot/recovery screens.
 - SQLCipher with a device-only random key (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), a cipher guard, and a recovery screen
-  for "database present, key missing". "Start over" keeps the orphaned DB for 30 days or until the first successful
-  backup. The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
+  for "database present, key missing" (interim UI until the #60 mockups). "Start over" keeps the orphaned DB — it is
+  renamed, not deleted, and its key moves to `bl.db.key.orphan-<stamp>` beside it — a kept file's key does not always
+  carry the same stamp, because the rename and the key move are two steps, so E8 reads every
+  `bl.db.key.orphan-*` entry rather than matching names; deleting it after 30 days or the first successful backup and
+  restoring a backup are E8 work
+  ([#96](https://github.com/alimek/budget-lens-offline/issues/96), [#97](https://github.com/alimek/budget-lens-offline/issues/97)). The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
 - Schema per [#35](https://github.com/alimek/budget-lens-offline/issues/35): one `items` table with `kind`, rule versions as rows, payment status as its own table, no SQL
   default for `items.currency`, an encrypted copy before every pending migration, Drizzle 0.45.x ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)).
 - App structure per [#36](https://github.com/alimek/budget-lens-offline/issues/36): **Expo Router** ([ADR 0006](../decisions/0006-app-stack.md)) with native tabs
@@ -56,9 +61,10 @@ no sign-up, and the first launch guides the user through a short onboarding.
 - The app refuses to run in a build without SQLCipher (`PRAGMA cipher_version` guard).
 - Onboarding makes no network requests except the optional lookup of an existing backup in the user's own iCloud /
   Google Drive ([E8](cloud-backup.md), [#116](https://github.com/alimek/budget-lens-offline/issues/116)), on Android the Google Drive consent step, and the background EAS Update check of release builds ([ADR 0013](../decisions/0013-eas-update-network-exception.md)); the onboarding privacy explanation must mention that check, reusing the `privacy.updates` text already shown in Settings → *Privacy* (#191). Confirming it locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
-- The DB file is excluded from Android Auto Backup. A missing key leads to the recovery screen. When the backup rules
-  are added, decide whether they also exclude the EAS Update installation ID (`dev.expo.EASSharedPreferences`, today
-  restored by Auto Backup; [updates.md](../release/updates.md#installation-id-storage)).
+- The DB file is excluded from Android Auto Backup. A missing key leads to the recovery screen. The EAS Update
+  installation ID (`dev.expo.EASSharedPreferences`) stays in Android backups (#75): the privacy text in Settings,
+  [updates.md](../release/updates.md#installation-id-storage) and the App Store privacy worksheet already disclose
+  that a device backup can restore it, so excluding it would need a new build and a change to that disclosure.
 - There is no backup prompt, reminder or nudge besides the Android consent step ([#48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263253821)).
 - Every screen has a `screen-<name>` `testID` and all strings go through i18n (PL+EN).
 

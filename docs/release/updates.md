@@ -60,9 +60,11 @@ Verified in `expo-eas-client` 58.0.2 (`EASClientID` on iOS and Android) and in t
   `android:allowBackup="true"` (Expo's default) without backup rules, so Android Auto Backup includes the file:
   deleting the app removes it, but a reinstall with a cloud backup or a device-to-device transfer restores it.
 
-So the ID is reset by deleting the app unless a device backup is restored. Excluding it from backups would need
-native backup rules (a new build, a new fingerprint); the explicit Android backup rules are planned with the
-database ([app-shell-storage.md](../features/app-shell-storage.md)).
+So the ID is reset by deleting the app unless a device backup is restored. The Android backup rules added with the
+database ([app-shell-storage.md](../features/app-shell-storage.md), #75) exclude the database directory and the
+stored database key and **deliberately leave this preferences file backed up**: the privacy text in Settings, this
+page and the App Store privacy worksheet already disclose that a device backup can restore the installation ID, so
+excluding it would need a new build and a change to that disclosure.
 
 Users see this in the app: Settings → *Privacy* (`privacy.updates` in the locale files, English and Polish) explains
 that the app checks for updates each time it starts, the installation ID (and that a device backup can restore it),

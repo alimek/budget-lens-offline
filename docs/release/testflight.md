@@ -147,7 +147,7 @@ Owner decision (2026-10-20, [#177 comment](https://github.com/alimek/budget-lens
 - **Export compliance:** `ios.config.usesNonExemptEncryption: false` sets `ITSAppUsesNonExemptEncryption = NO`, so
   App Store Connect does not ask the compliance question for every build. Approved by the owner, who treats the
   on-device SQLCipher encryption as exempt. Reasoning:
-  the app has no encryption of its own except HTTPS through Apple's OS networking and, once #75 lands, SQLCipher
+  the app has no encryption of its own except HTTPS through Apple's OS networking and, since #75, SQLCipher
   (AES) that only protects the user's own data at rest on the device. The app's primary function is personal
   budgeting, not information security, communication or networking, so this falls under the exemptions Apple lists
   for encryption that is not the primary function (EAR Category 5 Part 2, Note 4). If this assessment changes, set
