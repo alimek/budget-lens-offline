@@ -50,6 +50,9 @@ ends up in a build or a commit.
 A change that only touches JavaScript or assets can reach an installed build as an EAS Update instead of a new build
 ([updates.md](updates.md#update-or-new-build)).
 
+Before a release build, run the local e2e suites on **both iOS and Android** (`pnpm e2e:ios`, `pnpm e2e:android`);
+day-to-day UI PRs are tested on iOS only ([testing](../testing.md#platforms)).
+
 Prerequisites: a paid Apple Developer Program membership, and an Expo login with access to the account that owns the
 linked project (`pnpm --filter @budget-lens/mobile eas whoami`; Developer role or higher).
 
