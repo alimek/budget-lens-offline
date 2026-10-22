@@ -14,11 +14,11 @@ import { useItemRows } from "@/features/items/use-item-rows";
 import { GroupedList, ListSection, NavigationRow } from "@/ui/native/list";
 
 export default function ItemsScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   const router = useRouter();
   const items = useItemRows();
   const [confirming, setConfirming] = useState<ItemRow | null>(null);
-  const note = items.hasInvalidItems ? t("items.list.someInvalid") : undefined;
+  const note = items.hasInvalidItems ? t("list.someInvalid") : undefined;
 
   return (
     <View testID="screen-items" collapsable={false} className="flex-1 bg-background">
@@ -36,7 +36,7 @@ export default function ItemsScreen() {
           <ListSection>
             <NavigationRow
               testID="items-open-archived"
-              label={t("items.list.archived")}
+              label={t("list.archived")}
               onPress={() => router.push("/(tabs)/items/archived")}
             />
           </ListSection>

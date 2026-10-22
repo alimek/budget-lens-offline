@@ -159,55 +159,5 @@
       "title": "Secure storage is unavailable",
       "body": "Budget Lens could not read this device’s secure storage, so it cannot open your budget. Nothing has been changed or deleted."
     }
-  },
-  "items": {
-    "list": {
-      "income": "Income",
-      "expenses": "Expenses",
-      "archived": "Archived items",
-      "changeFrom": "Change from {{month}}",
-      "noRate": "No rate yet",
-      "loading": "Loading items…",
-      "loadError": "Couldn't load your items. Your data hasn't changed.",
-      "someInvalid": "Some items couldn't be read and are hidden."
-    },
-    "empty": {
-      "title": "No items yet",
-      "body": "Add your regular bills, subscriptions and income once. Budget Lens puts them in the right months."
-    },
-    "actions": {
-      "archive": "Archive"
-    },
-    "archive": {
-      "title": "Archive “{{name}}”?",
-      "message": "It disappears from upcoming months. Closed months keep it. You can find it later in Archived items.",
-      "confirm": "Archive",
-      "done": "Archived"
-    },
-    "summary": {
-      "separator": " · ",
-      "monthly": "Monthly",
-      "everyN_one": "Every {{count}} month",
-      "everyN_other": "Every {{count}} months",
-      "yearly": "Yearly · {{monthName}}",
-      "oneTime": "One-time · {{month}}",
-      "onDay_one": "on the {{count}}st",
-      "onDay_two": "on the {{count}}nd",
-      "onDay_few": "on the {{count}}rd",
-      "onDay_other": "on the {{count}}th",
-      "from": "from {{month}}",
-      "until": "until {{month}}",
-      "ended": "Ended {{month}}"
-    },
-    "a11y": {
-      "row": "{{name}}, {{kind}}, {{amount}}, {{summary}}",
-      "rowChange": "{{name}}, {{kind}}, {{amount}}, {{summary}}, {{change}}",
-      "amountNoRate": "{{amount}}, {{note}}",
-      "kindExpense": "expense",
-      "kindIncome": "income"
-    },
-    "archived": {
-      "empty": "No archived items"
-    }
   }
 }

@@ -9,7 +9,7 @@ import { Text } from "@/ui/components/text";
 import { GroupedList } from "@/ui/native/list";
 
 export default function ArchivedItemsScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   const items = useItemRows({ archived: true });
   return (
     <View testID="screen-items-archived" collapsable={false} className="flex-1 bg-background">
@@ -25,7 +25,7 @@ export default function ArchivedItemsScreen() {
             variant="body"
             className="px-4 py-6 text-muted-foreground"
           >
-            {t("items.archived.empty")}
+            {t("archived.empty")}
           </Text>
         ) : null}
         <GroupedList testID="items-archived-list">

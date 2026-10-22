@@ -23,7 +23,7 @@ export function ItemRowView({
   onAction,
   testIdPrefix = "items-row",
 }: ItemRowViewProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   const copy = itemRowCopy(row, useLanguage(), (key, options) => t(key, { ...options }));
   return (
     <TransactionRow

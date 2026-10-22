@@ -23,7 +23,7 @@ const row = (fields: Partial<ItemRow> & Pick<ItemRow, "id">): ItemRow => ({
   itemType: "expense",
   currency: "PLN",
   amount: -320_000 as MinorUnits,
-  summary: [{ key: "items.summary.monthly", options: {}, gap: "separator" }],
+  summary: [{ key: "summary.monthly", options: {}, gap: "separator" }],
   changeFrom: undefined,
   foreign: false,
   sortOrder: 1,
@@ -39,7 +39,7 @@ describe("itemRowCopy", () => {
     const copy = itemRowCopy(expense, "en", t);
 
     // Assert
-    expect(copy.meta).toBe("items.summary.monthly");
+    expect(copy.meta).toBe("summary.monthly");
     expect(copy.amount.text).toBe(`\u2212${money(-320_000 as MinorUnits, "PLN")}`);
     expect(copy.amount.tone).toBe("expense");
     expect(copy.badge).toBeUndefined();
@@ -55,8 +55,8 @@ describe("itemRowCopy", () => {
     const copy = itemRowCopy(expense, "en", t);
 
     // Assert
-    expect(copy.badge).toMatch(/^items\.list\.changeFrom\(month=/);
-    expect(copy.accessibilityLabel).toMatch(/^items\.a11y\.rowChange\(/);
+    expect(copy.badge).toMatch(/^list\.changeFrom\(month=2026-12\)$/);
+    expect(copy.accessibilityLabel).toMatch(/^a11y\.rowChange\(/);
   });
 
   it("notes that a foreign item has no rate yet", () => {
@@ -72,10 +72,10 @@ describe("itemRowCopy", () => {
     const copy = itemRowCopy(foreign, "en", t);
 
     // Assert
-    expect(copy.amountNote).toBe("items.list.noRate");
+    expect(copy.amountNote).toBe("list.noRate");
     expect(copy.amount.text).toBe(`\u2212${money(-1_500 as MinorUnits, "JPY")}`);
     // The note is part of the row's one accessible name, not a separate element.
-    expect(copy.accessibilityLabel).toContain("amount=items.a11y.amountNoRate(");
+    expect(copy.accessibilityLabel).toContain("amount=a11y.amountNoRate(");
   });
 
   it("signs income with a plus and reads it as income", () => {
@@ -93,7 +93,7 @@ describe("itemRowCopy", () => {
     // Assert
     expect(copy.amount.text).toBe(`+${money(850_000 as MinorUnits, "PLN")}`);
     expect(copy.amount.tone).toBe("income");
-    expect(copy.accessibilityLabel).toContain("kind=items.a11y.kindIncome");
+    expect(copy.accessibilityLabel).toContain("kind=a11y.kindIncome");
   });
 });
 
@@ -103,8 +103,6 @@ describe("itemRowActions", () => {
     const actions = itemRowActions(t);
 
     // Assert
-    expect(actions).toEqual([
-      { key: "archive", label: "items.actions.archive", destructive: true },
-    ]);
+    expect(actions).toEqual([{ key: "archive", label: "actions.archive", destructive: true }]);
   });
 });

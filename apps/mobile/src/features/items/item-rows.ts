@@ -79,7 +79,7 @@ function itemRow(item: StoredItem, context: ItemRowContext): ItemRow | undefined
     currency: item.currency,
     // The sign is the list's signal for the kind, never colour alone (#58); amounts are stored positive.
     amount: item.itemType === "expense" ? negateMinorUnits(version.amount) : version.amount,
-    summary: summarizeVersion(version, context.activeMonth, context.lang),
+    summary: summarizeVersion(version, context.activeMonth),
     changeFrom: scheduledChange(item, context.activeMonth),
     // No rate store exists yet (#92), so a foreign item never has a base-currency value to show.
     foreign: item.currency !== context.baseCurrency,

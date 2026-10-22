@@ -1,30 +1,29 @@
 // The recurrence summary of a list row (#112): what a rule version does, in words. Nothing here is a sentence
 // built in code – a part is an i18n key with its options, and `joinSummary` only puts the translated separator
-// between translated parts (docs/i18n.md). Month names come from native `Intl` (`month-name.ts`).
+// between translated parts (docs/i18n.md). A part carries a raw `YearMonth` (or a month number) and the
+// `monthName` i18next formatter renders it in the case the translation asks for (#63, decision 5).
 import {
   addMonths,
-  type Language,
   monthsBetween,
   type RuleVersion,
   type Schedule,
   validateSchedule,
   type YearMonth,
 } from "@budget-lens/core";
-import { formatMonth, formatMonthName } from "./month-name";
 
 /** The keys a summary is built from; every one of them is a full phrase on its own. */
 export type SummaryKey =
-  | "items.summary.monthly"
-  | "items.summary.everyN"
-  | "items.summary.yearly"
-  | "items.summary.oneTime"
-  | "items.summary.onDay"
-  | "items.summary.from"
-  | "items.summary.until"
-  | "items.summary.ended";
+  | "summary.monthly"
+  | "summary.everyN"
+  | "summary.yearly"
+  | "summary.oneTime"
+  | "summary.onDay"
+  | "summary.from"
+  | "summary.until"
+  | "summary.ended";
 
-/** `items.summary.separator` is the joining text, never a part. */
-export type SummaryTextKey = SummaryKey | "items.summary.separator";
+/** `summary.separator` is the joining text, never a part. Keys of the `items` namespace. */
+export type SummaryTextKey = SummaryKey | "summary.separator";
 
 export interface SummaryPart {
   readonly key: SummaryKey;
@@ -32,6 +31,11 @@ export interface SummaryPart {
   readonly options: Readonly<Record<string, string | number | boolean>>;
   /** How this part follows the previous one: the separator key, or a plain space ("Every 3 months from Feb 2027"). */
   readonly gap: "separator" | "space";
+}
+
+/** The month number of a `YearMonth`, for a key that names the month alone ("Yearly · March"). */
+function monthNumber(month: YearMonth): number {
+  return Number(month.slice(5, 7));
 }
 
 /** The month of the schedule's first occurrence. */
@@ -56,27 +60,27 @@ function lastOccurrence(schedule: Schedule): YearMonth | undefined {
 }
 
 /** The repeating rhythm: monthly, yearly with its month name, or every N months. */
-function cadence(schedule: Schedule, lang: Language): SummaryPart {
+function cadence(schedule: Schedule): SummaryPart {
   if (schedule.kind === "one-time") {
     return {
-      key: "items.summary.oneTime",
-      options: { month: formatMonth(schedule.month, lang) },
+      key: "summary.oneTime",
+      options: { month: schedule.month },
       gap: "separator",
     };
   }
   const { intervalMonths } = schedule;
   if (intervalMonths === 1) {
-    return { key: "items.summary.monthly", options: {}, gap: "separator" };
+    return { key: "summary.monthly", options: {}, gap: "separator" };
   }
   if (intervalMonths === 12) {
     return {
-      key: "items.summary.yearly",
-      options: { monthName: formatMonthName(schedule.anchor, lang) },
+      key: "summary.yearly",
+      options: { month: monthNumber(schedule.anchor) },
       gap: "separator",
     };
   }
   return {
-    key: "items.summary.everyN",
+    key: "summary.everyN",
     options: { count: intervalMonths },
     gap: "separator",
   };
@@ -84,7 +88,7 @@ function cadence(schedule: Schedule, lang: Language): SummaryPart {
 
 /** The day of the month, an English ordinal ("on the 10th") through i18next's ordinal plural rules. */
 const dayPart = (dayOfMonth: number): SummaryPart => ({
-  key: "items.summary.onDay",
+  key: "summary.onDay",
   options: { count: dayOfMonth, ordinal: true },
   gap: "separator",
 });
@@ -101,7 +105,6 @@ const dayPart = (dayOfMonth: number): SummaryPart => ({
 export function summarizeVersion(
   version: RuleVersion,
   activeMonth: YearMonth,
-  lang: Language,
 ): readonly SummaryPart[] {
   const { schedule } = version;
   if (validateSchedule(schedule).length > 0) {
@@ -109,17 +112,15 @@ export function summarizeVersion(
   }
   const last = lastOccurrence(schedule);
   if (schedule.kind === "recurring" && last !== undefined && monthsBetween(activeMonth, last) < 0) {
-    return [
-      { key: "items.summary.ended", options: { month: formatMonth(last, lang) }, gap: "separator" },
-    ];
+    return [{ key: "summary.ended", options: { month: last }, gap: "separator" }];
   }
-  const parts: SummaryPart[] = [cadence(schedule, lang)];
+  const parts: SummaryPart[] = [cadence(schedule)];
   // A one-time item names its month in its own part; only a rhythm can start later on top of being named.
   const starts = firstOccurrence(schedule);
   if (schedule.kind === "recurring" && monthsBetween(activeMonth, starts) > 0) {
     parts.push({
-      key: "items.summary.from",
-      options: { month: formatMonth(starts, lang) },
+      key: "summary.from",
+      options: { month: starts },
       gap: "space",
     });
   }
@@ -129,8 +130,8 @@ export function summarizeVersion(
   }
   if (schedule.kind === "recurring" && schedule.endMonth !== undefined) {
     parts.push({
-      key: "items.summary.until",
-      options: { month: formatMonth(schedule.endMonth, lang) },
+      key: "summary.until",
+      options: { month: schedule.endMonth },
       gap: "separator",
     });
   }
@@ -148,7 +149,7 @@ export function joinSummary(
       if (index === 0) {
         return text;
       }
-      return part.gap === "space" ? ` ${text}` : translate("items.summary.separator") + text;
+      return part.gap === "space" ? ` ${text}` : translate("summary.separator") + text;
     })
     .join("");
 }

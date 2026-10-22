@@ -1,5 +1,7 @@
-// What the list says about a rule version (#112): its rhythm, the month it starts from, the month it runs until.
+// What the list says about a rule version (#112): its rhythm, the month it starts from, the month it runs until,
+// rendered through the real `items` resources in both languages, so the summaries are what a user actually reads.
 import {
+  type Language,
   type MinorUnits,
   type RuleVersion,
   type Schedule,
@@ -7,12 +9,8 @@ import {
   type YearMonth,
 } from "@budget-lens/core";
 import { describe, expect, it } from "vitest";
-import {
-  joinSummary,
-  type SummaryPart,
-  type SummaryTextKey,
-  summarizeVersion,
-} from "./recurrence-summary";
+import { createI18n } from "../../i18n/create-i18n";
+import { joinSummary, summarizeVersion } from "./recurrence-summary";
 
 const activeMonth = toYearMonth("2026-10");
 
@@ -25,33 +23,22 @@ const version = (schedule: Schedule, amount = 1000): RuleVersion => ({
   schedule,
 });
 
-/** The parts as one line, through the same joining the screen uses, with development words. */
-const words: Record<SummaryTextKey, string> = {
-  "items.summary.separator": " | ",
-  "items.summary.monthly": "Monthly",
-  "items.summary.everyN": "Every {{count}} months",
-  "items.summary.yearly": "Yearly {{monthName}}",
-  "items.summary.oneTime": "One-time {{month}}",
-  "items.summary.onDay": "day {{count}}",
-  "items.summary.from": "from {{month}}",
-  "items.summary.until": "until {{month}}",
-  "items.summary.ended": "ended {{month}}",
-};
-
-function text(parts: readonly SummaryPart[]): string {
-  return joinSummary(parts, (key, options) => {
-    let line = words[key];
-    for (const [name, value] of Object.entries(options ?? {})) {
-      line = line.replace(`{{${name}}}`, String(value));
-    }
-    return line;
-  });
+/** The summary line as the screen renders it: the parts joined by the translated separator. */
+function summaryLine(version: RuleVersion, lang: Language, on = activeMonth): string {
+  // The real resources, reached through the `items` namespace like the screen does.
+  const t = createI18n(lang).t as unknown as (
+    key: string,
+    options?: Record<string, string | number | boolean>,
+  ) => string;
+  return joinSummary(summarizeVersion(version, on), (key, options) =>
+    t(key, { ns: "items", ...options }),
+  );
 }
 
 describe("summarizeVersion", () => {
   it("names the rhythm and the day of a monthly item", () => {
     // Arrange
-    const rule = version({
+    const rent = version({
       kind: "recurring",
       intervalMonths: 1,
       anchor: month("2026-01"),
@@ -59,64 +46,60 @@ describe("summarizeVersion", () => {
     });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(rent, "en"), summaryLine(rent, "pl")];
 
     // Assert
-    expect(parts.map((part) => part.key)).toEqual(["items.summary.monthly", "items.summary.onDay"]);
-    expect(parts[1]?.options).toEqual({ count: 10, ordinal: true });
+    expect(lines).toEqual(["Monthly · on the 10th", "Co miesiąc · 10. dnia"]);
   });
 
   it("counts a longer rhythm", () => {
     // Arrange
-    const rule = version({ kind: "recurring", intervalMonths: 3, anchor: month("2026-01") });
+    const quarterly = version({ kind: "recurring", intervalMonths: 3, anchor: month("2026-01") });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(quarterly, "en"), summaryLine(quarterly, "pl")];
 
     // Assert
-    expect(parts).toHaveLength(1);
-    expect(parts[0]?.options).toEqual({ count: 3 });
+    expect(lines).toEqual(["Every 3 months", "Co 3 miesiące"]);
   });
 
-  it("names the month of a yearly item", () => {
+  it("names the month of a yearly item on its own", () => {
     // Arrange
-    const rule = version({ kind: "recurring", intervalMonths: 12, anchor: month("2027-03") });
+    const insurance = version({ kind: "recurring", intervalMonths: 12, anchor: month("2026-03") });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(insurance, "en"), summaryLine(insurance, "pl")];
 
     // Assert
-    expect(parts[0]?.options).toEqual({ monthName: "March" });
+    expect(lines).toEqual(["Yearly · March", "Co roku · marzec"]);
   });
 
   it("says which month an item that has not started yet begins from", () => {
     // Arrange
-    const rule = version({ kind: "recurring", intervalMonths: 3, anchor: month("2027-02") });
+    const later = version({ kind: "recurring", intervalMonths: 3, anchor: month("2027-02") });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(later, "en"), summaryLine(later, "pl")];
 
     // Assert
-    expect(parts.map((part) => part.key)).toEqual(["items.summary.everyN", "items.summary.from"]);
-    expect(parts[1]?.options).toEqual({ month: "Feb 2027" });
-    expect(text(parts)).toBe("Every 3 months from Feb 2027");
+    expect(lines).toEqual(["Every 3 months from Feb 2027", "Co 3 miesiące od lutego 2027"]);
   });
 
-  it("names the month of a one-time item", () => {
+  it("names the month of a one-time item, also after it has passed", () => {
     // Arrange
-    const rule = version({ kind: "one-time", month: month("2026-11") });
+    const oneTime = version({ kind: "one-time", month: month("2026-11") });
+    const past = version({ kind: "one-time", month: month("2026-05") });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(oneTime, "en"), summaryLine(past, "pl")];
 
     // Assert
-    expect(parts).toHaveLength(1);
-    expect(parts[0]?.options).toEqual({ month: "Nov 2026" });
+    expect(lines).toEqual(["One-time · Nov 2026", "Jednorazowo · maj 2026"]);
   });
 
-  it("says until when a recurring item still runs and ends later", () => {
+  it("says until when a recurring item still runs", () => {
     // Arrange
-    const rule = version({
+    const gym = version({
       kind: "recurring",
       intervalMonths: 1,
       anchor: month("2026-01"),
@@ -124,15 +107,15 @@ describe("summarizeVersion", () => {
     });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(gym, "en"), summaryLine(gym, "pl")];
 
     // Assert
-    expect(text(parts)).toBe("Monthly | until Jun 2027");
+    expect(lines).toEqual(["Monthly · until Jun 2027", "Co miesiąc · do czerwca 2027"]);
   });
 
   it("says only that an item whose last occurrence has passed has ended", () => {
-    // Arrange: every 3 months from Jan 2026 to Jul 2026, so the last occurrence is Jul, before Oct.
-    const rule = version({
+    // Arrange: every 3 months from Jan 2026 to Aug 2026, so the last occurrence is Jul, before Oct.
+    const finished = version({
       kind: "recurring",
       intervalMonths: 3,
       anchor: month("2026-01"),
@@ -140,41 +123,20 @@ describe("summarizeVersion", () => {
     });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const lines = [summaryLine(finished, "en"), summaryLine(finished, "pl")];
 
     // Assert
-    expect(parts.map((part) => part.key)).toEqual(["items.summary.ended"]);
-    expect(parts[0]?.options).toEqual({ month: "Jul 2026" });
-  });
-
-  it("keeps the month of a one-time item whose month has passed", () => {
-    // Arrange
-    const rule = version({ kind: "one-time", month: month("2026-05") });
-
-    // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
-
-    // Assert
-    expect(parts.map((part) => part.key)).toEqual(["items.summary.oneTime"]);
+    expect(lines).toEqual(["Ended Jul 2026", "Zakończona w lipcu 2026"]);
   });
 
   it("summarises a schedule core rejects as nothing", () => {
     // Arrange: an archived item's history can hold a broken schedule (#81 never validates it).
-    const rule = version({ kind: "recurring", intervalMonths: 0, anchor: month("2026-01") });
+    const broken = version({ kind: "recurring", intervalMonths: 0, anchor: month("2026-01") });
 
     // Act
-    const parts = summarizeVersion(rule, activeMonth, "en");
+    const parts = summarizeVersion(broken, activeMonth);
 
     // Assert
     expect(parts).toEqual([]);
-  });
-
-  it("formats a month as a calendar month, never as an instant", () => {
-    // Arrange
-    const rule = version({ kind: "one-time", month: month("2027-02") });
-
-    // Act / Assert: the same short month/year form in both languages, none of them moved by a time zone.
-    expect(summarizeVersion(rule, activeMonth, "en")[0]?.options["month"]).toBe("Feb 2027");
-    expect(summarizeVersion(rule, activeMonth, "pl")[0]?.options["month"]).toContain("2027");
   });
 });

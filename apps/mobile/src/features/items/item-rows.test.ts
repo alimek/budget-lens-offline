@@ -134,7 +134,7 @@ describe("itemSections", () => {
     // Assert: the summary already says the month it starts from.
     expect(row?.amount).toBe(-80_000);
     expect(row?.changeFrom).toBeUndefined();
-    expect(row?.summary.map((part) => part.key)).toContain("items.summary.from");
+    expect(row?.summary.map((part) => part.key)).toContain("summary.from");
   });
 
   it("marks a foreign item against the base currency and keeps its own", () => {

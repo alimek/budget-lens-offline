@@ -28,7 +28,7 @@ export function ItemSectionList({
   onAction,
   note,
 }: ItemSectionListProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   const rows = (list: readonly ItemRow[]) =>
     list.map((row) => (
       <ItemRowView
@@ -45,7 +45,7 @@ export function ItemSectionList({
     <>
       {hasIncome ? (
         <ListSection
-          title={t("items.list.income")}
+          title={t("list.income")}
           testID={sectionTestIds.income}
           footer={hasExpenses ? undefined : note}
         >
@@ -53,11 +53,7 @@ export function ItemSectionList({
         </ListSection>
       ) : null}
       {hasExpenses ? (
-        <ListSection
-          title={t("items.list.expenses")}
-          testID={sectionTestIds.expenses}
-          footer={note}
-        >
+        <ListSection title={t("list.expenses")} testID={sectionTestIds.expenses} footer={note}>
           {rows(sections.expenses)}
         </ListSection>
       ) : null}

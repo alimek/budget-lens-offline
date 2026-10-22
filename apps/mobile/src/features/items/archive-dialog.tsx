@@ -21,13 +21,14 @@ export interface ArchiveDialogProps {
  * for one on Android). Archiving keeps the item and its versions (#81); a real delete is #63's open point 1.
  */
 export function ArchiveDialog({ row, onClose }: ArchiveDialogProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
+  const { t: tShared } = useTranslation();
   const db = useDatabase();
   const confirm = () => {
     if (row !== null) {
       // The clock and the new version id are injected; the repository reads no clock of its own (#81).
       archiveItem(db, row.id, { now: () => Date.now(), newId: randomUUID });
-      AccessibilityInfo.announceForAccessibility(t("items.archive.done"));
+      AccessibilityInfo.announceForAccessibility(t("archive.done"));
     }
     onClose();
   };
@@ -35,10 +36,10 @@ export function ArchiveDialog({ row, onClose }: ArchiveDialogProps) {
     <AppAlert
       testID="item-archive-dialog"
       visible={row !== null}
-      title={t("items.archive.title", { name: row?.name ?? "" })}
-      message={t("items.archive.message")}
-      confirmLabel={t("items.archive.confirm")}
-      cancelLabel={t("common.cancel")}
+      title={t("archive.title", { name: row?.name ?? "" })}
+      message={t("archive.message")}
+      confirmLabel={t("archive.confirm")}
+      cancelLabel={tShared("common.cancel")}
       destructive
       onConfirm={confirm}
       onDismiss={onClose}

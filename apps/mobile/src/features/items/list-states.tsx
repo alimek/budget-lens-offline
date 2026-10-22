@@ -36,12 +36,12 @@ export function ReadState({
 
 /** The loading state, shown only after the 300 ms of #58 so a local read never flashes a spinner. */
 function LoadingItems({ testID = "items-loading" }: { readonly testID?: string }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   const theme = useThemeColors();
   return (
     <View testID={testID} className="flex-row items-center gap-3 px-4 pt-6">
       <ProgressIndicator color={theme.primary} trackColor={theme.muted} />
-      <Text variant="subheadline">{t("items.list.loading")}</Text>
+      <Text variant="subheadline">{t("list.loading")}</Text>
     </View>
   );
 }
@@ -54,13 +54,18 @@ function LoadFailed({
   readonly onRetry: () => void;
   readonly testID?: string;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
+  const { t: tShared } = useTranslation();
   return (
     <View testID={testID} className="gap-3 px-4 pt-6">
       <Text variant="body" className="text-destructive">
-        {t("items.list.loadError")}
+        {t("list.loadError")}
       </Text>
-      <SecondaryButton testID="items-error-retry" label={t("common.retry")} onPress={onRetry} />
+      <SecondaryButton
+        testID="items-error-retry"
+        label={tShared("common.retry")}
+        onPress={onRetry}
+      />
     </View>
   );
 }
@@ -80,14 +85,14 @@ export function EmptyItems({
   readonly children?: ReactNode;
   readonly testID?: string;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   return (
     <View testID={testID} className="items-center gap-2 px-8 py-14">
       <Text variant="title-3" className="text-center">
-        {t("items.empty.title")}
+        {t("empty.title")}
       </Text>
       <Text variant="body" className="text-center text-muted-foreground">
-        {t("items.empty.body")}
+        {t("empty.body")}
       </Text>
       <SomeInvalidNote visible={hasInvalidItems} />
       {children}
@@ -103,11 +108,11 @@ function SomeInvalidNote({
   readonly visible: boolean;
   readonly testID?: string;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("items");
   if (!visible) return null;
   return (
     <Text testID={testID} variant="footnote" className="text-center text-muted-foreground">
-      {t("items.list.someInvalid")}
+      {t("list.someInvalid")}
     </Text>
   );
 }
