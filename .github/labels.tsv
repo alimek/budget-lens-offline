@@ -30,6 +30,7 @@ help wanted	008672	Extra attention is needed
 invalid	e4e669	This doesn't seem right
 mvp	1d76db	In scope for the first release
 needs:human	b60205	Real blocker: the repo owner decides and merges
+needs:simulator	fbca04	Needs the iOS simulator for UI testing; at most one such task in progress at a time
 phase:dev	dff3e4	Delivery phase D: development
 phase:research	e4e2f7	Delivery phase R: research
 phase:ui	fde8e1	Delivery phase U: UI/design

@@ -6,11 +6,10 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 ## 2026-10-22 22:47 (Europe/Warsaw): at most one simulator task in progress at a time
 
-- **Words:** "nie powinniśmy nigdy mieć dwóch tasków na raz działających, próbujących coś testować na UI-u" (owner
-  words relayed in chat, 2026-10-22 22:47)
-- **Confirmation:** at 22:53 in chat: "Orkiestrator przekazał też Twoje słowa: „nie powinniśmy nigdy mieć dwóch tasków
-  na raz działających, próbujących coś testować na UI-u”. Wpisać to do dziennika decyzji jako Twoją decyzję?" – "Tak,
-  wpisz".
+- **Question:** asked to confirm recording the owner's words below as a decision (owner's own chat, 2026-10-22 22:53).
+- **Answer:** "Tak, wpisz" (confirmed directly by the owner in chat, 2026-10-22 22:53)
+- **Original (another chat, relayed, 22:47):** "nie powinniśmy nigdy mieć dwóch tasków na raz działających,
+  próbujących coś testować na UI-u"
 - **Context:** there is only one simulator.
 - **Meaning:** at most one issue or PR labeled `needs:simulator` is in progress at a time. Mixed work is split into a
   UI part (needs the simulator, label `needs:simulator`) and a non-UI part (core, db, logic: unit tests only) that may
@@ -19,21 +18,23 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 ## 2026-10-22 22:45 (Europe/Warsaw): six components move to universal Expo UI after the current stage
 
-- **Question:** "Przenieść sześć komponentów na uniwersalne Expo UI?"
-- **Answer:** "A: tak, przenieś sześć komponentów na universal po obecnym etapie" (owner answer in chat, 2026-10-22
-  22:45)
-- **Confirmation:** at 22:48 in the same chat: "Orkiestrator każe też wpisać do dziennika Twoją decyzję: sześć
-  komponentów przechodzi na uniwersalne Expo UI, ale dopiero po obecnym etapie. Potwierdzasz?" – "Tak, potwierdzam".
+- **Question:** asked to confirm logging the decision that the six components move to universal Expo UI
+  ([#237](https://github.com/alimek/budget-lens-offline/issues/237)), but only after the current stage (owner's own
+  chat, 2026-10-22 22:48).
+- **Answer:** "Tak, potwierdzam" (confirmed directly by the owner in chat, 2026-10-22 22:48)
+- **Original (another chat, relayed, 22:45):** question "Przenieść sześć komponentów na uniwersalne Expo UI?", answer
+  "A: tak, przenieś sześć komponentów na universal po obecnym etapie".
 - **Meaning:** the six components move to universal Expo UI, but only after the current stage (E3); until then the
   per-platform wrappers stay as they are.
 - **Issues:** [#237](https://github.com/alimek/budget-lens-offline/issues/237)
 
 ## 2026-10-22 22:41 (Europe/Warsaw): UI changes are tested on iOS by default
 
-- **Question:** "Na której platformie testujemy na co dzień?"
-- **Answer:** "iOS na co dzień" (owner answer in chat, 2026-10-22 22:41)
-- **Confirmation:** at 22:46 in the same chat: "Na co dzień testuję tylko na iOS, a Androida tylko przy zmianach
-  zależnych od platformy i przed buildem?" – "Tak, tak zrób".
+- **Question:** "Na co dzień testuję tylko na iOS, a Androida tylko przy zmianach zależnych od platformy i przed
+  buildem?" (owner's own chat, 2026-10-22 22:46)
+- **Answer:** "Tak, tak zrób" (confirmed directly by the owner in chat, 2026-10-22 22:46)
+- **Original (another chat, relayed, 22:41):** question "Na której platformie testujemy na co dzień?", answer "iOS na
+  co dzień".
 - **Context:** testing on two devices every time takes too long unless something is platform-specific.
 - **Meaning:** UI PRs carry local e2e evidence on iOS only. Both iOS and Android are tested only for platform-specific
   changes (native modules or deps, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files

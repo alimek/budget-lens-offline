@@ -16,7 +16,8 @@ verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offli
 - **No percentage coverage thresholds** in any configuration or CI job; coverage is reported for information only.
 
 **Consequences.** Guidelines are in [../testing.md](../testing.md). UI PRs must include e2e evidence:
-screenshots (iOS + Android, simulator/emulator named; a video is also fine) from a TesterArmy `e2e`
+screenshots (iOS + Android, simulator/emulator named; a video is also fine; the iOS + Android part is superseded by
+[#238](https://github.com/alimek/budget-lens-offline/issues/238): iOS only by default, see [../testing.md](../testing.md#platforms)) from a TesterArmy `e2e`
 run or `e2e explore` on a local development build on a local dev machine. A manual screenshot from a development build
 alone is not enough. Model API keys are secrets: they come from the local environment (later GitHub Actions secrets
 if CI needs them) and never appear on GitHub – see [../conventions.md](../conventions.md#secrets).
