@@ -19,5 +19,7 @@ verification: [#1 decisions comment](https://github.com/alimek/budget-lens-offli
 screenshots (iOS + Android, simulator/emulator named; a video is also fine; the iOS + Android part is superseded by
 [#238](https://github.com/alimek/budget-lens-offline/issues/238): iOS only by default, see [../testing.md](../testing.md#platforms)) from a TesterArmy `e2e`
 run or `e2e explore` on a local development build on a local dev machine. A manual screenshot from a development build
-alone is not enough. Model API keys are secrets: they come from the local environment (later GitHub Actions secrets
+alone is not enough. (Where the evidence lives is superseded by
+[#241](https://github.com/alimek/budget-lens-offline/issues/241): result summary and 1–3 key screenshots attached to the
+PR description, never committed; see [../testing.md](../testing.md#test-evidence-stays-out-of-the-repo).) Model API keys are secrets: they come from the local environment (later GitHub Actions secrets
 if CI needs them) and never appear on GitHub – see [../conventions.md](../conventions.md#secrets).

@@ -18,7 +18,7 @@ test("labels the inputs and validates the amount field", async (fixtures) => {
   for (const id of inputIds) await expect(screen.getByTestId(id)).toBeVisible();
   // Any non-empty accessible name: tests never select by translated labels. Compose text fields keep their label
   // in a child text node that TalkBack reads with the field but the snapshot does not count as the name (see the
-  // UIAutomator dump in docs/evidence/182), so on Android only the date field is checked by name.
+  // UIAutomator dump in #182), so on Android only the date field is checked by name.
   const named = platform === "ios" ? inputIds : ["ds-date-picker"];
   for (const id of named) await expect(screen.getByTestId(id)).toHaveAccessibleName(/\S/);
   const amount = screen.getByTestId("ds-amount-field");

@@ -15,3 +15,7 @@ apps/mobile/.e2e/*
 !apps/mobile/.e2e/cache/
 apps/mobile/.devices/
 
+# Test evidence stays out of the repo (#241): keep e2e output locally, attach key screenshots to the PR
+docs/evidence/
+evidence/
+screenshots/

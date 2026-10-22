@@ -72,9 +72,11 @@ The root `pnpm e2e:ios` / `pnpm e2e:android` scripts run the same targets. The e
 telemetry. Tests use no agent steps, model provider or secrets. The Savings action targets
 `overview-open-savings`; on Android, where Expo UI puts that ID on a wrapper, it taps the native button
 inside it ([testing](testing.md#e2e-smoke-tests-15)).
-Results, screenshots, traces and video are written under `apps/mobile/.e2e/<platform>/` (ignored); review the
-report before attaching evidence to a PR. UI PRs attach the iOS screenshots (device named; Android too only for
-platform-specific changes, see [testing](testing.md#platforms)) and the e2e command in the Screenshots section of the [PR template](../.github/pull_request_template.md). A passing
+Results, screenshots, traces and video are written under `apps/mobile/.e2e/<platform>/` (ignored) and stay local,
+never committed (#241); review the report before attaching evidence to a PR. UI PRs attach the e2e result summary and
+1–3 key iOS screenshots that show the change (device named; Android too only for platform-specific changes, see
+[testing](testing.md#platforms)) to the PR description, in the Screenshots section of the
+[PR template](../.github/pull_request_template.md). A passing
 bundle export does not prove that a native build starts. The e2e setup is described in
 [testing](testing.md#e2e-smoke-tests-15); the fast mobile CI gates (no native build) remain in #109.
 

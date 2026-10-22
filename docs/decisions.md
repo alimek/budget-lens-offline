@@ -4,6 +4,22 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-22 23:18 (Europe/Warsaw): test evidence leaves the repo; PRs carry only key screenshots
+
+- **Question:** asked to confirm logging that test evidence leaves the repo and PRs carry only key screenshots
+  (owner's own chat, 2026-10-22 23:19).
+- **Answer:** "Tak, wpisz" (confirmed directly by the owner in chat, 2026-10-22 23:19)
+- **Original (another chat, relayed, 23:18):** "w repozytorium to nie jest miejsce na trzymanie screenshotów z
+  ewidencji testów, I w ogóle, jeżeli mamy coś jeszcze, co jest ewidencją testów, to powinniśmy to wywalić z
+  repozytorium" and "Jak już coś, to do piarki powinniśmy uploadować"; only specific screenshots that show the change.
+- **Meaning:** test evidence (screenshots, e2e logs, run reports) is not committed; `docs/evidence/` is removed (Git
+  history stays as is). Run e2e locally and keep the full run output locally, outside the repo. A UI PR description
+  carries the e2e result summary and at most 1–3 key screenshots that show the change (iOS by default, #238),
+  attached to the PR description: uploaded as `<pr>-<n>.png` to the `e2e-evidence` pre-release and embedded by the
+  asset's download URL, with no private setup details or personal data in the images
+  ([testing.md](testing.md#test-evidence-stays-out-of-the-repo)).
+- **Issues:** [#241](https://github.com/alimek/budget-lens-offline/issues/241)
+
 ## 2026-10-22 22:47 (Europe/Warsaw): at most one simulator task in progress at a time
 
 - **Question:** asked to confirm recording the owner's words below as a decision (owner's own chat, 2026-10-22 22:53).
@@ -36,7 +52,8 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 - **Original (another chat, relayed, 22:41):** question "Na której platformie testujemy na co dzień?", answer "iOS na
   co dzień".
 - **Context:** testing on two devices every time takes too long unless something is platform-specific.
-- **Meaning:** UI PRs carry local e2e evidence on iOS only. Both iOS and Android are tested only for platform-specific
+- **Meaning:** UI PRs carry local e2e evidence on iOS only (where it lives is superseded by
+  [#241](https://github.com/alimek/budget-lens-offline/issues/241)). Both iOS and Android are tested only for platform-specific
   changes (native modules or deps, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files
   including the Expo UI wrappers in `apps/mobile/src/ui/native/`, permissions, fonts or assets that render per
   platform) and before a release build. Screens that only use the wrappers are iOS-only
