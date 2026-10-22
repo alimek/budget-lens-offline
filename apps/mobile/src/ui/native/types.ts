@@ -8,6 +8,17 @@ export interface ButtonProps {
   onPress: () => void;
   testID: string;
   disabled?: boolean;
+  /** Fill the width of the screen and stack, as the recovery actions of #60 do. Native minimums still apply. */
+  fullWidth?: boolean;
+}
+
+/** What a `StatusIcon` says, named for the situation rather than for the glyph. */
+export type StatusIconName = "key" | "lock" | "shield" | "warning" | "error";
+
+export interface StatusIconProps {
+  name: StatusIconName;
+  /** Edge of the glyph in points; 48 on the boot screens of #60. */
+  size?: number;
 }
 
 export interface ToggleProps {

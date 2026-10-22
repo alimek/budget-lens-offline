@@ -151,25 +151,60 @@
     "outOfRange": "This amount is too large"
   },
   "boot": {
-    "encryptionUnavailable": {
-      "title": "This build cannot encrypt",
-      "body": "Budget Lens keeps every budget on this device and refuses to save one unencrypted, so this build will not open yours. Install a build that includes SQLCipher."
+    "whatYouCanDo": "What you can do",
+    "startOver": "Start over",
+    "store": {
+      "appStore": "the App Store",
+      "playStore": "Google Play"
     },
-    "recovery": {
-      "title": "We can’t open your budget",
-      "keyMissing": "The encryption key for this budget is not on this device, or the file it belongs to is no longer here. The key never leaves the phone that created it, so restoring a phone backup or reinstalling the app can leave a budget unreadable.",
-      "migrationFailed": "An update to your budget could not be finished. It was put back to the version from before the update.",
-      "keepsFile": "Nothing was deleted: the budget file stays on this device, still encrypted.",
-      "startOver": "Start over",
-      "confirmTitle": "Start over?",
-      "confirmBody": "The app begins with an empty budget and keeps the current file on this device. Restoring from your own backup arrives with the backup feature.",
-      "confirmAction": "Start over",
-      "restoreFailed": "An update to your budget could not be finished, and the version from before the update could not be put back either. An intact copy is still kept on this device, still encrypted, and nothing new was written over it.",
-      "stateUnrecognized": "Some files of a budget are on this device in a state Budget Lens does not recognise, so it opened nothing and changed nothing. A new budget would need the key these files may still use, so no key was replaced."
+    "steps": {
+      "tapRetry": "Tap Try again.",
+      "restart": "If that doesn’t help, restart your phone and open Budget Lens again.",
+      "checkUpdate": "Check {{store}} for a newer version of Budget Lens.",
+      "lastResort": "As a last resort, start over with a new, empty budget. Your current budget file stays on this phone, encrypted."
+    },
+    "keyMissing": {
+      "title": "Can’t unlock your budget",
+      "body": "Your budget is still on this phone, but the key that unlocks it is missing. This usually happens after restoring the phone from a backup or moving to a new phone.",
+      "step1": "Tap Try again, in case this was a one-off problem.",
+      "step2": "If your budget is still on your previous phone, keep using it there.",
+      "step3": "Or start over with a new, empty budget. Your old budget file stays on this phone, encrypted, but Budget Lens can’t open it.",
+      "confirmTitle": "Start over with an empty budget?",
+      "confirmBody": "Your current data can’t be opened without the missing key. It will stay on this phone, encrypted, but won’t appear in the app. You’ll set up Budget Lens again from the beginning."
     },
     "storageUnreachable": {
-      "title": "Secure storage is unavailable",
-      "body": "Budget Lens could not read this device’s secure storage, so it cannot open your budget. Nothing has been changed or deleted."
+      "title": "Secure storage isn’t responding",
+      "body": "Budget Lens keeps your budget encrypted and stores the key in this phone’s secure storage. Right now the phone isn’t letting the app read it, so your budget can’t be opened. Nothing has been changed.",
+      "step1": "Unlock your phone and tap Try again.",
+      "step2": "Restart your phone, then open Budget Lens again.",
+      "step3": "Make sure your phone has some free storage space.",
+      "step4": "If nothing helps, start over with a new, empty budget. Your current budget file stays on this phone, encrypted.",
+      "confirmTitle": "Start over with an empty budget?",
+      "confirmBody": "Your current budget will be set aside on this phone, still encrypted. This version of Budget Lens can’t bring it back, so do this only if Try again keeps failing.",
+      "startOverBlocked": "Starting over isn’t possible while secure storage isn’t responding. Nothing has been changed. Restart your phone and try again."
+    },
+    "migrationFailed": {
+      "title": "Couldn’t finish updating your budget",
+      "body": "The app was updated, but moving your budget to the new version didn’t finish. Your budget was put back exactly as it was before, so nothing is lost."
+    },
+    "restoreFailed": {
+      "body": "The app was updated, but moving your budget to the new version didn’t finish, and putting the earlier version back didn’t work either. A safe copy of your budget is still on this phone, encrypted, and nothing has been written over it."
+    },
+    "stateUnrecognized": {
+      "title": "Couldn’t open your budget",
+      "body": "Something unexpected happened while opening your budget. Budget Lens hasn’t changed or deleted anything."
+    },
+    "encryptionUnavailable": {
+      "title": "This version can’t protect your budget",
+      "body": "This copy of Budget Lens was built without encryption, so it won’t open or save your budget. Your budget hasn’t been changed.",
+      "step1": "Install the latest version of Budget Lens from {{store}}.",
+      "step2": "Then open the app again. Your budget will be there.",
+      "noStartOver": "Starting over wouldn’t help here: a new budget couldn’t be encrypted either."
+    },
+    "status": {
+      "retrying": "Trying again…",
+      "failed": "That didn’t work. Nothing has been changed.",
+      "startingOver": "Setting up a new budget…"
     }
   }
 }

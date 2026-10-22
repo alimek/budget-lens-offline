@@ -151,25 +151,60 @@
     "outOfRange": "Ta kwota jest za duża"
   },
   "boot": {
-    "encryptionUnavailable": {
-      "title": "Ta wersja nie szyfruje",
-      "body": "Budget Lens przechowuje każdy budżet na tym urządzeniu i odmawia zapisu bez szyfrowania, więc ta wersja nie otworzy Twojego budżetu. Zainstaluj wersję zawierającą SQLCipher."
+    "whatYouCanDo": "Co możesz zrobić",
+    "startOver": "Zacznij od nowa",
+    "store": {
+      "appStore": "App Store",
+      "playStore": "Sklepie Google Play"
     },
-    "recovery": {
-      "title": "Nie możemy otworzyć Twojego budżetu",
-      "keyMissing": "Klucz szyfrowania tego budżetu nie ma na tym urządzeniu albo plik, do którego należy, już tu nie jest. Klucz nigdy nie opuszcza telefonu, na którym powstał, więc przywrócenie kopii telefonu lub ponowna instalacja aplikacji może sprawić, że budżet będzie nieczytelny.",
-      "migrationFailed": "Nie udało się dokończyć aktualizacji budżetu. Został on przywrócony do wersji sprzed aktualizacji.",
-      "keepsFile": "Nic nie zostało usunięte: plik budżetu zostaje na tym urządzeniu, nadal zaszyfrowany.",
-      "startOver": "Zacznij od nowa",
-      "confirmTitle": "Zacząć od nowa?",
-      "confirmBody": "Aplikacja zacznie od pustego budżetu, a bieżący plik zostanie na tym urządzeniu. Przywracanie z własnej kopii pojawi się razem z funkcją kopii zapasowej.",
-      "confirmAction": "Zacznij od nowa",
-      "restoreFailed": "Nie udało się dokończyć aktualizacji budżetu i nie udało się też przywrócić wersji sprzed aktualizacji. Na urządzeniu nadal jest nieuszkodzona kopia, nadal zaszyfrowana, i nic nowego nie zostało na niej zapisane.",
-      "stateUnrecognized": "Część plików budżetu jest na tym urządzeniu w stanie, którego Budget Lens nie rozpoznaje, więc aplikacja niczego nie otworzyła i niczego nie zmieniła. Nowy budżet potrzebowałby klucza, którego te pliki mogą jeszcze używać, więc żaden klucz nie został zastąpiony."
+    "steps": {
+      "tapRetry": "Stuknij „Spróbuj ponownie”.",
+      "restart": "Jeśli to nie pomoże, uruchom telefon ponownie i znowu otwórz Budget Lens.",
+      "checkUpdate": "Sprawdź, czy w {{store}} jest nowsza wersja Budget Lens.",
+      "lastResort": "W ostateczności zacznij od nowa z pustym budżetem. Obecny plik budżetu zostanie na tym telefonie, zaszyfrowany."
+    },
+    "keyMissing": {
+      "title": "Nie można odblokować budżetu",
+      "body": "Twój budżet nadal jest na tym telefonie, ale brakuje klucza, który go odblokowuje. Zwykle zdarza się to po przywróceniu telefonu z kopii zapasowej lub przeniesieniu się na nowy telefon.",
+      "step1": "Stuknij „Spróbuj ponownie” – może to był jednorazowy problem.",
+      "step2": "Jeśli budżet nadal jest na Twoim poprzednim telefonie, korzystaj z niego tam.",
+      "step3": "Możesz też zacząć od nowa z pustym budżetem. Stary plik budżetu zostanie na tym telefonie, zaszyfrowany, ale Budget Lens nie może go otworzyć.",
+      "confirmTitle": "Zacząć od nowa z pustym budżetem?",
+      "confirmBody": "Obecnych danych nie da się otworzyć bez brakującego klucza. Zostaną na tym telefonie, zaszyfrowane, ale nie będą widoczne w aplikacji. Skonfigurujesz Budget Lens od początku."
     },
     "storageUnreachable": {
-      "title": "Pamięć zabezpieczona jest niedostępna",
-      "body": "Budget Lens nie mógł odczytać zabezpieczonej pamięci tego urządzenia, więc nie może otworzyć Twojego budżetu. Nic nie zostało zmienione ani usunięte."
+      "title": "Bezpieczny magazyn nie odpowiada",
+      "body": "Budget Lens przechowuje budżet w postaci zaszyfrowanej, a klucz trzyma w bezpiecznym magazynie telefonu. Telefon nie pozwala teraz go odczytać, więc nie można otworzyć budżetu. Nic nie zostało zmienione.",
+      "step1": "Odblokuj telefon i stuknij „Spróbuj ponownie”.",
+      "step2": "Uruchom telefon ponownie i znowu otwórz Budget Lens.",
+      "step3": "Sprawdź, czy w telefonie jest trochę wolnego miejsca.",
+      "step4": "Jeśli nic nie pomaga, możesz zacząć od nowa z pustym budżetem. Obecny plik budżetu zostanie na tym telefonie, zaszyfrowany.",
+      "confirmTitle": "Zacząć od nowa z pustym budżetem?",
+      "confirmBody": "Obecny budżet zostanie odłożony na tym telefonie, nadal zaszyfrowany. Ta wersja Budget Lens nie potrafi go przywrócić, więc zrób to tylko wtedy, gdy „Spróbuj ponownie” wciąż nie działa.",
+      "startOverBlocked": "Nie można zacząć od nowa, dopóki bezpieczny magazyn nie odpowiada. Nic nie zostało zmienione. Uruchom telefon ponownie i spróbuj jeszcze raz."
+    },
+    "migrationFailed": {
+      "title": "Nie udało się dokończyć aktualizacji budżetu",
+      "body": "Aplikacja została zaktualizowana, ale przeniesienie budżetu do nowej wersji się nie powiodło. Budżet przywrócono dokładnie do stanu sprzed aktualizacji, więc nic nie zginęło."
+    },
+    "restoreFailed": {
+      "body": "Aplikacja została zaktualizowana, ale przeniesienie budżetu do nowej wersji się nie powiodło, a przywrócenie wcześniejszej wersji też nie zadziałało. Bezpieczna kopia budżetu nadal jest na tym telefonie, zaszyfrowana, i nic jej nie nadpisało."
+    },
+    "stateUnrecognized": {
+      "title": "Nie udało się otworzyć budżetu",
+      "body": "Podczas otwierania budżetu stało się coś nieoczekiwanego. Budget Lens niczego nie zmienił ani nie usunął."
+    },
+    "encryptionUnavailable": {
+      "title": "Ta wersja nie może chronić Twojego budżetu",
+      "body": "Ta kopia Budget Lens została zbudowana bez szyfrowania, więc nie otworzy ani nie zapisze budżetu. Twój budżet nie został zmieniony.",
+      "step1": "Zainstaluj najnowszą wersję Budget Lens dostępną w {{store}}.",
+      "step2": "Potem otwórz aplikację ponownie. Twój budżet tam będzie.",
+      "noStartOver": "Rozpoczęcie od nowa nic tu nie da: nowego budżetu też nie dałoby się zaszyfrować."
+    },
+    "status": {
+      "retrying": "Ponawianie próby…",
+      "failed": "Nie udało się. Nic nie zostało zmienione.",
+      "startingOver": "Tworzenie nowego budżetu…"
     }
   }
 }

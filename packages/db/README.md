@@ -274,6 +274,30 @@ row has `status = 'closed'` (core's `validateMonthEditable`): the same policy th
 read from the caller's context and the `months` table rather than from a clock. An invalid `month` or `activeMonth`
 is `invalid-month`.
 
+## "Start over" order (`src/start-over.ts`)
+
+"Start over" from a recovery screen sets the budget of the device aside and creates an empty one. Which device
+operation runs when is the part that can lose a budget, so it is decided here with the operations injected, as
+`MigrationSafetyCopy` injects the file work of a migration (`startOverWithKeptKey`, #217 R1):
+
+1. `probeSecureStorage` – write a value to secure storage, read it back, remove it. Every start over ends by
+   storing a new key, so one that cannot prove secure storage answers may not rename anything: the outcome is
+   `blocked(secure_storage)` and nothing moved.
+2. Read where the files and the keys are, and decide with `planStartOverKey` which stamp the key under the live
+   name belongs to (#217 R5): this run's stamp while a budget file is still under a live name; otherwise the
+   newest kept file that has no key of its own yet; a key that is already kept beside a file needs no write; and
+   a key that belongs to no file it can name is `blocked(key_pairing)` rather than a guess or an overwrite. A key
+   that is already kept is never replaced.
+3. `storeKeptKey` – store the key under that stamp and read it back, before a single file moves.
+4. `renameFilesAside` – only now do the live database with its side files, the pre-migration copy and the
+   interrupted restore move aside under one stamp.
+5. `deleteLiveKey` – and only after the rename is the key under the live name dropped.
+
+A failing step 1, 2 or 3 returns `blocked` with nothing renamed, so the screen the user is on stays and says why;
+a failing step 4 or 5 throws, because the device refused an operation, and the live key stays where it is while
+the kept files already have their key beside them. Either way there is never a renamed file without a findable
+key, and nothing here ever deletes a file or a key: that is E8 (#96/#97).
+
 ## Tests
 
 `pnpm --filter @budget-lens/db test` runs Vitest on Node with sql.js (SQLite in WebAssembly) as the driver, used
@@ -288,6 +312,9 @@ only the decisions above. Covered:
   the launch that has migrations, the data back in place after a failing statement or a committed migration that
   leaves rows without their parent, and a failed restore reported as `MigrationRestoreError` with the copy left
   alone (`test/migration-copy.test.ts`);
+- the order of the "start over" steps: the secure-storage probe first, the key beside the file it belongs to
+  before any file moves, the live key dropped only after the rename, and a key that cannot be paired leaving
+  everything where it was (`test/start-over.test.ts`, above);
 - the constraints that encode business rules.
 
 `test/items-repository.test.ts` covers the repository's business rules: the base-currency default and whole minor

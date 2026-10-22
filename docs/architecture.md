@@ -126,9 +126,12 @@ calls `bootAppDatabase()` (`src/db/database.ts`), which opens `budget-lens.db` e
 it with `createDatabase()` from `packages/db` and migrates it. The gate renders the screens only after that, and
 shows a boot screen (`src/db/boot-screens.tsx`) instead of the app while the database stays closed; nothing here
 throws during render, and the only file it ever deletes is one expo-sqlite created for a launch that a build
-without SQLCipher must not keep. `openEncryptedDatabase()` (`src/db/encrypted-database.ts`) keeps the order #34
-requires: `PRAGMA cipher_version` first — in a build without SQLCipher `PRAGMA key` silently does nothing, so such
-a build stops rather than write plaintext — then `PRAGMA key` with the device key, then a read of `sqlite_master`,
+without SQLCipher must not keep. Asking again never blanks that screen (#217 R4): it stays mounted with its
+buttons disabled and a status line ("Trying again…", "Setting up a new budget…", then what the attempt ended
+with), announced on both platforms, and a second tap while an attempt is running does nothing.
+`openEncryptedDatabase()` (`src/db/encrypted-database.ts`) keeps the order #34 requires: `PRAGMA
+cipher_version` first — in a build without SQLCipher `PRAGMA key` silently does nothing, so such a build stops
+rather than write plaintext — then `PRAGMA key` with the device key, then a read of `sqlite_master`,
 because a wrong key is only reported when a page is read. Only the error saying the file is not a database is read
 as a key that does not open it: a busy device, an I/O error or a full disk goes to the retry screen instead, and
 never to a screen offering to start over (`src/db/open-error.ts`, #75 R3). The key is 32 random bytes as lowercase
@@ -146,10 +149,17 @@ post-commit integrity check fails. Putting it back copies the copy to `budget-le
 over the live file, so the live name always holds either the old file or the whole copy; the copy itself is kept,
 and a restore that fails is reported as `MigrationRestoreError` and shown as such rather than as "restored" (#75
 R1). expo-sqlite runs in rollback-journal mode, so `-journal`, `-wal` and `-shm` move with the file they belong to
-and are never left behind for another file to adopt (#75 R5). "Start over" renames the old file and its side files
-aside and moves the key that may open them to a name of its own, so the kept file can still be opened by E8;
-deleting such files and restoring a backup are E8 work (#96, #97). Android Auto Backup and device transfer are
-excluded by explicit rules from `plugins/withBackupRules.js` (not `allowBackup=false`); the iOS device backup keeps
+and are never left behind for another file to adopt (#75 R5). "Start over" runs `startOverWithKeptKey`
+(`packages/db/src/start-over.ts`) with the device operations injected, in the order that cannot strand a budget
+(#217 R1): secure storage first proves it can write and read back a value, the key is stored under the stamp of
+the file it opens and read back, only then are the files renamed aside, and the key under the live name is
+dropped last – so no single failing step can leave a kept file without a findable key. A refusal before anything
+moved comes back as `start_over_blocked`, which keeps the user on the screen they are on with that reason in its
+status line; a refusal in the middle is reported as `storage_unreachable`. The kept key is paired with the file it
+belongs to, never with a stamp of this run when the file was kept earlier, and a key that is already kept is never
+overwritten (#217 R5); deleting such files and restoring a backup are E8 work (#96, #97). Android Auto Backup
+and device transfer are excluded by explicit rules from `plugins/withBackupRules.js` (not
+`allowBackup=false`); the iOS device backup keeps
 the ciphertext file (owner review #34), and the EAS Update installation ID stays backed up, as the privacy text
 already discloses ([updates.md](release/updates.md#installation-id-storage)). A root error boundary is follow-up
 work with the final #60 screens. The Items list is the first screen to read the database (#112): the ready

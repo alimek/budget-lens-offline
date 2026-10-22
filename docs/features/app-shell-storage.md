@@ -19,11 +19,11 @@ no sign-up, and the first launch guides the user through a short onboarding.
 - `packages/db` (Drizzle schema + migrations): implemented in #74, with a database gate before data screens render.
   Implemented in #75: the device key, the `PRAGMA cipher_version` guard, the encrypted copy taken before pending
   migrations and the boot/recovery screens.
-- SQLCipher with a device-only random key (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), a cipher guard, and a recovery screen
-  for "database present, key missing" (interim UI until the #60 mockups). "Start over" keeps the orphaned DB — it is
-  renamed, not deleted, and its key moves to `bl.db.key.orphan-<stamp>` beside it — a kept file's key does not always
-  carry the same stamp, because the rename and the key move are two steps, so E8 reads every
-  `bl.db.key.orphan-*` entry rather than matching names; deleting it after 30 days or the first successful backup and
+- SQLCipher with a device-only random key (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), a cipher guard, and the #60 recovery
+  screens. "Start over" keeps the orphaned DB — it is renamed, not deleted — and stores its key under
+  `bl.db.key.orphan-<stamp>` for the stamp of the file it belongs to, so the key and the file keep matching names
+  for E8 (#217 R5); a key already kept under a stamp is never overwritten, and secure storage is proved to answer
+  before anything is renamed (#217 R1). Deleting it after 30 days or the first successful backup and
   restoring a backup are E8 work
   ([#96](https://github.com/alimek/budget-lens-offline/issues/96), [#97](https://github.com/alimek/budget-lens-offline/issues/97)). The DB is not excluded from iOS device backup ([owner review #34](https://github.com/alimek/budget-lens-offline/issues/34#issuecomment-6263677486)).
 - Schema per [#35](https://github.com/alimek/budget-lens-offline/issues/35): one `items` table with `kind`, rule versions as rows, payment status as its own table, no SQL

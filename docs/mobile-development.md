@@ -36,7 +36,8 @@ prompt required to connect the development client to Metro. All application data
 and migrates its local SQLite database, encrypted with SQLCipher, before rendering data screens (#74, #75). A
 development build can also show the boot screens and check that this build really encrypts, on deep links:
 `budget-lens:///dev/boot-screen?screen=recovery` (also `migration-failed`,
-`restore-failed`, `state-unrecognized`, `encryption-unavailable`, `storage-unreachable`) and
+`restore-failed`, `state-unrecognized`, `encryption-unavailable`, `storage-unreachable`, and the #217 states
+`retrying`, `starting-over`, `status-failed`, `start-over-blocked`) and
 `budget-lens:///dev/storage-check`, which reports the cipher pragmas, the encryption state of the database file and
 of the copy, and the files a "start over" kept. `budget-lens:///dev/forget-key` (#75 R6) forgets the stored key, so
 a cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.

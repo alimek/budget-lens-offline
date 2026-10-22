@@ -9,8 +9,11 @@ import * as SecureStore from "expo-secure-store";
  */
 const KEY_NAME = "bl.db.key.v1";
 
-/** Where the key of a database a "start over" kept is moved, so the kept file can still be opened by E8 (#75 R2). */
+/** Where the key of a database a "start over" kept is stored, so the kept file can still be opened by E8 (#75 R2). */
 const KEPT_KEY_PREFIX = "bl.db.key.orphan-";
+
+/** Where the write-and-read-back check of #217 R1 puts its value, and removes it again. */
+const PROBE_KEY_NAME = "bl.db.key.probe";
 
 // `*_THIS_DEVICE_ONLY` keeps the key out of iCloud and Google backups (owner decision, #34 2026-10-19). No
 // `requireAuthentication`: an entry protected that way becomes unreadable when the user changes their biometrics,
@@ -53,19 +56,60 @@ export function isDatabaseKey(value: unknown): value is string {
 }
 
 /**
- * Move the current key to the name of a kept database before a new one takes its place (#75 R2). Overwriting it
- * would leave the file that was kept openable by nobody: E8 (#96/#97) is meant to read such files again.
- *
- * The copy is written before the original is deleted, so a failure in between leaves the key twice rather than
- * not at all, and a "start over" that cannot move the key does not write a new one.
+ * Prove that secure storage can write, read back and remove a value, without touching anything of a budget
+ * (#217 R1). A "start over" always ends by storing a new key, so it asks this before it renames or moves a single
+ * thing: storage that answers to a probe is storage that can hold the key of the fresh budget.
  */
-export async function moveDatabaseKeyAside(stamp: number): Promise<void> {
-  const key = await readDatabaseKey();
-  if (key === null) {
-    return;
+export async function probeSecureStorage(): Promise<void> {
+  const probe = Array.from(getRandomBytes(16), (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
+  await SecureStore.setItemAsync(PROBE_KEY_NAME, probe, KEY_OPTIONS);
+  if ((await SecureStore.getItemAsync(PROBE_KEY_NAME, KEY_OPTIONS)) !== probe) {
+    throw new Error("The written secure storage probe could not be read back");
   }
-  await SecureStore.setItemAsync(`${KEPT_KEY_PREFIX}${String(stamp)}`, key, KEY_OPTIONS);
-  await SecureStore.deleteItemAsync(KEY_NAME, KEY_OPTIONS);
+  await SecureStore.deleteItemAsync(PROBE_KEY_NAME, KEY_OPTIONS);
+}
+
+/**
+ * Store the key under the stamp of the database file it opens and read it back (#217 R5), so E8 (#96/#97) finds
+ * the key beside the file it kept. A key already kept under that stamp is never replaced: it belongs to that
+ * file, and losing it would lose a budget this app is only setting aside.
+ */
+export async function storeKeptDatabaseKey(stamp: number, key: string): Promise<void> {
+  const name = `${KEPT_KEY_PREFIX}${String(stamp)}`;
+  const kept = await SecureStore.getItemAsync(name, KEY_OPTIONS);
+  if (kept !== null && kept !== key) {
+    throw new Error(`A different key is already kept under ${name}`);
+  }
+  await SecureStore.setItemAsync(name, key, KEY_OPTIONS);
+  if ((await SecureStore.getItemAsync(name, KEY_OPTIONS)) !== key) {
+    throw new Error("The kept database key could not be read back");
+  }
+}
+
+/** The kept key entries of the given stamps. A stamp with no entry has a kept file whose key was never moved. */
+export async function readKeptDatabaseKeys(
+  stamps: readonly number[],
+): Promise<Map<number, string>> {
+  const entries = await Promise.all(
+    stamps.map(
+      async (stamp) =>
+        [
+          stamp,
+          await SecureStore.getItemAsync(`${KEPT_KEY_PREFIX}${String(stamp)}`, KEY_OPTIONS),
+        ] as const,
+    ),
+  );
+  return new Map(entries.filter((entry): entry is [number, string] => entry[1] !== null));
+}
+
+/**
+ * Drop the key under the live name, once the files it opened are kept and its copy beside them has been read
+ * back (#217 R1). Nothing else ever removes a key: `forgetDatabaseKey` below is development-only.
+ */
+export function deleteDatabaseKey(): Promise<void> {
+  return SecureStore.deleteItemAsync(KEY_NAME, KEY_OPTIONS);
 }
 
 /**

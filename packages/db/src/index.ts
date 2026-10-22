@@ -65,3 +65,11 @@ export {
   SETTINGS_TABLES,
   updateStoredSettings,
 } from "./settings-repository";
+export type {
+  KeptKeyPlan,
+  StartOverBlocker,
+  StartOverFiles,
+  StartOverOutcome,
+  StartOverSteps,
+} from "./start-over";
+export { planStartOverKey, startOverWithKeptKey } from "./start-over";

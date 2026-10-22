@@ -52,6 +52,21 @@ function keptName(stamp: number, name: string): string {
   return name === DATABASE_NAME ? orphanName(stamp) : `${orphanName(stamp)}.${name}`;
 }
 
+/**
+ * The stamps in the names of the files a "start over" has kept, each once: side files and the kept copy of the
+ * same budget carry the stamp of the file they were renamed with (#217 R5).
+ */
+export function orphanStamps(names: Iterable<string>): number[] {
+  const stamps = new Set<number>();
+  for (const name of names) {
+    const stamp = Number(new RegExp(`^${ORPHAN_PREFIX}(\\d+)`).exec(name)?.[1]);
+    if (Number.isFinite(stamp)) {
+      stamps.add(stamp);
+    }
+  }
+  return [...stamps];
+}
+
 /** Whether a directory entry is one of the files this app owns. */
 export function isBudgetFile(name: string): boolean {
   return (

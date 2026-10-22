@@ -8,6 +8,7 @@ import {
   fileNamesOf,
   isBudgetFile,
   isOrphanName,
+  orphanStamps,
   RESTORE_NAME,
 } from "./database-names";
 
@@ -76,6 +77,23 @@ function hasOrphanFile(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * The stamps of the budget files a "start over" has kept, read from their names (#217 R5). A key is paired with
+ * one of these, and a stamp among them whose kept-key entry is missing names the file whose key was never moved.
+ */
+export function keptDatabaseFileStamps(): number[] {
+  const directory = new Directory(databaseDirectory);
+  if (!directory.exists) {
+    return [];
+  }
+  return orphanStamps(
+    directory
+      .list()
+      .filter((entry) => isBudgetFile(entry.name))
+      .map((entry) => entry.name),
+  );
 }
 
 /** Delete a database file expo-sqlite created but that the app must not keep (a hard stop on first launch). */
