@@ -4,7 +4,7 @@ import {
   isMinorUnits,
   type MinorUnits,
   subtractMinorUnits,
-  sumCurrencyAmounts,
+  sumMinorUnits,
   toMinorUnits,
 } from "./money";
 import {
@@ -212,21 +212,6 @@ export function buildClosedOccurrences(
   return { ok: true, value: Object.freeze(snapshot) };
 }
 
-/**
- * Base-currency total of snapshot rows: each `baseAmount` is tagged with the base currency, so a foreign-currency
- * amount reaching this sum is reported instead of being added to a total of another currency (#138).
- */
-function baseTotal(
-  rows: readonly ClosedOccurrence[],
-  baseCurrency: CurrencyCode,
-): Result<MinorUnits> {
-  const total = sumCurrencyAmounts(
-    baseCurrency,
-    rows.map((row) => ({ currency: baseCurrency, amount: row.baseAmount })),
-  );
-  return total.ok ? { ok: true, value: total.value.amount } : failure("invalid-currency");
-}
-
 export interface CloseMonthInput extends ClosingConversion {
   readonly currentMonth: YearMonth;
   readonly closingBalance: MinorUnits;
@@ -274,17 +259,19 @@ export function closeMonth(
   const snapshot = buildClosedOccurrences(resolved.occurrences, input.paymentStatuses, input);
   if (!snapshot.ok) return snapshot;
   try {
-    const incomeRows = snapshot.value.filter((row) => row.itemType === "income");
-    const expenseRows = snapshot.value.filter((row) => row.itemType === "expense");
-    const totalIncome = baseTotal(incomeRows, input.baseCurrency);
-    if (!totalIncome.ok) return totalIncome;
-    const totalExpenses = baseTotal(expenseRows, input.baseCurrency);
-    if (!totalExpenses.ok) return totalExpenses;
+    // Every `baseAmount` was converted from the item's own currency to `baseCurrency` per row above, so these
+    // totals add amounts of one currency (#138).
+    const totalIncome = sumMinorUnits(
+      snapshot.value.filter((row) => row.itemType === "income").map((row) => row.baseAmount),
+    );
+    const totalExpenses = sumMinorUnits(
+      snapshot.value.filter((row) => row.itemType === "expense").map((row) => row.baseAmount),
+    );
     const closed: ClosedMonth = Object.freeze({
       ...updated.value,
       status: "closed",
-      totalIncome: totalIncome.value,
-      totalExpenses: totalExpenses.value,
+      totalIncome,
+      totalExpenses,
       baseCurrency: input.baseCurrency,
       closedOccurrences: snapshot.value,
     });
