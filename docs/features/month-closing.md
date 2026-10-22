@@ -1,6 +1,6 @@
 # PRD: Balance & month closing (E5)
 
-Epic: [#27](https://github.com/alimek/budget-lens-offline/issues/27) · Status: proposed (open: [#66 questions 1–3](#open-questions)) · decisions: [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613), [#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), [#40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950) · MVP
+Epic: [#27](https://github.com/alimek/budget-lens-offline/issues/27) · Status: approved ([#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613), [confirmed](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278), [#66 answers](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6341377311)) · decisions: [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613), [#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), [#40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), [#35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802), [#39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210), [#124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950) · MVP
 
 ## Problem
 
@@ -20,8 +20,8 @@ with opening = closing. Closed months never change.
 - Month closing core ([#84](https://github.com/alimek/budget-lens-offline/issues/84), PR [#137](https://github.com/alimek/budget-lens-offline/pull/137)).
 - Rate snapshot at close ([#141](https://github.com/alimek/budget-lens-offline/issues/141)).
 - Months table + transactional close ([#85](https://github.com/alimek/budget-lens-offline/issues/85)).
-- Check-balance sheet ([#86](https://github.com/alimek/budget-lens-offline/issues/86), pending #66 question 1, recommended: keep), close-month flow ([#115](https://github.com/alimek/budget-lens-offline/issues/115)), history ([#87](https://github.com/alimek/budget-lens-offline/issues/87)).
-- Entry points: check balance (pending #66 question 1) and close month from the **Month** tab; history from the Month toolbar menu
+- Check-balance sheet ([#86](https://github.com/alimek/budget-lens-offline/issues/86)), close-month flow ([#115](https://github.com/alimek/budget-lens-offline/issues/115)), history ([#87](https://github.com/alimek/budget-lens-offline/issues/87)).
+- Entry points: check balance and close month from the **Month** tab; history from the Month toolbar menu
   ([#36 tabs](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)).
 - Month close per the [#66 decisions](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) (decided on #66 (2026-10-22), [confirmed by owner](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278);
   supersedes #43 decisions 1, 5 and 6):
@@ -30,15 +30,17 @@ with opening = closing. Closed months never change.
     month can be closed, plus an opt-in local reminder at 09:00 (#45 rules: off by default, never asked in onboarding,
     best-effort, no amounts). A future active month can't occur.
   - **One open month, closed in order** (B): once the active month has ended, months after it show "Close <month>
-    first" with ways out (close it, go to it, plan in Items). No "close all".
+    first" with ways out (close it, go to it, plan in Items) until it is closed. Before the active month ends, later
+    months stay browsable as in #65 ([#66 answer 2](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6341377311)). No "close all".
+  - **"Remind me" card**: while month-end reminders are off, the close result offers "Get a reminder on the 1st?" only
+    after the **first** close; after that they can be turned on in Settings ([#66 answer 3](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6341377311)).
   - **Calculated closing balance** (C): opening + all of the month's income − all of its expenses, every effective
     occurrence counted, paid or not, after overrides and skips, converted per row. The same calculation is used for
     "Expected at month end", the close summary and the next month's opening. No `estimated` flag, no typed balance.
   - **Check balance** (#66 screen R8): the user can enter their actual balance as a **check only**. The sheet shows it, "Calculated
     now" (opening + received − paid so far) and the difference, and offers a one-time "Balance correction" item for
     the difference. The check is stored separately and never becomes the closing balance; the close summary shows the
-    last check and its difference. Whether this sheet stays in the MVP is open (#66 question 1, recommended: keep);
-    either way an entered balance never feeds the closing balance (C).
+    last check and its difference. The sheet stays in the MVP ([#66 answer 1](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6341377311)).
 - Month lifecycle per the [#43 research](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6339987487) ([accepted 2026-10-22](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002)):
   - **Catch-up close** when the active month is before the device's calendar month: a "Close N months" banner on the
     Month tab and Overview leads to a guided close, oldest month first, no skipping, with "Month 1 of N" and **Later**.
@@ -71,8 +73,7 @@ with opening = closing. Closed months never change.
 
 - As a user, after a month ends I confirm what was paid, skip what didn't happen, and close it; the app calculates the
   closing balance.
-- As a user, I can check my real balance against the calculated one and add a one-time correction for the difference
-  (pending #66 question 1, recommended: keep).
+- As a user, I can check my real balance against the calculated one and add a one-time correction for the difference.
 - As a user, before closing I confirm the items that are still unpaid or not received, and can move any of them to
   the next month.
 - As a user who didn't open the app for months, I close the missed months one by one, oldest first.
@@ -90,7 +91,8 @@ with opening = closing. Closed months never change.
   in `exchange_rates`, which stores only the current rate per currency ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). There is no
   savings snapshot at close ([owner review #39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210)).
 - A month can't be closed before it has ended on the device's local calendar; the close is rejected (core needs a
-  `month < currentMonth` rule, e.g. a `month-not-ended` code), and months after an ended active month are blocked.
+  `month < currentMonth` rule, e.g. a `month-not-ended` code), and months after an ended active month are blocked
+  until it is closed (browsable before it ends). The "Remind me" card appears only after the first close.
 - Closing balance = opening + total income − total expenses (paid or not), so `netChange` = income − expenses. Core
   calculates it; a check balance never feeds it.
 - Catch-up close: months close in sequence, oldest first (`month-sequence-conflict` otherwise), each with a calculated
@@ -117,11 +119,7 @@ with opening = closing. Closed months never change.
 - Month lifecycle edge cases: decided on [#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002) (2026-10-22), except where #66 supersedes it (below).
 - Month close: decided on [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) (2026-10-22), [confirmed by owner](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278); supersedes #43 decisions
   1, 5 and 6 (early close, estimated catch-up balances, the closing balance source).
-- Still open from [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) ("Questions for Grzegorz"; recommended defaults in brackets):
-  1. Check balance: keep it check-only with "Add a one-time item for the difference" [keep], or remove manual
-     balance entry from the MVP?
-  2. Future months while the ended active month is unclosed: blocked (#66 screen R4) with browsing allowed before the month
-     ends [recommended], or always blocked?
-  3. "Remind me" card: after every close while reminders are off, or only after the first close [first only]?
+- #66 questions 1–3 (check balance, later months while blocked, "Remind me" card): decided on [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6341377311)
+  (2026-10-22), recommended answers accepted.
 - `closed_occurrences`: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided: yes).
 - Cross rates: [#124](https://github.com/alimek/budget-lens-offline/issues/124) (decided).
