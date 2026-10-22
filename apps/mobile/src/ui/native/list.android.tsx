@@ -80,8 +80,11 @@ export function ListSection({ title, testID, footer, children }: ListSectionProp
 }
 
 /**
- * A plain list row that opens a pushed screen: label, spacer, `chevron_right`. One accessibility element named by
- * `label` (the chevron is decoration and hidden from TalkBack).
+ * A plain list row that opens a pushed screen: label, spacer, `chevron_right`. The row is one focusable element
+ * named by `label`; the texts inside it are not focusable, and the chevron is decoration without a label of its
+ * own. Compose is measured against the viewport (`useViewportSizeMeasurement`) because `matchContents` matches the
+ * height only, and every child of a slot is a Compose view: putting a React Native view in a slot nests the two
+ * interop trees, which leaves the row without a width and the icon unreported.
  */
 export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
   const theme = useThemeColors();
@@ -94,7 +97,11 @@ export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
       onPress={onPress}
       android_ripple={{ color: theme["muted-foreground"], foreground: true }}
     >
-      <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
+      <Host
+        matchContents={{ vertical: true }}
+        useViewportSizeMeasurement
+        style={{ alignSelf: "stretch" }}
+      >
         <ListItem
           colors={{ containerColor: theme.background, contentColor: theme.foreground }}
           modifiers={[fillMaxWidth()]}
@@ -103,9 +110,7 @@ export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
             <Text>{label}</Text>
           </ListItem.HeadlineContent>
           <ListItem.TrailingContent>
-            <View importantForAccessibility="no-hide-descendants">
-              <Icon source={chevronIcon} tint={theme["muted-foreground"]} size={20} />
-            </View>
+            <Icon source={chevronIcon} tint={theme["muted-foreground"]} size={20} />
           </ListItem.TrailingContent>
         </ListItem>
       </Host>
