@@ -14,7 +14,7 @@ by Grzegorz on 2026-10-18
 | [0004](0004-testing-tools.md) | Open-source e2e framework as main testing, minimal Vitest unit tests, no coverage thresholds | Accepted |
 | [0005](0005-fallow-lefthook-ci.md) | Fallow, Lefthook and required CI checks | Accepted |
 | [0006](0006-app-stack.md) | Expo SDK 58 app stack (incl. Expo Router) | Accepted |
-| [0007](0007-local-database.md) | expo-sqlite + SQLCipher + Drizzle | Accepted |
+| [0007](0007-local-database.md) | expo-sqlite + Drizzle; SQLCipher superseded by [#242](https://github.com/alimek/budget-lens-offline/issues/242) | Superseded by [#242](https://github.com/alimek/budget-lens-offline/issues/242) (encryption); expo-sqlite + Drizzle accepted |
 | [0008](0008-money-minor-units.md) | Money as integer minor units | Accepted |
 | [0009](0009-english-and-i18n.md) | English codebase, i18n for UI | Accepted |
 | [0010](0010-dependency-versions.md) | Latest stable dependencies, pinned exactly | Accepted |

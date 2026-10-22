@@ -41,13 +41,14 @@ docs/                    # architecture, conventions, glossary, domain, decision
 ```
 apps/mobile  (scaffold, Stage 1)   Expo app: UI, navigation, state, platform integrations
    │ depends on
-   ├── packages/db   (exists)     Drizzle schema + migrations for expo-sqlite (SQLCipher since #75)
+   ├── packages/db   (exists)     Drizzle schema + migrations for expo-sqlite (plain SQLite since #242)
    └── packages/core (exists)     pure TypeScript domain logic
 ```
 
 Scope: No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google
 Drive. A multi-user shared wallet is out of scope; encrypted backup/restore is a
-planned epic with details still open (#30, E8, `epic:cloud-backup`).
+planned epic with details still open (#30, E8, `epic:cloud-backup`) — the only place where Budget Lens will
+encrypt anything again; the database itself stays plain ([ADR 0007](decisions/0007-local-database.md), #242).
 
 Dependencies point inwards: `apps/mobile` may use `packages/db` and `packages/core`; `packages/core` depends on
 nothing app- or platform-specific.
@@ -82,7 +83,7 @@ implemented and what is still planned:
 | Framework | Expo SDK 58 (React Native 0.88, New Architecture), development builds (not Expo Go) | Implemented (#73): Expo SDK 58 development client |
 | Navigation | Expo Router | Implemented (#73) |
 | UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73, #119): Expo UI wrappers in `src/ui/native`, Indigo tokens in `global.css` + `src/ui/lib/theme.ts`, React Native Reusables components in `src/ui/components` ([design system](design-system.md)) |
-| Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Implemented (#74, #75): expo-sqlite 58.0.13 with SQLCipher, `packages/db` schema v1 with drizzle-orm 0.45.4 / drizzle-kit 0.31.11, migrations applied by `runMigrations()` on every start behind an encrypted copy ([packages/db/README.md](../packages/db/README.md)); device key in expo-secure-store, `PRAGMA cipher_version` guard and boot screens ([#75](https://github.com/alimek/budget-lens-offline/issues/75), below) |
+| Local database | expo-sqlite in its plain form (no SQLCipher, no app-level encryption), Drizzle ORM + drizzle-kit migrations | Implemented (#74, #75, #242): expo-sqlite 58.0.13, `packages/db` schema v1 with drizzle-orm 0.45.4 / drizzle-kit 0.31.11, migrations applied by `runMigrations()` on every start behind a pre-migration copy ([packages/db/README.md](../packages/db/README.md)); one recovery screen when the file cannot be opened or migrated ([#75](https://github.com/alimek/budget-lens-offline/issues/75), #242, below) |
 | Reactive reads | A small in-house hook on expo-sqlite's `addDatabaseChangeListener` declaring the tables a query reads (#35 §4); Drizzle `useLiveQuery` only where one table suffices | Implemented (#112): `useLiveRead(tables, read)` in `apps/mobile/src/db` re-runs a synchronous `packages/db` read when one of its tables changes, over the `db` that `DatabaseGate` hands to `DatabaseProvider`; a write through a repository needs no refresh callback (`useSettings`, `useActiveMonth` and the Items list use it) |
 | App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
@@ -94,15 +95,14 @@ implemented and what is still planned:
 | Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests run locally on a dev machine on dedicated simulators/emulators (not in CI, [ci.md](ci.md#native-builds-and-e2e-local)); setup in #15 |
 
 Known constraints from the SDK 58 research (#10): Drizzle `useLiveQuery` only re-runs for changes to the main table
-of the query (joins are ignored) and re-runs on every row change; `PRAGMA key` silently does nothing in a build
-without SQLCipher, so the app must verify `PRAGMA cipher_version` before using the database.
+of the query (joins are ignored) and re-runs on every row change.
 
 ## Open questions
 
 Not decided yet; do not treat these as part of the stack:
 
-- From the SDK 58 research (#10): DB key and recovery model, details of the encrypted
-  backup/restore epic (e.g. full snapshot vs incremental backup to the user's own cloud storage),
+- From the SDK 58 research (#10): details of the encrypted backup/restore epic (e.g. full snapshot vs incremental
+  backup to the user's own cloud storage); the DB key and recovery model of that research was dropped with #242.
   lint (Biome only vs Biome + minimal ESLint). Chart library and minimum OS versions were decided on #44
   (2026-10-22, see the stack table).
 
@@ -121,38 +121,38 @@ The root contains
 created once per provider with an injectable clock; it currently holds only the selected month.
 No SQLite data is copied into Zustand. Onboarding and recovery belong to #59/#60.
 
-**Database bootstrap (#74, #75).** `DatabaseGate` (`src/db/database-gate.tsx`) wraps the Stack in the root layout. It
-calls `bootAppDatabase()` (`src/db/database.ts`), which opens `budget-lens.db` encrypted (change listener on), wraps
-it with `createDatabase()` from `packages/db` and migrates it. The gate renders the screens only after that, and
-shows a boot screen (`src/db/boot-screens.tsx`) instead of the app while the database stays closed; nothing here
-throws during render, and the only file it ever deletes is one expo-sqlite created for a launch that a build
-without SQLCipher must not keep. `openEncryptedDatabase()` (`src/db/encrypted-database.ts`) keeps the order #34
-requires: `PRAGMA cipher_version` first — in a build without SQLCipher `PRAGMA key` silently does nothing, so such
-a build stops rather than write plaintext — then `PRAGMA key` with the device key, then a read of `sqlite_master`,
-because a wrong key is only reported when a page is read. Only the error saying the file is not a database is read
-as a key that does not open it: a busy device, an I/O error or a full disk goes to the retry screen instead, and
-never to a screen offering to start over (`src/db/open-error.ts`, #75 R3). The key is 32 random bytes as lowercase
-hex in expo-secure-store under `bl.db.key.v1`, `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, written and read back before the
-file is created; a new file always gets a new key because the iOS Keychain survives an uninstall. A read that
-SecureStore refuses is its own screen with a retry, never "key missing" (#34 §2).
+**Database bootstrap (#74, #75, #242).** `DatabaseGate` (`src/db/database-gate.tsx`) wraps the Stack in the root
+layout. It calls `bootAppDatabase()` (`src/db/database.ts`), which opens the plain `budget-lens.db` (change listener
+on), wraps it with `createDatabase()` from `packages/db` and migrates it. The gate renders the screens only after
+that, and shows the recovery screen (`src/db/boot-screens.tsx`) instead of the app while the database stays closed;
+nothing here throws during render, and no path in the boot deletes a file. There is no key, no cipher check and no
+pairing of files and keys any more (#242): the data is protected by the OS sandbox and its own data protection, and
+a budget can no longer be lost because a key went missing.
 
-What a launch may do with the files it finds is decided by `planBoot()` (`src/db/boot-plan.ts`) from that listing
-alone, so the rule is testable: only a launch that found no file of a budget writes a key or creates a file
-(#75 R2); a launch that finds the live file gone while the pre-migration copy or the temporary file of an
-interrupted restore is still here finishes that restore with the key already stored, and never generates one
-(#75 R1). Before migrations the app takes an encrypted copy (`sqlcipher_export` into a database attached with the
-same key) whenever one is pending, keeps it until the next successful boot, and puts it back if a migration or the
-post-commit integrity check fails. Putting it back copies the copy to `budget-lens.restoring.db` and moves that
-over the live file, so the live name always holds either the old file or the whole copy; the copy itself is kept,
-and a restore that fails is reported as `MigrationRestoreError` and shown as such rather than as "restored" (#75
-R1). expo-sqlite runs in rollback-journal mode, so `-journal`, `-wal` and `-shm` move with the file they belong to
-and are never left behind for another file to adopt (#75 R5). "Start over" renames the old file and its side files
-aside and moves the key that may open them to a name of its own, so the kept file can still be opened by E8;
-deleting such files and restoring a backup are E8 work (#96, #97). Android Auto Backup and device transfer are
-excluded by explicit rules from `plugins/withBackupRules.js` (not `allowBackup=false`); the iOS device backup keeps
-the ciphertext file (owner review #34), and the EAS Update installation ID stays backed up, as the privacy text
-already discloses ([updates.md](release/updates.md#installation-id-storage)). A root error boundary is follow-up
-work with the final #60 screens. The Items list is the first screen to read the database (#112): the ready
+What a launch does with the files it finds is short enough to state here: if the live file is gone while the
+pre-migration copy or the temporary file of an interrupted restore is still here, the launch finishes that restore
+and nothing else (#75 R1); otherwise it opens the live file, or lets expo-sqlite create one. Before migrations the
+app takes a copy (SQLite's own `backupDatabaseSync`, so the copy is consistent) whenever one is pending, keeps it
+until the next successful boot, and puts it back if a migration or the post-commit integrity check fails. Putting
+it back copies the copy to `budget-lens.restoring.db` and moves that over the live file, so the live name always
+holds either the old file or the whole copy; the copy itself is kept, and a restore that also fails keeps it where
+it is, so the recovery screen never claims the database was restored (#75 R1). Anything the app cannot open — a
+leftover from an encrypted build, a truncated file, a busy or full device — is the same one state, with a retry
+first and a destructive action last (#34 §2). expo-sqlite runs in rollback-journal mode, so `-journal`, `-wal` and
+`-shm` move with the file they belong to and are never left behind for another file to adopt (#75 R5). "Start
+over" renames the old file and its side files aside, so the kept file can still be read by E8; deleting such files
+and restoring a backup are E8 work (#96, #97). Android Auto Backup and device transfer are excluded by explicit
+rules from `plugins/withBackupRules.js` (not `allowBackup=false`), and the iOS device backup keeps the file inside
+the app sandbox (owner review #34); the EAS Update installation ID stays backed up, as the privacy text already
+discloses ([updates.md](release/updates.md#installation-id-storage)). A root error boundary is follow-up work with
+the final #60 screens.
+
+**Upgrade from an encrypted database (#242).** There is deliberately no migration path: an encrypted file cannot be
+opened without the key this build no longer asks for, and the key would have to be read and used to rewrite the
+file — exactly the machinery #242 removes. An install that updates from an encrypted build therefore lands on the
+recovery screen, renames its encrypted file aside when the owner accepts "Start over", and continues with an empty
+budget. The data on the device is lost (the file stays on disk for support and for E8, but this build cannot read
+it); the owner accepted that on 2026-10-22 ([decisions.md](decisions.md)). The Items list is the first screen to read the database (#112): the ready
 connection reaches the screens through `DatabaseProvider`/`useDatabase()` (`src/db/database-provider.tsx`),
 `useLiveRead` re-runs a repository read when one of its tables changes, and `useActiveMonth` anchors the list
 to the active `months` row, falling back to the device's calendar month until onboarding (#111) opens one.

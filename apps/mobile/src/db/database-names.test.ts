@@ -5,7 +5,6 @@ import {
   DATABASE_NAME,
   fileNamesOf,
   isBudgetFile,
-  isOrphanName,
   orphanName,
   RESTORE_NAME,
   sideFileNames,
@@ -60,8 +59,8 @@ describe("asideNames", () => {
 
     // Assert
     expect(onlyCopy.map((move) => move.from)).toEqual(fileNamesOf(COPY_NAME));
-    expect(isOrphanName(orphanName(42))).toBe(true);
-    expect(isOrphanName(DATABASE_NAME)).toBe(false);
+    expect(isBudgetFile(orphanName(42))).toBe(true);
+    expect(isBudgetFile(RESTORE_NAME)).toBe(true);
     expect(isBudgetFile(`${orphanName(42)}.${COPY_NAME}-journal`)).toBe(true);
     expect(isBudgetFile("some-other-app.db")).toBe(false);
   });

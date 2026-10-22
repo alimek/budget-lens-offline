@@ -40,10 +40,6 @@ export function orphanName(stamp: number): string {
   return `${ORPHAN_PREFIX}${String(stamp)}${ORPHAN_SUFFIX}`;
 }
 
-export function isOrphanName(name: string): boolean {
-  return name.startsWith(ORPHAN_PREFIX) && name.endsWith(ORPHAN_SUFFIX);
-}
-
 /**
  * A "start over" renames a kept file to `<orphan>`, and a copy or an interrupted restore to
  * `<orphan>.<original name>`, so each keeps its own side files beside it and still says what it was.

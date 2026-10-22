@@ -6,19 +6,19 @@ import type { MigrationSafetyCopy, schema } from "../src";
 const SQL = await initSqlJs();
 
 /**
- * A fresh in-memory database. Tests use sql.js (plain SQLite in WebAssembly); the app uses expo-sqlite with
- * SQLCipher. The schema SQL is the same, and nothing here depends on file access or SQLCipher-only features.
+ * A fresh in-memory database. Tests use sql.js (SQLite in WebAssembly), the app uses expo-sqlite; both run the
+ * same plain SQLite, so the schema SQL is the same and nothing here depends on file access.
  */
 export function openTestDatabase(): SQLJsDatabase {
   return drizzle(new SQL.Database());
 }
 
 /**
- * The database file and the encrypted copy of it (#35 §2, #75), modelled with sql.js bytes: `create` saves them,
- * `restore` makes them the live file again, and `connect` is what a launch does – open the current file, so a test
- * sees what the launch after a restored copy sees. The app copies a file with SQLCipher
- * (`sqlcipher_export`); the bytes of an sql.js database are the same whole-file copy without the encryption,
- * which is covered on devices (#75, e2e). `calls` counts what the migration wrapper asked the copy to do.
+ * The database file and the pre-migration copy of it (#35 §2, #75), modelled with sql.js bytes: `create` saves
+ * them, `restore` makes them the live file again, and `connect` is what a launch does – open the current file, so
+ * a test sees what the launch after a restored copy sees. The app copies the file with SQLite's own backup
+ * (`backupDatabaseSync`), which is the same whole-file copy in front of the migration; the file work itself is
+ * covered on devices (#75, e2e). `calls` counts what the migration wrapper asked the copy to do.
  */
 export function openTestDatabaseFile(): {
   readonly connect: () => SQLJsDatabase;
