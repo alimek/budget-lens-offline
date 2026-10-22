@@ -29,8 +29,8 @@
   copy (taken only when a migration is pending and restored when a migration or the post-commit integrity check
   fails, #75), the order of the "start over" steps (secure-storage probe, key paired with the file it opens,
   rename, live key dropped last, #217), the constraints that encode business rules (one active month, one rule
-  version per item and month,
-  singleton settings, required item currency, RESTRICT foreign keys), the business rules of the items and
+  version per item and month, singleton settings, required item currency, RESTRICT foreign keys), the business
+  rules of the items and
   rule-version repository (#81: the base-currency default, the currency that cannot change after creation,
   archiving instead of deleting, both schedule shapes round-tripping, and a damaged row being reported instead of
   dropped) and those of the settings repository (#78: the defaults of a database with no row, core's validation

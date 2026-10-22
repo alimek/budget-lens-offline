@@ -157,10 +157,10 @@ dropped last – so no single failing step can leave a kept file without a finda
 moved comes back as `start_over_blocked`, which keeps the user on the screen they are on with that reason in its
 status line; a refusal in the middle is reported as `storage_unreachable`. The kept key is paired with the file it
 belongs to, never with a stamp of this run when the file was kept earlier, and a key that is already kept is never
-overwritten (#217 R5); deleting such files and restoring a backup are E8 work (#96, #97). Android Auto Backup
-and device transfer are excluded by explicit rules from `plugins/withBackupRules.js` (not
-`allowBackup=false`); the iOS device backup keeps
-the ciphertext file (owner review #34), and the EAS Update installation ID stays backed up, as the privacy text
+overwritten (#217 R5); deleting such files and restoring a backup are E8 work (#96, #97). Android Auto Backup and
+device transfer are excluded by explicit rules from `plugins/withBackupRules.js` (not `allowBackup=false`); the iOS
+device backup keeps the ciphertext file (owner review #34), and the EAS Update installation ID stays backed up, as
+the privacy text
 already discloses ([updates.md](release/updates.md#installation-id-storage)). A root error boundary is follow-up
 work with the final #60 screens. The Items list is the first screen to read the database (#112): the ready
 connection reaches the screens through `DatabaseProvider`/`useDatabase()` (`src/db/database-provider.tsx`),
