@@ -24,8 +24,12 @@ belong to #85; payment-status storage belongs to #83.
   `{ closed, next, unpaid, unreceived }` in `value`. Inputs are never mutated.
 
 Closing resolves occurrences with `resolveOccurrences` (#5): amount overrides replace the original amounts,
-skips remove occurrences, and schedules exclude inactive items. It converts and sums **all** effective incomes and
-expenses in base-currency minor units, including unsettled ones. These are planned totals, not inferred bank transactions. `netChange` keeps the legacy
+skips remove occurrences, and schedules exclude inactive items. Totals are base-currency minor units, including
+unsettled ones: **every** effective occurrence is first converted per row with `convertMinor` from **its own**
+item currency to `baseCurrency`, and only the converted `baseAmount`s are then summed with `sumMinorUnits`
+(#138, `month-closing.test.ts`: "freezes original currency, applied rate and converted totals"). Amounts of two
+item currencies are never added together, so no mixed-scale total can appear. These are planned totals, not
+inferred bank transactions. `netChange` keeps the legacy
 balance-update meaning: actual closing minus opening, which can differ from `totalIncome - totalExpenses`.
 The caller's actual closing balance wins; core does not infer it from the planned totals.
 
@@ -41,8 +45,9 @@ opening balances against history.
 per-item currency is in MVP. Base currency is selected during onboarding and locked once onboarding is confirmed;
 changing it later is not supported. Onboarding/persistence enforce that lifecycle rule, not the pure closing function.
 
-Closing takes `ClosingItem` (`ScheduledItem` plus required `currency: CurrencyCode`). Its amount and occurrence
-overrides are minor units of that item's currency. `baseCurrency` comes from the locked `Settings.baseCurrency`.
+Closing takes `ClosingItem`, which since #138 **is** `ScheduledItem`: `{ id, itemType, currency, amount, schedule }`
+with the required `currency: CurrencyCode`. Its amount and occurrence overrides are minor units of that item's
+currency, and each resolved occurrence exposes it. `baseCurrency` comes from the locked `Settings.baseCurrency`.
 `rates` maps each used foreign currency to a finite **positive** number: base-currency major units per one
 source-currency major unit, selected by the caller for the month being closed. Rates have the same decimal-number
 representation as `multiplyByRate`; arithmetic uses their decimal form with BigInt, not floating-point products.
@@ -117,7 +122,7 @@ Codes only, never UI messages:
 | `future-month` | The active month is after the supplied current calendar month. |
 | `month-sequence-conflict` | The active month is already closed, or is not later than every closed month. |
 | `month-out-of-range` | `9999-12` has no successor in the supported `YearMonth` range. |
-| `invalid-currency` | Base currency or an effective occurrence currency is unsupported. |
+| `invalid-currency` | The supplied `baseCurrency` is not a supported code, or a row handed to `buildClosedOccurrences` directly has one. Inside `closeMonth` an item with an unsupported currency never gets here: the resolver reports it as an invalid item and closing fails with `invalid-occurrences`. |
 | `missing-exchange-rate` | An effective foreign-currency occurrence has no supplied rate. |
 | `invalid-exchange-rate` | A used foreign rate is not a finite positive number. |
 | `invalid-amount` | A supplied balance or resolved amount is not a safe integer; occurrence amounts must be nonnegative. |

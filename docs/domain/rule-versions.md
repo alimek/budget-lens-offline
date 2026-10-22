@@ -27,8 +27,9 @@ RuleVersion   = { effectiveFrom: YearMonth, amount: MinorUnits, schedule: Schedu
 - `amount` is integer minor units of the **item's** currency. The currency is fixed per item and is not part of a
   version; a different currency means a new item
   ([#81 owner decision](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
-  `VersionedItem` carries that required `currency` (#138, landed with #81), so a version's `amount` and the item in
-  force always have one interpretation. The repository rejects a later change of it
+  `VersionedItem` carries that required `currency` (#138, landed with #81) and so does the resolved item in force
+  (`ScheduledItem.currency`), so a version's `amount` and the item in force always have one interpretation, and the
+  occurrences resolved from it expose it. The repository rejects a later change of it
   (`immutable-field`), and a created item without an explicit currency takes the base currency of the
   `settings` singleton (#35 Q5 keeps a SQL default out of the column).
 - Item-level fields are not versioned: a rename shows the new name in history too. `itemType` is fixed.
@@ -45,6 +46,8 @@ RuleVersion   = { effectiveFrom: YearMonth, amount: MinorUnits, schedule: Schedu
   `resolveOccurrences` ([occurrence overrides](occurrence-overrides.md), #5). Overrides stay keyed by
   `(itemType, itemId, month)` and are independent of versions. Items with invalid versions are reported in
   `invalidItems`.
+  An item whose stored `currency` is outside the supported set (`isCurrencyCode`) is reported there too: every
+  version amount is in a currency core does not know, so the item is never resolved (#138).
 
 ## Forecast integration
 

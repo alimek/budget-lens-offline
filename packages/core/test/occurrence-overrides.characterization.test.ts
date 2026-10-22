@@ -24,7 +24,7 @@ useFrozenClock("2026-10-18T10:00:00.000Z", "Europe/Warsaw");
 
 const START = toYearMonth("2026-10");
 
-/** The fixture items without the legacy override items, with amounts in minor units. */
+/** The fixture items without the legacy override items, with amounts in minor units of PLN (legacy has one currency). */
 function portedItems(
   items: readonly (LegacyExpense | LegacyIncome)[],
   itemType: ItemType,
@@ -34,7 +34,9 @@ function portedItems(
     .flatMap((item) => {
       const schedule = legacySchedule(item, START);
       const amount = toMinorUnits(Math.round(item.amount * 100));
-      return schedule === null ? [] : [{ id: item.id, itemType, amount, schedule }];
+      return schedule === null
+        ? []
+        : [{ id: item.id, itemType, currency: "PLN", amount, schedule }];
     });
 }
 

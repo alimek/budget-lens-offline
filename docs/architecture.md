@@ -12,8 +12,10 @@ What exists today in `packages/core`:
   [ADR 0012](decisions/0012-native-intl-money-formatting.md));
 - `YearMonth` months and recurrence schedules (#4, see [domain/recurrence.md](domain/recurrence.md));
 - occurrence overrides (#5, see [domain/occurrence-overrides.md](domain/occurrence-overrides.md));
-- rule versions and the pure rule-edit planner (#80, see [domain/rule-versions.md](domain/rule-versions.md)), with
-  the required per-item `currency` on a versioned item (#138, landed with #81);
+- rule versions and the pure rule-edit planner (#80, see [domain/rule-versions.md](domain/rule-versions.md));
+- per-item currency in the core item and occurrence model: a required `currency` on `ScheduledItem` and
+  `VersionedItem`, exposed by every resolved occurrence, and currency-carrying money that core never adds across
+  (#138, see [domain/money.md](domain/money.md), landed with #81 for versioned items);
 - the `Settings` model (#76);
 - injected NBP table-A client, current-rate store contract, shared rate selection and app-open refresh (#8);
 - balance forecast, warning codes and exact cross-currency conversion (#6, see [domain/forecast.md](domain/forecast.md));

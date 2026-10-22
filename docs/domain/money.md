@@ -87,6 +87,38 @@ Parsing remains independent of Intl and unchanged. Never pass plain numbers wher
 `MoneyOverflowError` is a `RangeError` subclass for arithmetic/conversion results outside the safe-integer range.
 Invalid inputs still throw ordinary `RangeError`, allowing forecast to report overflow without masking unrelated failures.
 
+### Amounts that carry a currency (#138)
+
+A `MinorUnits` number says nothing about its currency, and the scale of a minor unit differs per currency (1 zł is
+100 groszy, ¥1 is 1 yen), so adding a JPY amount to a PLN amount would produce a meaningless number. Amounts that
+come with their currency – a resolved occurrence and its override, a row the user edits – are `CurrencyAmount`
+(`{ currency, amount }`) and are added only with:
+
+- `addCurrencyAmounts(a, b)` – the sum of two `CurrencyAmount`s, or `{ ok: false, error: "currency-mismatch",
+  currencies: [a.currency, b.currency] }`. Different currencies are **never** added; the caller converts one of
+  them first (`convertMinor`, `convertViaPln`) or keeps the totals apart. The code is returned for the UI to
+  translate, nothing is thrown for it.
+- `sumCurrencyAmounts(expected, amounts)` – the same rule folded over a list of such amounts, starting from
+  `expected` with 0 and stopping at the first foreign amount.
+
+The guard is for amounts **in an item's currency**. Core never totals those: forecast and month closing convert
+**each occurrence** to the base currency per row first, with the item's own currency as the source
+(`convertViaPln` in forecast, `convertMinor` in closing) and its rate, and only then sum base-currency `MinorUnits`
+with `sumMinorUnits` – see `forecast.test.ts` ("converts mixed EUR and JPY items per row before summing in PLN")
+and `month-closing.test.ts` ("freezes original currency, applied rate and converted totals"). Amounts that never
+carry a currency (a base-currency balance, a threshold, those totals) stay plain `MinorUnits`.
+
+`MinorUnits` itself stays one brand (no per-currency type): it works with SQLite and JSON unchanged, and a
+per-currency type would ripple through `packages/db` and the app for totals core already converts before summing.
+So the rule is structural (convert per row, then sum one currency) plus this runtime guard wherever item-currency
+amounts are added; the pair `CurrencyCode` + `MinorUnits` is what you add, and a mismatch becomes a code.
+
+An item's amounts are minor units of the **item's** currency (`ScheduledItem.currency`, `VersionedItem.currency`,
+`ResolvedOccurrence.currency`), so item input and display always pass that currency: parse with
+`parseMoney(text, { currency: item.currency })` and format with
+`formatMoney(amount, { lang, currency: item.currency })`. The exponent of that currency decides the fraction digits
+(2 for PLN, 0 for JPY); an item amount is never rescaled between parsing, resolving and formatting.
+
 ### Currency conversion (#84)
 
 `convertMinor(amount, rate, source, target)` converts between supported currencies using their ISO exponents.

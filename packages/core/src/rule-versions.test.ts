@@ -186,23 +186,28 @@ describe("resolveVersionedOccurrences", () => {
     expect(days).toEqual([28, 29]);
   });
 
-  it("leaves out and reports an item with invalid versions instead of failing the month", () => {
+  it("leaves out and reports an item with invalid versions or an unsupported currency instead of failing the month", () => {
     // Arrange
     const corrupt: VersionedItem = JSON.parse(
       JSON.stringify({ id: "gym", itemType: "expense", versions: [{ ...STORED, schedule: null }] }),
+    );
+    const unknownCurrency: VersionedItem = JSON.parse(
+      JSON.stringify({ ...rent(version("2026-01", 90_000, monthly("2026-01"))), currency: "XXX" }),
     );
     const valid = rent(version("2026-01", 250_000, monthly("2026-01")));
 
     // Act
     const { occurrences, invalidItems } = resolveVersionedOccurrences(
-      [valid, corrupt],
+      [valid, corrupt, unknownCurrency],
       [],
       ym("2026-04"),
     );
 
     // Assert
-    expect(occurrences.map(({ item, amount }) => [item.id, amount])).toEqual([["rent", 250_000]]);
-    expect(invalidItems).toEqual([corrupt]);
+    expect(occurrences.map(({ item, currency, amount }) => [item.id, currency, amount])).toEqual([
+      ["rent", "PLN", 250_000],
+    ]);
+    expect(invalidItems).toEqual([corrupt, unknownCurrency]);
   });
 
   it("applies an override by month whichever version is in force", () => {

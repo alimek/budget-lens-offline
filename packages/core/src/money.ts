@@ -53,6 +53,56 @@ export function subtractMinorUnits(a: MinorUnits, b: MinorUnits): MinorUnits {
   return sumMinorUnits([a, negateMinorUnits(b)]);
 }
 
+/** An amount together with the currency it is expressed in, the unit core adds in (#138). */
+export interface CurrencyAmount {
+  readonly currency: CurrencyCode;
+  readonly amount: MinorUnits;
+}
+
+/** The result of {@link addCurrencyAmounts} / {@link sumCurrencyAmounts}: one currency, or the mismatch. */
+export type CurrencyAmountResult =
+  | { readonly ok: true; readonly value: CurrencyAmount }
+  | {
+      readonly ok: false;
+      /** The code the UI translates: amounts of different currencies are never added. */
+      readonly error: "currency-mismatch";
+      /** The currency of the total so far and of the amount that did not fit it. */
+      readonly currencies: readonly [CurrencyCode, CurrencyCode];
+    };
+
+/**
+ * Adds two amounts, each carrying its currency. Amounts of two currencies are never added: minor units of JPY and
+ * of PLN have different scales, so the result is `currency-mismatch` with both codes instead (#138). Convert one
+ * of them first ({@link convertMinor}, {@link convertViaPln}) or keep the totals apart.
+ * Throws what {@link addMinorUnits} throws (an invalid amount, {@link MoneyOverflowError}).
+ */
+export function addCurrencyAmounts(a: CurrencyAmount, b: CurrencyAmount): CurrencyAmountResult {
+  if (a.currency !== b.currency) {
+    return { ok: false, error: "currency-mismatch", currencies: [a.currency, b.currency] };
+  }
+  return { ok: true, value: { currency: a.currency, amount: addMinorUnits(a.amount, b.amount) } };
+}
+
+/**
+ * Sums amounts that all carry their currency, starting from `expected`: the total is in `expected`, and an empty
+ * list is `expected` with 0. The first amount in another currency ends the sum with `currency-mismatch`, so a
+ * mixed-scale total can never be returned (#138). Throws what {@link sumMinorUnits} throws.
+ */
+export function sumCurrencyAmounts(
+  expected: CurrencyCode,
+  amounts: Iterable<CurrencyAmount>,
+): CurrencyAmountResult {
+  let total: CurrencyAmount = { currency: expected, amount: toMinorUnits(0) };
+  for (const amount of amounts) {
+    const added = addCurrencyAmounts(total, amount);
+    if (!added.ok) {
+      return added;
+    }
+    total = added.value;
+  }
+  return { ok: true, value: total };
+}
+
 export function negateMinorUnits(amount: MinorUnits): MinorUnits {
   return toMinorUnits(-toMinorUnits(amount));
 }
