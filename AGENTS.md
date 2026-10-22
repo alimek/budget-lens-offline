@@ -89,6 +89,6 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
   runtime version, channels, publishing and rollback)
 - [docs/github-automation.md](docs/github-automation.md) – label sync from `.github/labels.tsv` and the per-label
   issue queue export (`scripts/github/`), token scopes and scheduling rules
-- [docs/decisions.md](docs/decisions.md) – log of the owner's answers in issue comments, newest first
+- [docs/decisions.md](docs/decisions.md) – log of the owner's answers in issue/PR comments or chat, newest first
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
   [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)
