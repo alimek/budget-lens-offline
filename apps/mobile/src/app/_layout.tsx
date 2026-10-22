@@ -76,6 +76,14 @@ function RootStack() {
             title: t("dev.forgetKey.title"),
           }}
         />
+        <Stack.Screen
+          name="dev/chart-spike"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.chartSpike.title"),
+          }}
+        />
       </Stack.Protected>
     </Stack>
   );

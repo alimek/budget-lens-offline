@@ -25,6 +25,12 @@ opens the savings screen (E7); Savings is not a tab.
 - Chart library: **`react-native-chart-kit` 7.0.4 (`/v2` charts) on `react-native-svg` 15.16.0** (the SDK 58 pin),
   validated by a one-day spike on iOS and Android dev builds before #89 ([#218](https://github.com/alimek/budget-lens-offline/issues/218); [decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575)).
   If the spike fails, the fallback is a hand-drawn chart on `react-native-svg` ([#218](https://github.com/alimek/budget-lens-offline/issues/218), [#44 research](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6339984974)).
+  **#218 passed (2026-10-22):** the library builds, renders and takes a tap on iOS and Android development builds of
+  SDK 58 at about +10 % of the JavaScript bundle, so the fallback is not needed ([ADR 0014](../decisions/0014-chart-library-and-minimum-os.md),
+  [#218 findings](https://github.com/alimek/budget-lens-offline/issues/218)). Two things to carry into #89: keep
+  `interaction.deselectOnOutsidePress: false` so a tap close to the last month reports it instead of clearing the
+  selection, and place the zero line and the low-balance threshold labels apart (or move one to the legend), because
+  chart-kit draws two close reference labels on top of each other.
 - Optional local notifications ([#91](https://github.com/alimek/budget-lens-offline/issues/91)): opt-in, local only, pre-scheduled on app open with
   `expo-notifications` ([#45 research](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340343141), [accepted](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501)).
 
