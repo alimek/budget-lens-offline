@@ -117,7 +117,7 @@ export function nativeButton(
 
 /**
  * The node that carries a Compose `semantics` content description: Compose exposes it on a child of the test ID
- * node when the control also has text (as with the paid checkbox, docs/evidence/182).
+ * node when the control also has text (as with the paid checkbox, #182).
  */
 export function describedNode(
   { screen, platform }: Pick<Fixtures, "screen" | "platform">,

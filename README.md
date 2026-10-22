@@ -82,8 +82,8 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 | `pr-body` | PR description contains `Closes #N`, `Fixes #N` or `Resolves #N` (pull requests only) |
 
 All jobs run on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not part of CI; they run locally on
-a dev machine on dedicated simulators/emulators, with screenshots from a local `e2e` run on the PR as evidence (iOS by default, both platforms only for
-platform-specific changes, #238; #166, see
+a dev machine on dedicated simulators/emulators, with the result summary and 1–3 key screenshots from a local `e2e` run attached to the PR description as evidence,
+never committed (#241; iOS by default, both platforms only for platform-specific changes, #238; #166, see
 [docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 Planned when `apps/mobile` exists (#109): fast Ubuntu-only checks such as `expo-doctor`, `migrations`, `bundle-size`.

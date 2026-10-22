@@ -54,7 +54,8 @@ CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licen
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
 CI runs only these fast checks, all on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not in CI: they run
 locally on a dev machine (macOS with Xcode for iOS, Android SDK for Android) on dedicated simulators/emulators, and
-the evidence is screenshots attached to the PR (iOS by default, see below; [docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
+the evidence is the e2e result summary and 1–3 key screenshots attached to the PR description, never committed (iOS by
+default, see below; [docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 ## Workflow
 
@@ -63,9 +64,16 @@ the evidence is screenshots attached to the PR (iOS by default, see below; [docs
 - A reviewer squash-merges after approval and fully green CI.
 - Testing: e2e first; unit tests only for business logic, Arrange-Act-Assert; no coverage thresholds –
   [docs/testing.md](docs/testing.md).
-- UI PRs include e2e evidence: screenshots (simulator/emulator named; a video is also fine) from a TesterArmy `e2e`
-  run or `e2e explore` on a local development build on a local dev machine, in the PR template's Screenshots section.
-  A manual screenshot from a development build alone is not enough.
+- UI PRs include e2e evidence from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev
+  machine: the e2e result summary and **1–3 key screenshots that show the change** (simulator/emulator named), attached
+  to the PR description in the PR template's Screenshots section. A manual screenshot from a development build alone is
+  not enough.
+- Test evidence stays out of the repo (#241): keep the full e2e run output (report, traces, all screenshots, video)
+  locally, outside the repo or in the ignored `apps/mobile/.e2e/`; never commit screenshots, logs or run reports.
+  Screenshots go to the `e2e-evidence` pre-release as `<pr>-<n>.png` (`gh release upload e2e-evidence <file>
+  --clobber`) and are embedded in the PR body by the asset's download URL; they show no device names or serials,
+  account names, paths, notifications or personal data. Details:
+  [docs/testing.md](docs/testing.md#test-evidence-stays-out-of-the-repo).
 - Platforms (#238): UI PRs are tested on **iOS only** by default. Test and attach **both iOS and Android** only when the
   PR touches something platform-specific: native modules or native dependencies, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files (including any change to the Expo UI wrappers `apps/mobile/src/ui/native/*.ios.tsx` / `*.android.tsx`), permissions, or fonts and assets that render per platform; and before a release build. Screens that only use the wrappers
   are iOS-only. Details: [docs/testing.md](docs/testing.md#platforms).
