@@ -40,6 +40,12 @@ no sign-up, and the first launch guides the user through a short onboarding.
   Items, Settings ([#36 Q1](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263044426); [Variant A, chosen by @alimek](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)). **Savings** is not a tab: it is a
   screen pushed from the Savings card on Overview. "Add item" is a toolbar `+` (iOS) / FAB (Android), never a tab.
 
+- Minimum OS: **Android 8.0 (minSdk 26)**, set with `expo-build-properties`, and **iOS 16.4** (the SDK 58 default).
+  Android 7 is not supported ([#44 decision](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340036713), [minimums decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575), 2026-10-22; applied in the
+  [#218](https://github.com/alimek/budget-lens-offline/issues/218) spike).
+- For the first month, the user is asked which items added for it are already paid, so the starting balance isn't
+  double-counted by the forecast; #59 / #111 place the step ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), row 12).
+
 **Out:**
 - Accounts and any Budget Lens server.
 - Cloud backup ([E8](cloud-backup.md)), except the onboarding backup lookup and the Android Drive consent step.

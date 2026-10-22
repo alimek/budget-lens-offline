@@ -88,6 +88,8 @@ implemented and what is still planned:
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
 | i18n | Polish and English; no hardcoded UI strings | Implemented (#73, #77): i18next + react-i18next, bundled PL/EN resources per namespace, English source and runtime fallback, typed keys, system language with an in-app override API, i18next-cli for extraction only, no CI translation check ([i18n](i18n.md)) |
 | Backup | No Budget Lens server or accounts; data stays on device; optional backup only via the user's own iCloud / Google Drive. Encrypted backup/restore is a planned epic (#30, details open) | Planned (#30) |
+| Charts | `react-native-chart-kit` 7.0.4 (`/v2`) on `react-native-svg` 15.16.0 ([decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575)) | Planned (#218 spike, #89) |
+| Minimum OS | Android 8.0 (minSdk 26, via `expo-build-properties`), iOS 16.4; Android 7 dropped ([#44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575)) | Planned (#218) |
 | App updates | EAS Update (`expo-updates`) for JavaScript and asset changes, fingerprint runtime version, background check that never blocks startup, applied on the next launch | Implemented (#184): [release/updates.md](release/updates.md), [ADR 0013](decisions/0013-eas-update-network-exception.md) |
 | Testing | Open-source [e2e](https://github.com/tester-army/e2e) framework with our own models ([#15 e2e decisions comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); provider open), on simulators/emulators, as the main testing; minimal Vitest unit tests in core | Partly implemented (#73): e2e smoke tests run locally on a dev machine on dedicated simulators/emulators (not in CI, [ci.md](ci.md#native-builds-and-e2e-local)); setup in #15 |
 
@@ -101,7 +103,8 @@ Not decided yet; do not treat these as part of the stack:
 
 - From the SDK 58 research (#10): DB key and recovery model, details of the encrypted
   backup/restore epic (e.g. full snapshot vs incremental backup to the user's own cloud storage),
-  chart library (Expo UI has no Android charts), lint (Biome only vs Biome + minimal ESLint), minimum OS versions.
+  lint (Biome only vs Biome + minimal ESLint). Chart library and minimum OS versions were decided on #44
+  (2026-10-22, see the stack table).
 
 ## Tooling
 

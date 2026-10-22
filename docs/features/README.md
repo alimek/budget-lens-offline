@@ -55,7 +55,8 @@ Other owner decisions of 2026-10-19 reflected in the PRDs:
 - **E7 Savings & currencies ([#29](https://github.com/alimek/budget-lens-offline/issues/29))**: P2 and not an MVP epic; `epic-plan.md` plans it as "MVP-optional (right
   after the MVP)". Only its rate tasks are pulled into the MVP, because per-item currency needs them: the NBP client
   ([#8](https://github.com/alimek/budget-lens-offline/issues/8)), rates storage ([#92](https://github.com/alimek/budget-lens-offline/issues/92)), rate refresh ([#93](https://github.com/alimek/budget-lens-offline/issues/93)) and manual rates ([#144](https://github.com/alimek/budget-lens-offline/issues/144), [#145](https://github.com/alimek/budget-lens-offline/issues/145)).
-  The E2, E3, E4, E5 and E6 PRDs cover those requirements. A PRD for savings follows when the epic is scheduled.
+  The E2, E3, E4, E5 and E6 PRDs cover those requirements; the month-end NBP rate rule ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002)) is in
+  the E5 PRD. A PRD for savings follows when the epic is scheduled.
 - **E9 One-time license ([#31](https://github.com/alimek/budget-lens-offline/issues/31))**: P2, planned "before public launch", not MVP. Its scope depends on open
   research: store IAP rules vs Paddle/Stripe ([#52](https://github.com/alimek/budget-lens-offline/issues/52)), offline license verification ([#53](https://github.com/alimek/budget-lens-offline/issues/53)) and pricing
   ([#12](https://github.com/alimek/budget-lens-offline/issues/12), P3). A PRD follows once those are answered.
