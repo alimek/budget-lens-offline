@@ -20,10 +20,10 @@ with opening = closing. Closed months never change.
 - Month closing core ([#84](https://github.com/alimek/budget-lens-offline/issues/84), PR [#137](https://github.com/alimek/budget-lens-offline/pull/137)).
 - Rate snapshot at close ([#141](https://github.com/alimek/budget-lens-offline/issues/141)).
 - Months table + transactional close ([#85](https://github.com/alimek/budget-lens-offline/issues/85)).
-- Check-balance sheet ([#86](https://github.com/alimek/budget-lens-offline/issues/86)), close-month flow ([#115](https://github.com/alimek/budget-lens-offline/issues/115)), history ([#87](https://github.com/alimek/budget-lens-offline/issues/87)).
-- Entry points: check balance and close month from the **Month** tab; history from the Month toolbar menu
+- Check-balance sheet ([#86](https://github.com/alimek/budget-lens-offline/issues/86), pending #66 question 1, recommended: keep), close-month flow ([#115](https://github.com/alimek/budget-lens-offline/issues/115)), history ([#87](https://github.com/alimek/budget-lens-offline/issues/87)).
+- Entry points: check balance (pending #66 question 1) and close month from the **Month** tab; history from the Month toolbar menu
   ([#36 tabs](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)).
-- Month close per the [#66 decisions](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) (Decided on #66 (2026-10-22), confirmed by owner in chat;
+- Month close per the [#66 decisions](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) (decided on #66 (2026-10-22), [confirmed by owner](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278);
   supersedes #43 decisions 1, 5 and 6):
   - **No closing before the month ends** (A). "Close month" is available from the 1st of the next month; before that
     the Month menu shows it disabled ("Available from …"). That day an in-app prompt on Month and Overview says the
@@ -34,10 +34,11 @@ with opening = closing. Closed months never change.
   - **Calculated closing balance** (C): opening + all of the month's income − all of its expenses, every effective
     occurrence counted, paid or not, after overrides and skips, converted per row. The same calculation is used for
     "Expected at month end", the close summary and the next month's opening. No `estimated` flag, no typed balance.
-  - **Check balance** (R8): the user can enter their actual balance as a **check only**. The sheet shows it, "Calculated
+  - **Check balance** (#66 screen R8): the user can enter their actual balance as a **check only**. The sheet shows it, "Calculated
     now" (opening + received − paid so far) and the difference, and offers a one-time "Balance correction" item for
     the difference. The check is stored separately and never becomes the closing balance; the close summary shows the
-    last check and its difference.
+    last check and its difference. Whether this sheet stays in the MVP is open (#66 question 1, recommended: keep);
+    either way an entered balance never feeds the closing balance (C).
 - Month lifecycle per the [#43 research](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6339987487) ([accepted 2026-10-22](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002)):
   - **Catch-up close** when the active month is before the device's calendar month: a "Close N months" banner on the
     Month tab and Overview leads to a guided close, oldest month first, no skipping, with "Month 1 of N" and **Later**.
@@ -70,7 +71,8 @@ with opening = closing. Closed months never change.
 
 - As a user, after a month ends I confirm what was paid, skip what didn't happen, and close it; the app calculates the
   closing balance.
-- As a user, I can check my real balance against the calculated one and add a one-time correction for the difference.
+- As a user, I can check my real balance against the calculated one and add a one-time correction for the difference
+  (pending #66 question 1, recommended: keep).
 - As a user, before closing I confirm the items that are still unpaid or not received, and can move any of them to
   the next month.
 - As a user who didn't open the app for months, I close the missed months one by one, oldest first.
@@ -82,12 +84,11 @@ with opening = closing. Closed months never change.
 - December closes into January of the next year. Opening = previous closing.
 - Closing is blocked with a clear message when a needed rate is missing; the user can enter a manual rate
   (`1 X = y PLN`).
-- The snapshot records, per occurrence in
-  `closed_occurrences` ([owner review #40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), Q3). It is kept with the closed month, not in `exchange_rates`, which stores only the
-  current rate per currency ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). There is no savings snapshot at close ([owner review #39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210)).
-  the rate used: the NBP table A rate of the month's last business day when it can be fetched
-  ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), decision 3), otherwise the current stored NBP or newer manual rate, with its source and
-  effective date. The month-end rate lives only in the snapshot, not in `exchange_rates`.
+- The snapshot records the rate used per occurrence in `closed_occurrences` ([owner review #40](https://github.com/alimek/budget-lens-offline/issues/40#issuecomment-6263679627), Q3): the NBP
+  table A rate of the month's last business day when it can be fetched ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), decision 3), otherwise the
+  current stored NBP or newer manual rate, with its source and effective date. It is kept with the closed month, not
+  in `exchange_rates`, which stores only the current rate per currency ([owner review #35](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). There is no
+  savings snapshot at close ([owner review #39](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263679210)).
 - A month can't be closed before it has ended on the device's local calendar; the close is rejected (core needs a
   `month < currentMonth` rule, e.g. a `month-not-ended` code), and months after an ended active month are blocked.
 - Closing balance = opening + total income − total expenses (paid or not), so `netChange` = income − expenses. Core
@@ -114,12 +115,12 @@ with opening = closing. Closed months never change.
 ## Open questions
 
 - Month lifecycle edge cases: decided on [#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002) (2026-10-22), except where #66 supersedes it (below).
-- Month close: Decided on [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) (2026-10-22), confirmed by owner in chat; supersedes #43 decisions
+- Month close: decided on [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) (2026-10-22), [confirmed by owner](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278); supersedes #43 decisions
   1, 5 and 6 (early close, estimated catch-up balances, the closing balance source).
 - Still open from [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340452613) ("Questions for Grzegorz"; recommended defaults in brackets):
   1. Check balance: keep it check-only with "Add a one-time item for the difference" [keep], or remove manual
      balance entry from the MVP?
-  2. Future months while the ended active month is unclosed: blocked (R4) with browsing allowed before the month
+  2. Future months while the ended active month is unclosed: blocked (#66 screen R4) with browsing allowed before the month
      ends [recommended], or always blocked?
   3. "Remind me" card: after every close while reminders are off, or only after the first close [first only]?
 - `closed_occurrences`: [#40](https://github.com/alimek/budget-lens-offline/issues/40) (decided: yes).
