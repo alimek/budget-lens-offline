@@ -198,8 +198,10 @@ export interface ListedItems {
 /**
  * The rows of one list read, in the order of {@link sortItemRows}.
  *
- * `onlyArchived` keeps just the archived items, which is what the read-only archived list shows; `readItems`
- * already leaves them out of an ordinary read.
+ * `onlyArchived` keeps just the archived items, which is what the read-only archived list shows. The hook reads
+ * both kinds at once, because the count of the "Archived items" row comes from the same read, so each list also
+ * takes the unreadable items of its own kind and leaves the other's out: a damaged archived row is no reason for
+ * the active list to say it is hiding something (#219 N1).
  *
  * `archivedCount` counts the archived items of the read whatever the screen lists, so it needs a read made with
  * `includeArchived`. `empty` is true only once a read has landed: a list that has not been read yet is not an
@@ -216,9 +218,12 @@ export function listItems(
       : stored.filter((item) => item.archivedAt === null);
   const { onlyArchived, ...rows } = context;
   const sections = itemSections(listed, rows);
+  const unreadable = (read?.invalidItems ?? []).filter(
+    (invalid) => (invalid.archivedAt !== null) === (onlyArchived === true),
+  );
   return {
     sections,
-    hasInvalidItems: (read?.invalidItems.length ?? 0) > 0,
+    hasInvalidItems: unreadable.length > 0,
     empty: read !== undefined && sections.income.length === 0 && sections.expenses.length === 0,
     archivedCount: stored.filter((item) => item.archivedAt !== null).length,
   };

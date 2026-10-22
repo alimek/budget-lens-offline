@@ -239,6 +239,7 @@ describe("items repository", () => {
     expect(invalidItems).toEqual([
       {
         itemId: "broken",
+        archivedAt: null,
         errors: expect.arrayContaining(["unsupported-currency", "invalid-interval"]),
       },
     ]);

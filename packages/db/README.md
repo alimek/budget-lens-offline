@@ -150,7 +150,9 @@ and return `{ ok } | { ok: false, error }` with codes:
 
 `readItems(db)` returns `{ items, invalidItems }`: every item with its versions in `effectiveFrom` order, plus the
 items that were left out and the core error codes that say why (`unsupported-currency`, `invalid-item-type`, or
-codes from `validateRuleVersions` and `validateSchedule`). Versions are validated for active items only: a plan that
+codes from `validateRuleVersions` and `validateSchedule`). Each report carries the row's `archivedAt` too, so a
+screen that reads both kinds – for the count of its archived list – can report a damaged row only where it would
+actually show it (#219 N1). Versions are validated for active items only: a plan that
 deletes every version archives its item, and that item's rule is history rather than damage. Like the rate store
 (#92) and the versioned resolver
 (#80), a malformed row is skipped **and** reported: one damaged row never loses the list and never throws, and #88
