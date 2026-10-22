@@ -45,7 +45,7 @@ const PATTERNS = [
   {
     label: "team role",
     pattern: `${START}(product owner|[a-z]+er bot)([^a-z0-9]|$)`,
-    hits: ["Product Owner review", "the Developer bot", "ask the tester bot"],
+    hits: ["Product Owner review", "the Helper bot", "ask the tester bot"],
     misses: [
       "a reviewer squash-merges",
       "developer build",
