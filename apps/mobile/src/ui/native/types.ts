@@ -1,5 +1,6 @@
 import type { CurrencyCode, MinorUnits } from "@budget-lens/core";
 import type { ReactNode } from "react";
+import type { AmountSign } from "../amount";
 import type { CalendarDate } from "../calendar-date";
 
 export interface ButtonProps {
@@ -19,8 +20,8 @@ export interface ToggleProps {
 }
 
 export interface ProgressIndicatorProps {
-  /** 0..1 */
-  fraction: number;
+  /** 0..1; omitted for an indeterminate indicator, as the loading state of #112. */
+  fraction?: number | undefined;
   color: string;
   trackColor: string;
 }
@@ -85,21 +86,41 @@ export interface GroupedListProps {
 }
 
 export interface ListSectionProps {
-  title: string;
-  testID: string;
+  /** Section header; a section without one is a plain card, as the archived row of #112. */
+  title?: string;
+  /** Test ID of the header, and therefore omitted when the section has none. */
+  testID?: string;
+  /** Muted line under the rows: the invalid-items note (#112), the form preview (#82). */
+  footer?: string | undefined;
   children: ReactNode;
 }
 
-export interface TransactionRowProps {
+/** A row that opens a pushed screen: label on the left, chevron on the right ("Archived items", #112). */
+export interface NavigationRowProps {
+  /** Visible label and accessible name of the row. */
+  label: string;
+  onPress: () => void;
+  testID: string;
+}
+
+/**
+ * The fields every row shows, with or without a status: the texts, the amount, the optional badge under them and
+ * the optional note under the amount.
+ */
+interface RowContentProps {
   title: string;
-  /** Secondary line, e.g. the due date. */
+  /** Secondary line, e.g. the due date or the recurrence summary. */
   meta?: string | undefined;
   amount: MinorUnits;
   /** The item's own currency; the amount is formatted in it. */
   currency: CurrencyCode;
-  paid: boolean;
-  onPaidChange: (paid: boolean) => void;
-  /** Test ID of the paid control (the row on Android, the status button on iOS). */
+  /** `always` also signs a positive amount with `+`; the Items list signs every row by its kind. */
+  sign?: AmountSign | undefined;
+  /** Tinted badge on a line of its own under the meta, e.g. "Change from Feb 2027". */
+  badge?: string | undefined;
+  /** Muted note under the amount, e.g. "No rate yet" for a foreign item (#92 adds the base value). */
+  amountNote?: string | undefined;
+  /** Test ID of the row. */
   testID: string;
   /**
    * Row actions revealed by swiping the row to the left (SwiftUI swipe actions on iOS, a gesture handler swipeable
@@ -108,6 +129,30 @@ export interface TransactionRowProps {
   actions?: readonly MenuAction<string>[] | undefined;
   onAction?: ((key: string) => void) | undefined;
 }
+
+/** A row with the paid status: the month view, where the whole row is the paid control. */
+export type PaidRowProps = RowContentProps & {
+  paid: boolean;
+  onPaidChange: (paid: boolean) => void;
+  /** Test ID of the paid control (the row on Android, the status button on iOS). */
+  showStatus?: true | undefined;
+  accessibilityLabel?: string | undefined;
+};
+
+/**
+ * A status-less row (`showStatus={false}`): an item row, which has no paid state to show (#63). It is one
+ * accessibility element named by `accessibilityLabel`, and it has no press handler yet: tapping an item row opens
+ * the edit sheet (#82), which is where that goes.
+ */
+export type StatuslessRowProps = RowContentProps & {
+  showStatus: false;
+  /** Accessible name of the whole row: name, kind, amount and summary as one sentence. */
+  accessibilityLabel: string;
+  paid?: undefined;
+  onPaidChange?: undefined;
+};
+
+export type TransactionRowProps = PaidRowProps | StatuslessRowProps;
 
 /** One action of a menu or a row (context menu items, swipe actions). */
 export interface MenuAction<K extends string> {

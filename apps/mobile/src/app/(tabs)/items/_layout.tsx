@@ -8,6 +8,7 @@ export default function Layout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ title: t("nav.tabs.items") }} />
+      <Stack.Screen name="archived" options={{ title: t("items.list.archived") }} />
     </Stack>
   );
 }

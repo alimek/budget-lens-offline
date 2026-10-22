@@ -116,3 +116,14 @@ function navigationColors(tokens: ThemeColors): NavigationColors {
 export function resolveColorScheme(scheme: string | null | undefined): ColorScheme {
   return scheme === "dark" ? "dark" : "light";
 }
+
+/**
+ * A token colour with transparency, as the 8-digit hex `#RRGGBBAA` that both Expo UI bridges accept: the tinted
+ * badge background of the #58 spec is `primary` at 12 %, which no token of its own exists for.
+ */
+export function tinted(color: string, percent: number): string {
+  const alpha = Math.round((percent / 100) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `${color}${alpha}`;
+}

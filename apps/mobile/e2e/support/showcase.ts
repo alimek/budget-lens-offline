@@ -50,16 +50,22 @@ export async function tapUntilVisible(control: Locator, result: Locator) {
 }
 
 /**
- * Opens the dev-only list example by deep link, so the showcase (with its secure field, which screenshots mask)
- * is not underneath it.
+ * Opens a development-only route by deep link and waits for its screen. The boot screens show only while the
+ * database stays closed, so every route is opened over the running app.
  */
-export async function openListExample({ app, screen, device, platform }: Fixtures) {
+export async function openDevScreen(fixtures: Fixtures, route: string, testID: string) {
+  const { app, screen, device, platform } = fixtures;
   await app.open();
   await expect(screen.getByTestId("screen-home")).toBeVisible();
-  await device.openLink("budget-lens:///dev/design-system-list");
-  const list = screen.getByTestId("screen-design-system-list");
-  if (platform === "ios") await confirmOpenInApp(screen, list);
-  await expect(list).toBeVisible();
+  await device.openLink(`budget-lens:///dev/${route}`);
+  const target = screen.getByTestId(testID);
+  if (platform === "ios") await confirmOpenInApp(screen, target);
+  await expect(target).toBeVisible();
+}
+
+/** Opens the dev-only list example, so the showcase (with its secure field, which screenshots mask) is not under it. */
+export function openListExample(fixtures: Fixtures) {
+  return openDevScreen(fixtures, "design-system-list", "screen-design-system-list");
 }
 
 /**
@@ -76,12 +82,16 @@ async function confirmOpenInApp(screen: Fixtures["screen"], target: Locator) {
 }
 
 /**
- * Swipes a list row to the left to reveal its actions. The row's test ID sits on its paid control, which on iOS is
- * only the small status button (a swipe there would be a tap), so the swipe runs across the list at the row's height.
+ * Swipes a list row to the left to reveal its actions. The row's test ID can sit on a small control inside the row
+ * (on iOS the paid button), where a swipe would be a tap, so the swipe runs across the list at the row's height.
  */
-export async function swipeRowLeft(screen: Fixtures["screen"], row: Locator) {
+export async function swipeRowLeft(
+  screen: Fixtures["screen"],
+  row: Locator,
+  listTestID = "ds-list",
+) {
   await expect(row).toBeVisible();
-  const list = await screen.getByTestId("ds-list").boundingBox();
+  const list = await screen.getByTestId(listTestID).boundingBox();
   const box = await row.boundingBox();
   if (!list || !box) throw new Error("the list or the row has no bounds");
   const y = box.y + box.height / 2;
