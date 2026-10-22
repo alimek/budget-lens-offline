@@ -28,7 +28,6 @@ plan** is used; paid features need the owner's consent.
   - **The project is already linked.** `extra.eas.projectId` is committed; it is not a secret. EAS CLI identifies the
     project and its account by this ID alone (since SDK 53 it does not need `owner`; eas-cli #2835 and #3017).
   - **Never commit `owner`.** It is an Expo account name, and the repository stays account-agnostic (#171).
-    `pnpm lint` rejects it (`scripts/check-machine-agnostic.mjs`).
   - **`extra.router` is not committed.** The `expo-router` config plugin adds `extra.router.asyncRoutes.web: true`
     whenever the config is evaluated (`expo config` shows the same value with or without it in `app.json`), and it
     only affects async routes on web. EAS writes it into `app.json` only while linking a project (`eas init`), not on
@@ -50,6 +49,9 @@ ends up in a build or a commit.
 
 A change that only touches JavaScript or assets can reach an installed build as an EAS Update instead of a new build
 ([updates.md](updates.md#update-or-new-build)).
+
+Before a release build, run the local e2e suites on **both iOS and Android** (`pnpm e2e:ios`, `pnpm e2e:android`);
+day-to-day UI PRs are tested on iOS only ([testing](../testing.md#platforms)).
 
 Prerequisites: a paid Apple Developer Program membership, and an Expo login with access to the account that owns the
 linked project (`pnpm --filter @budget-lens/mobile eas whoami`; Developer role or higher).

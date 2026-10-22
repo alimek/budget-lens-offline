@@ -65,9 +65,12 @@ Tool telemetry is disabled through environment variables, locally and in CI:
 - PR to `main` with an English description ending in `Closes #<n>`. Stacked PRs are allowed (base on the parent
   branch and say so in the description).
 - A reviewer **squash-merges** the PR after approval and fully green CI (with an English commit message).
-- **UI PRs** must include e2e evidence: **screenshots** (iOS + Android, simulator/emulator named; a
-  video is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine,
-  in the Screenshots section of the PR template (see [testing.md](testing.md)). A manual screenshot from a
+- **UI PRs** must include e2e evidence: the **e2e result summary and 1–3 key screenshots that show the change**
+  (simulator/emulator named; **iOS only** by default, both platforms only when the PR is platform-specific or before a
+  release build, see [testing.md](testing.md#platforms)) from a TesterArmy `e2e` run or `e2e explore` on a local
+  development build on a local dev machine, attached to the PR description in the Screenshots section of the PR
+  template. Test evidence is never committed; the full run output stays local, outside the repo (#241, see
+  [testing.md](testing.md#test-evidence-stays-out-of-the-repo)). A manual screenshot from a
   development build alone is not enough. Native builds and E2E do not run in CI (see
   [ci.md](ci.md#native-builds-and-e2e-local)).
 - Run the app only on **dedicated simulators/emulators** (names via `E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never
@@ -81,7 +84,7 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   `scripts/github/sync-labels.sh` applies it. Scripts, token scopes and the scheduling rules (pinned reviewed
   checkout, owner consent): [github-automation.md](github-automation.md).
 - **Machine-agnostic repo:** no host-, user- or operator-specific data and no references to a specific agent or bot
-  setup (see the hard rule in [AGENTS.md](../AGENTS.md)); `pnpm lint` runs `scripts/check-machine-agnostic.mjs`.
+  setup (see the hard rule in [AGENTS.md](../AGENTS.md)).
 - PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).
 - CI gates: `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title`, `pr-body`; all must pass.
   Details: [ci.md](ci.md). Commands: [README.md](../README.md).

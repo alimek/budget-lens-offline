@@ -57,12 +57,49 @@
     GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
-  - **UI PRs** include e2e evidence: **screenshots** (iOS + Android, simulator/emulator named; a video
-    is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
-    Screenshots section of the PR template. A manual screenshot from a development build alone is not enough.
+  - **UI PRs** include e2e evidence: the **e2e result summary and 1–3 key screenshots that show the change**
+    (simulator/emulator named) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local
+    dev machine, attached to the PR description in the Screenshots section of the PR template. A manual screenshot
+    from a development build alone is not enough. iOS only by default; see [Platforms](#platforms). Evidence is never
+    committed; see [Test evidence stays out of the repo](#test-evidence-stays-out-of-the-repo).
   - Only **dedicated simulators/emulators** are used (`E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never personal or
     shared devices.
   - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
+
+### Test evidence stays out of the repo
+
+Owner decision (#241, 2026-10-22): the repository is not the place for test evidence.
+
+- Run e2e locally and keep the full run output (report, `trace.md` files, all screenshots, video, logs) locally,
+  outside the repo or in the ignored `apps/mobile/.e2e/`. Never commit screenshots, e2e logs or run reports, and do not
+  add folders such as `docs/evidence/` (it is ignored by Git).
+- The PR description carries the e2e result summary (command, platform and simulator/emulator, passed/failed) and at
+  most **1–3 key screenshots that show the change**, not every capture. The screenshots are attached to the PR
+  description, not committed.
+- How to attach: one pre-release on this repo with the tag `e2e-evidence` holds PR screenshots. Name each file
+  `<pr>-<n>.png` (for example `241-1.png`), upload it with `gh release upload e2e-evidence <pr>-<n>.png --clobber`
+  and embed it in the PR body by the asset's download URL:
+  `![iOS: what it shows](https://github.com/alimek/budget-lens-offline/releases/download/e2e-evidence/241-1.png)`.
+- Screenshots must show no private setup details or personal data: no device names or serials, account names, file
+  paths or notifications. Crop or retake them if needed.
+- Committed test inputs are not evidence: e2e baselines used by `toHaveScreenshot` (`e2e/*.e2e.ts-snapshots/`) and
+  the `.e2e/cache` stay in the repo.
+
+### Platforms
+
+Owner decision (#238, 2026-10-22): UI PRs are tested on **iOS only** by default (local e2e on `E2E_IOS_SIMULATOR`),
+because testing on two devices every time takes too long. Run and attach **both iOS and Android** only when:
+
+- the PR touches something platform-specific: native modules or native dependencies, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files (including any change to the Expo UI wrappers `apps/mobile/src/ui/native/*.ios.tsx` / `*.android.tsx`), permissions, or fonts and assets that render per platform;
+- a release build is about to be made.
+
+Screens that only use the native wrappers (without changing them) are iOS-only. Non-UI PRs need no simulator.
+
+### One simulator
+
+There is only one simulator, so at most one issue or PR labeled `needs:simulator` is in progress at a time. Split
+mixed work into a UI part (needs the simulator, label `needs:simulator`) and a non-UI part (core, db, logic: unit
+tests only) that can run in parallel.
 
 ## Rules
 
@@ -224,12 +261,13 @@ E2E_IOS_SIMULATOR=My-Simulator pnpm e2e:ios
 For Android, first forward Metro to the dedicated emulator only: `adb -s <BudgetLens-emulator-serial> reverse tcp:8073
 tcp:8073`. The scripts set `E2E_TELEMETRY_DISABLED=1`. Output (report, `trace.md` per test, screenshots, iOS video)
 goes to `apps/mobile/.e2e/<platform>/` and is ignored by Git; `app.screenshot()` files are under
-`results/<test>/attempt-1/screenshots/`. Attach the screenshots to UI PRs (see the PR template).
+`results/<test>/attempt-1/screenshots/`. Attach 1–3 key screenshots to the UI PR description (see the PR template and
+[Test evidence stays out of the repo](#test-evidence-stays-out-of-the-repo)).
 Android screenshots are stabilized by agent-device (System UI demo mode with the clock set to 9:41 and
 notification icons hidden), so captures of an unchanged screen can be identical; to show that a run used new test
-code, attach that test's `trace.md` (run ID and steps) as well. If they show a clock other than 9:41, reset demo
+code, quote that test's run ID and steps from its `trace.md` in the PR description as well. If they show a clock other than 9:41, reset demo
 mode on the dedicated emulator once (`adb -s <emulator-serial> shell am broadcast -a com.android.systemui.demo -e
-command enter`, then the same with `exit`); see [evidence/15](evidence/15/README.md).
+command enter`, then the same with `exit`); see #15.
 
 **Known capture quirks:** screenshots black out secure text fields (`SecureField`, password fields), including
 ones on a screen underneath, which is why the list example is opened by deep link. On iOS the first gesture right

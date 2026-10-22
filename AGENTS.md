@@ -30,10 +30,10 @@ platform-agnostic TypeScript package.
   them; `.env*` is gitignored ([#15 e2e
   decisions](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
 - **Machine-agnostic repo.** No host-, user- or operator-specific data: no machine or host names, user names,
-  absolute home paths, local scheduler jobs, device serials or local simulator/emulator instances, and no references
-  to a specific agent or bot setup or who does what. Use env vars with documented defaults and generic wording ("a
-  local dev machine"); machine-specific automation lives outside the repo. `pnpm lint` enforces it
-  (`scripts/check-machine-agnostic.mjs`) and reviewers check it.
+  absolute home paths, local scheduler jobs, device serials or local simulator/emulator instances, no Expo account
+  name (no `expo.owner` in `apps/mobile/app.json`), and no references to a specific agent or bot setup or who does
+  what. Use env vars with documented defaults and generic wording ("a local dev machine"); machine-specific
+  automation lives outside the repo. Reviewers check it.
 
 Details and the rest of the conventions: [docs/conventions.md](docs/conventions.md).
 
@@ -54,7 +54,8 @@ CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licen
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
 CI runs only these fast checks, all on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not in CI: they run
 locally on a dev machine (macOS with Xcode for iOS, Android SDK for Android) on dedicated simulators/emulators, and
-the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
+the evidence is the e2e result summary and 1–3 key screenshots attached to the PR description, never committed (iOS by
+default, see below; [docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 ## Workflow
 
@@ -63,9 +64,22 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - A reviewer squash-merges after approval and fully green CI.
 - Testing: e2e first; unit tests only for business logic, Arrange-Act-Assert; no coverage thresholds –
   [docs/testing.md](docs/testing.md).
-- UI PRs include e2e evidence: screenshots (iOS + Android, simulator/emulator named; a video is also
-  fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the PR
-  template's Screenshots section. A manual screenshot from a development build alone is not enough.
+- UI PRs include e2e evidence from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev
+  machine: the e2e result summary and **1–3 key screenshots that show the change** (simulator/emulator named), attached
+  to the PR description in the PR template's Screenshots section. A manual screenshot from a development build alone is
+  not enough.
+- Test evidence stays out of the repo (#241): keep the full e2e run output (report, traces, all screenshots, video)
+  locally, outside the repo or in the ignored `apps/mobile/.e2e/`; never commit screenshots, logs or run reports.
+  Screenshots go to the `e2e-evidence` pre-release as `<pr>-<n>.png` (`gh release upload e2e-evidence <file>
+  --clobber`) and are embedded in the PR body by the asset's download URL; they show no device names or serials,
+  account names, paths, notifications or personal data. Details:
+  [docs/testing.md](docs/testing.md#test-evidence-stays-out-of-the-repo).
+- Platforms (#238): UI PRs are tested on **iOS only** by default. Test and attach **both iOS and Android** only when the
+  PR touches something platform-specific: native modules or native dependencies, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files (including any change to the Expo UI wrappers `apps/mobile/src/ui/native/*.ios.tsx` / `*.android.tsx`), permissions, or fonts and assets that render per platform; and before a release build. Screens that only use the wrappers
+  are iOS-only. Details: [docs/testing.md](docs/testing.md#platforms).
+- One simulator: at most one issue or PR labeled `needs:simulator` is in progress at a time. Split mixed work into a UI
+  part (needs the simulator, label `needs:simulator`) and a non-UI part (core, db, logic: unit tests only) that can run
+  in parallel ([docs/testing.md](docs/testing.md#one-simulator)).
 - Run the app only on dedicated simulators/emulators (names via `E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never on
   personal or shared devices.
 - Metro runs on the repo's fixed port **8073** – [docs/mobile-development.md](docs/mobile-development.md).

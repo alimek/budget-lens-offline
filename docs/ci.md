@@ -26,7 +26,7 @@ status check. Making checks required in the `main` ruleset is the repository own
 
 | Job | Fails when |
 | --- | --- |
-| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or host-, user- or agent-setup-specific content, including an Expo account name (`expo.owner`) in `apps/mobile/app.json` (`scripts/check-machine-agnostic.mjs`, see [AGENTS.md](../AGENTS.md)), or a migration problem in `packages/db`: `drizzle-kit check` not clean, schema changes without a migration, a stale `migrations.generated.ts` or a migration not newer than the previous one (`db:check`, see [packages/db](../packages/db/README.md#migrations)) |
+| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or a migration problem in `packages/db`: `drizzle-kit check` not clean, schema changes without a migration, a stale `migrations.generated.ts` or a migration not newer than the previous one (`db:check`, see [packages/db](../packages/db/README.md#migrations)) |
 | `typecheck` | Any TypeScript 7 error with the strict options in `tsconfig.base.json` |
 | `test` | Any failing Vitest test (coverage is reported, no thresholds) |
 | `fallow` | Any unused file, export, type or dependency (dev dependencies too), unlisted dependency, cycle or stale suppression |
@@ -109,9 +109,12 @@ no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow 
   [mobile development](mobile-development.md#development-builds)).
 - iOS release builds for internal TestFlight run on **EAS Build** and are uploaded with **EAS Submit**, both started
   manually (#178, [release/testflight.md](release/testflight.md)); no GitHub workflow triggers them.
-- The evidence on the PR is **screenshots** (iOS + Android, simulator/emulator named; a video is
-  also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
-  **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a
+- The evidence on the PR is the **e2e result summary and 1–3 key screenshots that show the change**
+  (simulator/emulator named; **iOS only** by default, both iOS and Android only for platform-specific changes and
+  before a release build, see [testing.md](testing.md#platforms)) from a TesterArmy `e2e` run or `e2e explore` on a
+  local development build on a local dev machine, attached to the PR description in the **Screenshots** section of the
+  [PR template](../.github/pull_request_template.md). Evidence is never committed (#241): the full run output stays
+  local, outside the repo (see [testing.md](testing.md#test-evidence-stays-out-of-the-repo)). A manual screenshot from a
   development build alone is not enough. It is required for every PR
   that changes UI; reviewers check it. `pr-body` does not check it (it only checks `Closes #N`), so non-UI PRs
   can leave the section out.

@@ -77,7 +77,8 @@ that pair a label with a value stack the label above the control instead of shar
 largest sizes; long pages scroll. Label/amount rows (the summary card, iOS `TransactionRow`) stay on one line up to the
 largest standard size and stack at accessibility sizes / font scale 1.5 and up (`useStackedRows()`, threshold in
 `src/ui/large-text.ts`), so neither a word nor an amount is broken mid-way. Check at 200% before merging UI changes (see
-[testing](testing.md#large-text-200)); the #182 captures are in [evidence/182](evidence/182/README.md).
+[testing](testing.md#large-text-200)); the #182 captures were in
+`docs/evidence/` (removed by #241, still in Git history).
 
 ### React Native Reusables
 
@@ -117,5 +118,4 @@ currency `ds-amount-input-locked`) and the stepper (`ds-stepper`), …). `/dev/d
 `AppSheet` (`ds-edit-sheet`), "Delete" (`ds-row-<id>-delete`) asks in an `AppAlert` (`ds-delete-alert`) and removes the
 row. The showcase's Overlays section has the sheet (`ds-open-sheet`, `ds-sheet`), the alert (`ds-open-alert`,
 `ds-alert`) and the menu (`ds-menu`, `ds-menu-<key>`), with the last result in `ds-overlay-result`. Screenshots from
-the e2e runs are in [evidence/119](evidence/119/README.md), [evidence/182](evidence/182/README.md) and
-[evidence/187](evidence/187/README.md).
+the #119, #182 and #187 e2e runs were in `docs/evidence/` (removed by #241, still in Git history).
