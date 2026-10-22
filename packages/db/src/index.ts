@@ -20,6 +20,7 @@ export {
   updateItem,
 } from "./items-repository";
 export type { MigrationBundle } from "./migration-bundle";
+export { MONTH_TABLES, readActiveMonth } from "./months-repository";
 export type {
   MonthOccurrence,
   MonthOccurrencesRead,

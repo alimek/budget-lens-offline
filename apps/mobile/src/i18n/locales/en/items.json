@@ -1,0 +1,53 @@
+{
+  "list": {
+    "income": "Income",
+    "expenses": "Expenses",
+    "archived": "Archived items",
+    "changeFrom": "Change from {{month, monthName}}",
+    "noRate": "No rate yet",
+    "loading": "Loading items…",
+    "loadError": "Couldn't load your items. Your data hasn't changed.",
+    "someInvalid": "Some items couldn't be read and are hidden."
+  },
+  "empty": {
+    "title": "No items yet",
+    "body": "Add your regular bills, subscriptions and income once. Budget Lens puts them in the right months."
+  },
+  "actions": {
+    "archive": "Archive"
+  },
+  "archive": {
+    "title": "Archive “{{name}}”?",
+    "message": "It disappears from upcoming months. Closed months keep it. You can find it later in Archived items.",
+    "confirm": "Archive",
+    "done": "Archived",
+    "failedTitle": "Couldn’t archive the item",
+    "failedMessage": "Nothing changed. The item is still in your list."
+  },
+  "summary": {
+    "separator": " · ",
+    "monthly": "Monthly",
+    "everyN_one": "Every {{count}} month",
+    "everyN_other": "Every {{count}} months",
+    "yearly": "Yearly · {{month, monthName}}",
+    "oneTime": "One-time · {{month, monthName(style: short)}}",
+    "onDay_one": "on the {{count}}st",
+    "onDay_two": "on the {{count}}nd",
+    "onDay_few": "on the {{count}}rd",
+    "onDay_other": "on the {{count}}th",
+    "from": "from {{month, monthName(style: short)}}",
+    "until": "until {{month, monthName(style: short)}}",
+    "ended": "Ended {{month, monthName(style: short)}}"
+  },
+  "archived": {
+    "empty": "No archived items"
+  },
+  "a11y": {
+    "row": "{{name}}, {{kind}}, {{amount}}, {{summary}}",
+    "rowChange": "{{name}}, {{kind}}, {{amount}}, {{summary}}, {{change}}",
+    "amountNoRate": "{{amount}}, {{note}}",
+    "kindExpense": "expense",
+    "kindIncome": "income",
+    "archived": "Archived items, {{total}}"
+  }
+}

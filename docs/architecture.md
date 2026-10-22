@@ -83,7 +83,7 @@ implemented and what is still planned:
 | Navigation | Expo Router | Implemented (#73) |
 | UI | Expo UI (native SwiftUI / Jetpack Compose components) + Uniwind (Tailwind for React Native) for custom views | Implemented (#73, #119): Expo UI wrappers in `src/ui/native`, Indigo tokens in `global.css` + `src/ui/lib/theme.ts`, React Native Reusables components in `src/ui/components` ([design system](design-system.md)) |
 | Local database | expo-sqlite with SQLCipher (`useSQLCipher: true`), Drizzle ORM + drizzle-kit migrations; DB key in expo-secure-store | Implemented (#74, #75): expo-sqlite 58.0.13 with SQLCipher, `packages/db` schema v1 with drizzle-orm 0.45.4 / drizzle-kit 0.31.11, migrations applied by `runMigrations()` on every start behind an encrypted copy ([packages/db/README.md](../packages/db/README.md)); device key in expo-secure-store, `PRAGMA cipher_version` guard and boot screens ([#75](https://github.com/alimek/budget-lens-offline/issues/75), below) |
-| Reactive reads | A small in-house hook on expo-sqlite's `addDatabaseChangeListener` declaring the tables a query reads (#35 §4); Drizzle `useLiveQuery` only where one table suffices | Planned (#75); `packages/db` exposes the item list reads with the tables they depend on (#81) |
+| Reactive reads | A small in-house hook on expo-sqlite's `addDatabaseChangeListener` declaring the tables a query reads (#35 §4); Drizzle `useLiveQuery` only where one table suffices | Implemented (#112): `useLiveRead(tables, read)` in `apps/mobile/src/db` re-runs a synchronous `packages/db` read when one of its tables changes, over the `db` that `DatabaseGate` hands to `DatabaseProvider`; a write through a repository needs no refresh callback (`useSettings`, `useActiveMonth` and the Items list use it) |
 | App state | Zustand with the provider pattern (store created inside a React provider) | Implemented (#73): provider-scoped store (selected month) |
 | Network data | TanStack Query only when network requests are added (NBP rates, license) | Planned (with the first network requests, e.g. NBP rates #8) |
 | i18n | Polish and English; no hardcoded UI strings | Implemented (#73, #77): i18next + react-i18next, bundled PL/EN resources per namespace, English source and runtime fallback, typed keys, system language with an in-app override API, i18next-cli for extraction only, no CI translation check ([i18n](i18n.md)) |
@@ -152,7 +152,10 @@ deleting such files and restoring a backup are E8 work (#96, #97). Android Auto 
 excluded by explicit rules from `plugins/withBackupRules.js` (not `allowBackup=false`); the iOS device backup keeps
 the ciphertext file (owner review #34), and the EAS Update installation ID stays backed up, as the privacy text
 already discloses ([updates.md](release/updates.md#installation-id-storage)). A root error boundary is follow-up
-work with the final #60 screens. No repository or screen reads the database yet (#81).
+work with the final #60 screens. The Items list is the first screen to read the database (#112): the ready
+connection reaches the screens through `DatabaseProvider`/`useDatabase()` (`src/db/database-provider.tsx`),
+`useLiveRead` re-runs a repository read when one of its tables changes, and `useActiveMonth` anchors the list
+to the active `months` row, falling back to the device's calendar month until onboarding (#111) opens one.
 
 The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
 Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,

@@ -101,6 +101,23 @@
       "forgotten": "Klucz zniknął; plik bazy danych został nietknięty.",
       "absent": "Nie było klucza do zapomnienia.",
       "failed": "Pamięć zabezpieczona odmówiła odpowiedzi."
+    },
+    "itemsSeed": {
+      "monthCases": "Przypadki miesiąca (pol.)",
+      "title": "Przykładowe pozycje",
+      "seed": "Zapisz przykładowe pozycje",
+      "clear": "Zarchiwizuj przykładowe pozycje",
+      "seeded": "Zapisano przykładowe pozycje.",
+      "cleared": "Zarchiwizowano przykładowe pozycje.",
+      "failed": "Nie udało się zapisać.",
+      "names": {
+        "rent": "Czynsz",
+        "internet": "Internet",
+        "streaming": "Streaming",
+        "carInsurance": "Ubezpieczenie auta",
+        "oldPhone": "Stary telefon",
+        "salary": "Wynagrodzenie"
+      }
     }
   },
   "budget": {

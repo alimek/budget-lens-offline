@@ -1,5 +1,6 @@
 import type { CurrencyCode, MinorUnits } from "@budget-lens/core";
 import type { ReactNode } from "react";
+import type { AmountSign } from "../amount";
 import type { CalendarDate } from "../calendar-date";
 
 export interface ButtonProps {
@@ -19,8 +20,8 @@ export interface ToggleProps {
 }
 
 export interface ProgressIndicatorProps {
-  /** 0..1 */
-  fraction: number;
+  /** 0..1; omitted for an indeterminate indicator, as the loading state of #112. */
+  fraction?: number | undefined;
   color: string;
   trackColor: string;
 }
@@ -85,29 +86,84 @@ export interface GroupedListProps {
 }
 
 export interface ListSectionProps {
-  title: string;
-  testID: string;
+  /** Section header; a section without one is a plain card, as the archived row of #112. */
+  title?: string;
+  /** Test ID of the header, and therefore omitted when the section has none. */
+  testID?: string;
+  /** Muted line under the rows: the invalid-items note (#112), the form preview (#82). */
+  footer?: string | undefined;
   children: ReactNode;
 }
 
-export interface TransactionRowProps {
+/** A row that opens a pushed screen: label on the left, an optional count and a chevron on the right (#112). */
+export interface NavigationRowProps {
+  /** Visible label of the row; the accessible name is `accessibilityLabel` when one is given. */
+  label: string;
+  /** Muted count before the chevron, e.g. how many items are archived. Not part of the name unless asked for. */
+  detail?: string | undefined;
+  /** Accessible name of the row; `label` by default. Pass the label with its count to keep them read together. */
+  accessibilityLabel?: string | undefined;
+  onPress: () => void;
+  testID: string;
+  /** Test ID of the `detail` itself, for a test that reads the count back. */
+  detailTestId?: string | undefined;
+}
+
+/**
+ * The fields every row shows, with or without a status: the texts, the amount, the optional badge under them and
+ * the optional note under the amount.
+ */
+interface RowContentProps {
   title: string;
-  /** Secondary line, e.g. the due date. */
+  /** Secondary line, e.g. the due date or the recurrence summary. */
   meta?: string | undefined;
   amount: MinorUnits;
   /** The item's own currency; the amount is formatted in it. */
   currency: CurrencyCode;
-  paid: boolean;
-  onPaidChange: (paid: boolean) => void;
-  /** Test ID of the paid control (the row on Android, the status button on iOS). */
+  /** `always` also signs a positive amount with `+`; the Items list signs every row by its kind. */
+  sign?: AmountSign | undefined;
+  /** Tinted badge on a line of its own under the meta, e.g. "Change from Feb 2027". */
+  badge?: string | undefined;
+  /** Muted note under the amount, e.g. "No rate yet" for a foreign item (#92 adds the base value). */
+  amountNote?: string | undefined;
+  /** Test ID of the row. */
   testID: string;
   /**
-   * Row actions revealed by swiping the row to the left (SwiftUI swipe actions on iOS, a gesture handler swipeable
-   * on Android). The first action is the trailing-most; a full swipe on iOS performs it.
+   * Row actions: revealed by swiping the row to the left (SwiftUI swipe actions on iOS, a gesture handler
+   * swipeable on Android) and, on a long press, by a menu (SwiftUI `ContextMenu` on iOS, an M3 `DropdownMenu`
+   * anchored to the row on Android). The same list drives both, so a row never offers an action twice over.
+   * The first action is the trailing-most; on iOS a full swipe does not perform one, because an action that
+   * confirms first must be tapped on purpose (#63).
+   *
+   * The swipe buttons carry `<testID>-<key>` and the menu items `<testID>-menu-<key>`.
    */
   actions?: readonly MenuAction<string>[] | undefined;
   onAction?: ((key: string) => void) | undefined;
 }
+
+/** A row with the paid status: the month view, where the whole row is the paid control. */
+export type PaidRowProps = RowContentProps & {
+  paid: boolean;
+  onPaidChange: (paid: boolean) => void;
+  /** Test ID of the paid control (the row on Android, the status button on iOS). */
+  showStatus?: true | undefined;
+  accessibilityLabel?: string | undefined;
+};
+
+/**
+ * A status-less row (`showStatus={false}`): an item row, which has no paid state to show (#63). It is one
+ * accessibility element named by `accessibilityLabel`, and it has no press handler yet: tapping an item row opens
+ * the edit sheet (#82), which is where that goes.
+ */
+export type StatuslessRowProps = RowContentProps & {
+  showStatus: false;
+  /** Accessible name of the whole row: name, kind, amount and summary as one sentence. */
+  accessibilityLabel: string;
+  paid?: undefined;
+  onPaidChange?: undefined;
+};
+
+export type TransactionRowProps = PaidRowProps | StatuslessRowProps;
 
 /** One action of a menu or a row (context menu items, swipe actions). */
 export interface MenuAction<K extends string> {
@@ -123,6 +179,20 @@ export interface ContextMenuProps<K extends string> {
   actions: readonly MenuAction<K>[];
   onAction: (key: K) => void;
   /** Test ID of the trigger button; each item gets `<testID>-<key>` where the platform exposes it. */
+  testID: string;
+}
+
+/**
+ * A short confirmation of something that already happened ("Archived", #63). The component shows `message` once
+ * and calls `onShown` as soon as it has taken it over, so the owner clears it there; it renders nothing itself on
+ * iOS, where the same notice is an accessibility announcement.
+ */
+export interface SnackbarProps {
+  /** The message to show, or none while nothing is pending. */
+  message: string | undefined;
+  /** Called once the notice has been shown or announced: the place to forget the message. */
+  onShown: () => void;
+  /** Test ID of the notice, where the platform exposes one. */
   testID: string;
 }
 
@@ -143,7 +213,8 @@ export interface AlertProps {
   title: string;
   message?: string | undefined;
   confirmLabel: string;
-  cancelLabel: string;
+  /** Omit for a notice the user only acknowledges: one button, no cancel. */
+  cancelLabel?: string | undefined;
   /** Styles the confirm button as destructive (for example "Delete"). */
   destructive?: boolean;
   onConfirm: () => void;

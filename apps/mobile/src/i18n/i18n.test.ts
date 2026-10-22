@@ -6,7 +6,7 @@ import { createI18n } from "./create-i18n";
 import { resolveLanguage } from "./language";
 
 // Fixture keys are not part of the typed app resources.
-type LooseT = (key: string, options?: { count: number }) => string;
+type LooseT = (key: string, options?: Record<string, string | number>) => string;
 
 describe("createI18n", () => {
   it("falls back to English for a key missing in Polish", () => {
@@ -46,6 +46,102 @@ describe("createI18n", () => {
 
     // Assert
     expect(forms).toEqual(["1 pozycja", "2 pozycje", "5 pozycji", "22 pozycje", "25 pozycji"]);
+  });
+});
+
+describe("the monthName formatter", () => {
+  /** A key rendered from the real resources, with a `YearMonth` or a month number in it. */
+  const render = (language: "en" | "pl", key: string, month: string | number): string => {
+    const t = createI18n(language).t as unknown as LooseT;
+    return t(key, { ns: "items", month });
+  };
+
+  it("renders the month keys of the items list in English", () => {
+    // Arrange: January, February and October of 2027, and their month numbers for the yearly key.
+    const months = ["2027-01", "2027-02", "2027-10"] as const;
+
+    // Act
+    const lines = months.flatMap((month) => [
+      render("en", "list.changeFrom", month),
+      render("en", "summary.from", month),
+      render("en", "summary.until", month),
+      render("en", "summary.ended", month),
+      render("en", "summary.oneTime", month),
+      render("en", "summary.yearly", Number(month.slice(5, 7))),
+    ]);
+
+    // Assert
+    expect(lines).toEqual([
+      "Change from January 2027",
+      "from Jan 2027",
+      "until Jan 2027",
+      "Ended Jan 2027",
+      "One-time · Jan 2027",
+      "Yearly · January",
+      "Change from February 2027",
+      "from Feb 2027",
+      "until Feb 2027",
+      "Ended Feb 2027",
+      "One-time · Feb 2027",
+      "Yearly · February",
+      "Change from October 2027",
+      "from Oct 2027",
+      "until Oct 2027",
+      "Ended Oct 2027",
+      "One-time · Oct 2027",
+      "Yearly · October",
+    ]);
+  });
+
+  it("declines the Polish months by the case each key asks for", () => {
+    // Arrange: February is the odd one out – lutego, lutym, lutym.
+    const months = ["2027-01", "2027-02", "2027-10"] as const;
+
+    // Act
+    const lines = months.flatMap((month) => [
+      render("pl", "list.changeFrom", month),
+      render("pl", "summary.from", month),
+      render("pl", "summary.until", month),
+      render("pl", "summary.ended", month),
+      render("pl", "summary.oneTime", month),
+      render("pl", "summary.yearly", Number(month.slice(5, 7))),
+    ]);
+
+    // Assert
+    expect(lines).toEqual([
+      "Zmiana od stycznia 2027",
+      "od stycznia 2027",
+      "do stycznia 2027",
+      "Zakończona w styczniu 2027",
+      "Jednorazowo · sty 2027",
+      "Co roku · styczeń",
+      "Zmiana od lutego 2027",
+      "od lutego 2027",
+      "do lutego 2027",
+      "Zakończona w lutym 2027",
+      "Jednorazowo · lut 2027",
+      "Co roku · luty",
+      "Zmiana od października 2027",
+      "od października 2027",
+      "do października 2027",
+      "Zakończona w październiku 2027",
+      "Jednorazowo · paź 2027",
+      "Co roku · październik",
+    ]);
+  });
+
+  it("capitalises a month that starts a sentence", () => {
+    // Arrange: a fixture key – the copy that needs it belongs to #82.
+    const renderCapitalised = (language: "en" | "pl"): string =>
+      (createI18n(language).t as unknown as LooseT)("{{month, monthName(capitalize: true)}}", {
+        month: "2026-10",
+      });
+
+    // Act
+    const lines = [renderCapitalised("pl"), renderCapitalised("en")];
+
+    // Assert: Polish month names are lowercase and get their capital only here; English is unchanged.
+    expect(lines).toEqual(["Październik 2026", "October 2026"]);
   });
 });
 

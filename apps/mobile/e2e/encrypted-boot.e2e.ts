@@ -1,37 +1,6 @@
-import { type Device, test } from "@e2e-dev/mobile";
-import { expect, type TestFixtures } from "e2e";
-import { appAlert, nativeButton, settle, tapUntilVisible } from "./support/showcase";
-
-type Fixtures = TestFixtures & { device: Device };
-type Locator = ReturnType<Fixtures["screen"]["getByTestId"]>;
-
-/**
- * iOS asks "Open in <app>?" the first time a simulator opens the app's own link; later ones go straight in.
- * Either the target or the alert is the answer, so the two are raced instead of sleeping between polls.
- */
-async function confirmOpenInApp(screen: Fixtures["screen"], target: Locator) {
-  const alert = screen.getByRole("alert");
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const winner = await Promise.race([
-      target.isVisible().then((visible) => (visible ? ("target" as const) : undefined)),
-      alert.isVisible().then((visible) => (visible ? ("alert" as const) : undefined)),
-    ]);
-    if (winner === "target") return;
-    if (winner === "alert") return alert.getByRole("button").last().tap();
-    await settle(250);
-  }
-}
-
-/** Opens a development-only route by deep link: the boot screens show only while the database stays closed. */
-async function openDevScreen(fixtures: Fixtures, route: string, testID: string) {
-  const { app, screen, device } = fixtures;
-  await app.open();
-  await expect(screen.getByTestId("screen-home")).toBeVisible();
-  await device.openLink(`budget-lens:///dev/${route}`);
-  const target = screen.getByTestId(testID);
-  if (fixtures.platform === "ios") await confirmOpenInApp(screen, target);
-  await expect(target).toBeVisible();
-}
+import { test } from "@e2e-dev/mobile";
+import { expect } from "e2e";
+import { appAlert, nativeButton, openDevScreen, tapUntilVisible } from "./support/showcase";
 
 interface BootScreenCase {
   name: string;

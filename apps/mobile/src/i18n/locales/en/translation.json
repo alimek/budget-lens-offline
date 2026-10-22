@@ -101,6 +101,23 @@
       "forgotten": "The key is gone; the database file is untouched.",
       "absent": "There was no key to forget.",
       "failed": "Secure storage refused to answer."
+    },
+    "itemsSeed": {
+      "monthCases": "Polish month cases",
+      "title": "Example items",
+      "seed": "Seed example items",
+      "clear": "Archive example items",
+      "seeded": "Example items written.",
+      "cleared": "Example items archived.",
+      "failed": "Seeding failed.",
+      "names": {
+        "rent": "Rent",
+        "internet": "Internet",
+        "streaming": "Streaming",
+        "carInsurance": "Car insurance",
+        "oldPhone": "Old phone plan",
+        "salary": "Salary"
+      }
     }
   },
   "budget": {

@@ -1,6 +1,7 @@
 import type { Language } from "@budget-lens/core";
 import { createInstance, type i18n, type Resource } from "i18next";
 import { initReactI18next } from "react-i18next";
+import { formatMonthName } from "./format-month-name";
 import { resources as bundledResources, defaultNS } from "./resources";
 
 /** An initialized i18next instance; init is synchronous because every resource is bundled. */
@@ -17,5 +18,7 @@ export function createI18n(language: Language, resources: Resource = bundledReso
     returnEmptyString: false,
     interpolation: { escapeValue: false },
   });
+  // Registered once for every namespace: `{{month, monthName(case: genitive)}}` (#63, decision 5).
+  instance.services.formatter?.add("monthName", formatMonthName);
   return instance;
 }

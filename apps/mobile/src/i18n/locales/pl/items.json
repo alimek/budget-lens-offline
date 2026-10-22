@@ -1,0 +1,52 @@
+{
+  "list": {
+    "income": "Przychody",
+    "expenses": "Wydatki",
+    "archived": "Zarchiwizowane pozycje",
+    "changeFrom": "Zmiana od {{month, monthName(case: genitive)}}",
+    "noRate": "Brak kursu",
+    "loading": "Wczytywanie pozycji…",
+    "loadError": "Nie udało się wczytać pozycji. Twoje dane nie zostały zmienione.",
+    "someInvalid": "Niektórych pozycji nie udało się odczytać i są ukryte."
+  },
+  "empty": {
+    "title": "Nie masz jeszcze pozycji",
+    "body": "Dodaj raz stałe rachunki, subskrypcje i przychody. Budget Lens umieści je we właściwych miesiącach."
+  },
+  "actions": {
+    "archive": "Archiwizuj"
+  },
+  "archive": {
+    "title": "Zarchiwizować „{{name}}”?",
+    "message": "Zniknie z nadchodzących miesięcy. Zamknięte miesiące ją zachowają. Znajdziesz ją później w zarchiwizowanych pozycjach.",
+    "confirm": "Archiwizuj",
+    "done": "Zarchiwizowano",
+    "failedTitle": "Nie udało się zarchiwizować pozycji",
+    "failedMessage": "Nic się nie zmieniło. Pozycja wciąż jest na liście."
+  },
+  "summary": {
+    "separator": " · ",
+    "monthly": "Co miesiąc",
+    "everyN_one": "Co {{count}} miesiąc",
+    "everyN_few": "Co {{count}} miesiące",
+    "everyN_many": "Co {{count}} miesięcy",
+    "everyN_other": "Co {{count}} miesiąca",
+    "yearly": "Co roku · {{month, monthName}}",
+    "oneTime": "Jednorazowo · {{month, monthName(style: short)}}",
+    "onDay_other": "{{count}}. dnia",
+    "from": "od {{month, monthName(case: genitive)}}",
+    "until": "do {{month, monthName(case: genitive)}}",
+    "ended": "Zakończona w {{month, monthName(case: locative)}}"
+  },
+  "archived": {
+    "empty": "Brak zarchiwizowanych pozycji"
+  },
+  "a11y": {
+    "row": "{{name}}, {{kind}}, {{amount}}, {{summary}}",
+    "rowChange": "{{name}}, {{kind}}, {{amount}}, {{summary}}, {{change}}",
+    "amountNoRate": "{{amount}}, {{note}}",
+    "kindExpense": "wydatek",
+    "kindIncome": "przychód",
+    "archived": "Zarchiwizowane pozycje, {{total}}"
+  }
+}

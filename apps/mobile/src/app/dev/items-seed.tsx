@@ -1,0 +1,229 @@
+// Development-only seed for the Items list (#112): one press writes a small, deterministic set of items through
+// the real repository, the other archives them again, so an e2e run can start from an empty list and from a
+// populated one on the same device. Names come from i18n like every other text; the row ids carry a `gen` query
+// parameter the test chooses, so a fresh run seeds new rows instead of colliding with the archived ones that the
+// previous run left behind.
+import {
+  addMonths,
+  type CurrencyCode,
+  type ItemType,
+  type MinorUnits,
+  type RuleVersion,
+  type Schedule,
+  type YearMonth,
+} from "@budget-lens/core";
+import { archiveItem, createItem, readItems } from "@budget-lens/db";
+import { randomUUID } from "expo-crypto";
+import { Redirect, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { localCalendarMonth } from "@/db/active-month";
+import { useDatabase } from "@/db/database-provider";
+import { useActiveMonth } from "@/db/use-active-month";
+import { formatMonthName } from "@/i18n/format-month-name";
+import { Screen } from "@/ui/components/screen";
+import { Text } from "@/ui/components/text";
+import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
+
+/**
+ * The Polish month cases, in the order the screen shows them (#63, decision 5). The nominative is the one form
+ * that comes from native `Intl` rather than from the table, and Hermes has its own `Intl` build: an e2e test
+ * reads this line back on both platforms, so a platform that declines the nominative ("lutego 2027" instead of
+ * "luty 2027") fails there instead of shipping the wrong month.
+ */
+const POLISH_MONTH_CASES = ["nominative", "genitive", "instrumental", "locative"] as const;
+
+/** February, the odd month out: *luty*, but *lutego* and twice *lutym*. */
+const PROBE_MONTH = "2027-02";
+
+const polishMonthCases = POLISH_MONTH_CASES.map((name) =>
+  formatMonthName(PROBE_MONTH, "pl", { case: name }),
+).join(" · ");
+
+/** Every seeded row id starts with this, which is also exactly what "clear" archives. */
+const SEED_PREFIX = "dev-seed-";
+
+/** The repository deps: the clock and the new version ids are injected, never read inside the package (#81). */
+const deps = { now: () => Date.now(), newId: randomUUID };
+
+/** The names of the seeded items, typed so the translated lookup stays type-safe. */
+type SeedNameKey =
+  | "dev.itemsSeed.names.rent"
+  | "dev.itemsSeed.names.internet"
+  | "dev.itemsSeed.names.streaming"
+  | "dev.itemsSeed.names.carInsurance"
+  | "dev.itemsSeed.names.oldPhone"
+  | "dev.itemsSeed.names.salary";
+
+interface SeedSpec {
+  readonly slug: string;
+  readonly nameKey: SeedNameKey;
+  readonly kind: ItemType;
+  readonly currency: CurrencyCode;
+  readonly sortOrder: number;
+  readonly amount: MinorUnits;
+  /** First version's anchor, in months from the month the app is on. */
+  readonly startOffset: number;
+  readonly dayOfMonth?: number;
+  readonly oneTime?: boolean;
+  /** A second version at this offset gives the row its "Change from" badge. */
+  readonly change?: { readonly offset: number; readonly amount: MinorUnits };
+  /** Seeded straight into the archive, for the archived list. */
+  readonly archived?: boolean;
+}
+
+const SPECS: readonly SeedSpec[] = [
+  {
+    slug: "rent",
+    nameKey: "dev.itemsSeed.names.rent",
+    kind: "expense",
+    currency: "PLN",
+    sortOrder: 1,
+    amount: 320_000 as MinorUnits,
+    startOffset: -9,
+    dayOfMonth: 10,
+  },
+  {
+    slug: "internet",
+    nameKey: "dev.itemsSeed.names.internet",
+    kind: "expense",
+    currency: "PLN",
+    sortOrder: 2,
+    amount: 100_000 as MinorUnits,
+    startOffset: -9,
+    dayOfMonth: 15,
+    change: { offset: 2, amount: 120_000 as MinorUnits },
+  },
+  {
+    slug: "streaming",
+    nameKey: "dev.itemsSeed.names.streaming",
+    // A foreign-currency item: there is no rate for it yet (#92), so its row says "No rate yet".
+    kind: "expense",
+    currency: "JPY",
+    sortOrder: 3,
+    amount: 1_500 as MinorUnits,
+    startOffset: -9,
+    dayOfMonth: 1,
+  },
+  {
+    slug: "car-insurance",
+    nameKey: "dev.itemsSeed.names.carInsurance",
+    kind: "expense",
+    currency: "PLN",
+    sortOrder: 4,
+    amount: 150_000 as MinorUnits,
+    startOffset: 0,
+    oneTime: true,
+  },
+  {
+    slug: "old-phone",
+    nameKey: "dev.itemsSeed.names.oldPhone",
+    kind: "expense",
+    currency: "PLN",
+    sortOrder: 5,
+    amount: 60_000 as MinorUnits,
+    startOffset: -12,
+    archived: true,
+  },
+  {
+    slug: "salary",
+    nameKey: "dev.itemsSeed.names.salary",
+    kind: "income",
+    currency: "PLN",
+    sortOrder: 1,
+    amount: 850_000 as MinorUnits,
+    startOffset: -9,
+    dayOfMonth: 5,
+  },
+];
+
+/** The rhythm of a spec anchored to `start`: monthly from then on, or one month for a one-time item. */
+function scheduleOf(spec: SeedSpec, start: YearMonth): Schedule {
+  const day = spec.dayOfMonth === undefined ? {} : { dayOfMonth: spec.dayOfMonth };
+  return spec.oneTime === true
+    ? { kind: "one-time", month: start, ...day }
+    : { kind: "recurring", intervalMonths: 1, anchor: start, ...day };
+}
+
+/** The versions of a spec: the one in force, and the scheduled change when the spec has one. */
+function versionsOf(spec: SeedSpec, month: YearMonth): RuleVersion[] {
+  const start = addMonths(month, spec.startOffset);
+  const first: RuleVersion = {
+    effectiveFrom: start,
+    amount: spec.amount,
+    schedule: scheduleOf(spec, start),
+  };
+  if (spec.change === undefined) {
+    return [first];
+  }
+  const changed: RuleVersion = {
+    effectiveFrom: addMonths(month, spec.change.offset),
+    amount: spec.change.amount,
+    schedule: scheduleOf(spec, start),
+  };
+  return spec.change.offset > spec.startOffset ? [first, changed] : [changed, first];
+}
+
+/**
+ * Development-only seeder behind `Stack.Protected guard={__DEV__}` (#75 R7). Open it with
+ * `budget-lens:///dev/items-seed?gen=7`: "Seed" writes the set with ids `dev-seed-7-<slug>` and "Clear" archives
+ * every `dev-seed-*` item, leaving the list empty. A release build cannot reach the route, so it can run none of
+ * this. The seeded item names are user data, written through i18n like every other text in the app.
+ */
+export default function DevItemsSeed() {
+  const { t } = useTranslation();
+  const db = useDatabase();
+  // Development-only, and it only ever writes rows anchored to roughly now, so the calendar month stands in
+  // while no month is open yet (the screen's own fallback is a display-only one; see `useActiveMonth`).
+  const { month: stored } = useActiveMonth();
+  const month = stored ?? localCalendarMonth(new Date());
+  const { gen = "1" } = useLocalSearchParams<{ readonly gen?: string }>();
+  const [result, setResult] = useState("");
+
+  const seed = () => {
+    const known = new Set(readItems(db, { includeArchived: true }).items.map((item) => item.id));
+    for (const spec of SPECS) {
+      const id = `${SEED_PREFIX}${gen}-${spec.slug}`;
+      if (known.has(id)) continue;
+      createItem(
+        db,
+        {
+          id,
+          kind: spec.kind,
+          name: t(spec.nameKey),
+          currency: spec.currency,
+          sortOrder: spec.sortOrder,
+          versions: versionsOf(spec, month),
+        },
+        deps,
+      );
+      if (spec.archived === true) archiveItem(db, id, deps);
+    }
+    setResult(t("dev.itemsSeed.seeded"));
+  };
+
+  const clear = () => {
+    const seeded = readItems(db, { includeArchived: true }).items.filter((item) =>
+      item.id.startsWith(SEED_PREFIX),
+    );
+    for (const item of seeded) archiveItem(db, item.id, deps);
+    setResult(t("dev.itemsSeed.cleared"));
+  };
+
+  if (!__DEV__) {
+    return <Redirect href="/(tabs)/overview" />;
+  }
+  return (
+    <Screen testID="screen-dev-items-seed">
+      <Text testID="dev-items-seed-result">{result}</Text>
+      <Text>{t("dev.itemsSeed.monthCases")}</Text>
+      <Text testID="dev-month-cases">{polishMonthCases}</Text>
+      <PrimaryButton testID="dev-items-seed-seed" label={t("dev.itemsSeed.seed")} onPress={seed} />
+      <SecondaryButton
+        testID="dev-items-seed-clear"
+        label={t("dev.itemsSeed.clear")}
+        onPress={clear}
+      />
+    </Screen>
+  );
+}

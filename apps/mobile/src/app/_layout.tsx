@@ -61,6 +61,14 @@ function RootStack() {
           }}
         />
         <Stack.Screen
+          name="dev/items-seed"
+          options={{
+            headerShown: true,
+            headerBackButtonDisplayMode: "minimal",
+            title: t("dev.itemsSeed.title"),
+          }}
+        />
+        <Stack.Screen
           name="dev/forget-key"
           options={{
             headerShown: true,
