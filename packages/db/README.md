@@ -95,6 +95,20 @@ Foreign keys are a per-connection setting, so the app uses this one migrated con
 Any migration that rebuilds a table (`__new_<table>`) needs a test that seeds rows first; see
 `test/migrations.test.ts`.
 
+### Migration 0001 (`0001_override_shape_check`)
+
+It rebuilds `occurrence_overrides` to add `overrides_shape_chk`, the SQL form of core's rule that an override is
+exactly one of an amount and a skip. The rebuild copies every row into the new table, so a v1 row with neither
+(`amount_minor` NULL and `skipped` 0, core's `empty-override`) or with both (core's `skipped-with-amount`) fails the
+`INSERT INTO __new_occurrence_overrides` and the migration throws. That hard failure is deliberate: no shipped
+database can hold such a row. Schema v1 shipped in TestFlight build 6, but no build before #83 ever wrote
+`occurrence_overrides`; since #83 the only writer is this repository, behind core's shape validation and now the
+CHECK; and there is no backup restore yet. If a row like that ever appears, the user loses nothing they had: the
+transaction rolls back, `runMigrationsWithSafetyCopy` restores the encrypted pre-migration copy, and the boot shows
+the `migration_failed` screen (#75, #210). Anything that writes overrides from outside this repository later
+(encrypted backup restore, #30; an import) must validate the shape with core before writing, or rely on the CHECK to
+reject it. `test/migrations.test.ts` pins both the rebuild of valid rows and this failure path.
+
 ## Items and rule-version repository (`src/items-repository.ts`, #81)
 
 Rows in, `@budget-lens/core` types out. Picking the version in force per month stays in core

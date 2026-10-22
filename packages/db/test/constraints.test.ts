@@ -123,10 +123,19 @@ describe("schema v1 constraints", () => {
     };
 
     // Act
-    const error = sqliteError(() => db.insert(schema.occurrenceOverrides).values(override).run());
+    const bothError = sqliteError(() =>
+      db.insert(schema.occurrenceOverrides).values(override).run(),
+    );
+    const neitherError = sqliteError(() =>
+      db
+        .insert(schema.occurrenceOverrides)
+        .values({ ...override, id: "override-2", amountMinor: null, skipped: false })
+        .run(),
+    );
 
     // Assert: core calls these `skipped-with-amount` and `empty-override`; both are not overrides.
-    expect(error).toContain("CHECK constraint failed: overrides_shape_chk");
+    expect(bothError).toContain("CHECK constraint failed: overrides_shape_chk");
+    expect(neitherError).toContain("CHECK constraint failed: overrides_shape_chk");
     expect(db.select().from(schema.occurrenceOverrides).all()).toEqual([]);
   });
 

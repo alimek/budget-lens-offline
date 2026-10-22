@@ -1,9 +1,15 @@
 import { toMinorUnits, toYearMonth } from "@budget-lens/core";
 import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { type MigrationBundle, MigrationIntegrityError, runMigrations, schema } from "../src";
+import {
+  type MigrationBundle,
+  MigrationIntegrityError,
+  runMigrations,
+  runMigrationsWithSafetyCopy,
+  schema,
+} from "../src";
 import schemaMigrations from "../src/migrations.generated";
-import { item, openTestDatabase, ruleVersion, sqliteError } from "./helpers";
+import { item, openTestDatabase, openTestDatabaseFile, ruleVersion, sqliteError } from "./helpers";
 
 /** A later schema version that changes a column default on `items`: drizzle-kit 0.31.11 output, verbatim. */
 const REBUILD_ITEMS = `PRAGMA foreign_keys=OFF;--> statement-breakpoint
@@ -231,6 +237,24 @@ describe("runMigrations", () => {
     expect(bothError).toContain("CHECK constraint failed: overrides_shape_chk");
     expect(neitherError).toContain("CHECK constraint failed: overrides_shape_chk");
     expect(db.select().from(schema.occurrenceOverrides).all()).toEqual([]);
+  });
+
+  it("restores the pre-migration copy when the shape CHECK rebuild meets a row that is not an override", () => {
+    // Arrange: a v1 database holding the one row 0001 cannot rebuild: neither an amount nor a skip.
+    const file = openTestDatabaseFile();
+    runMigrations(file.connect(), shippedUpTo(1));
+    file.connect().insert(schema.items).values(item("item-1")).run();
+    const neither = { ...amountOverride, amountMinor: null, skipped: false };
+    file.connect().insert(schema.occurrenceOverrides).values(neither).run();
+
+    // Act
+    const migrate = () => runMigrationsWithSafetyCopy(file.connect(), file.copy);
+
+    // Assert: nothing is half-migrated – the copy is put back, and the launch after it sees v1 as it was (#75).
+    expect(migrate).toThrow();
+    expect(file.calls).toEqual({ created: 1, restored: 1, discarded: 0 });
+    expect(file.connect().select().from(schema.occurrenceOverrides).all()).toEqual([neither]);
+    expect(file.connect().all(sql`SELECT * FROM __drizzle_migrations`)).toHaveLength(1);
   });
 
   it("stops with an integrity error when a migration leaves rows without their parent", () => {
