@@ -5,7 +5,8 @@
 Stage 0 is in progress: the monorepo, tooling and CI exist; domain logic is being ported into `packages/core`
 issue by issue. `apps/mobile` now contains the Expo development-client scaffold (#73). `packages/db` holds the Drizzle
 schema v1 and its migrations, which the app runs at startup (#74), plus the items and rule-version repository with
-the list reads the item screens and the forecast hook will use (#81).
+the list reads the item screens and the forecast hook will use (#81), and the occurrence override and payment status
+repository with the month reads the month view (#114) and month closing (#84/#85) will use (#83).
 What exists today in `packages/core`:
 - money in integer minor units: the `MinorUnits` type, exact operations, parsing and native `Intl.NumberFormat`
   currency formatting for `pl` and `en`, always showing full amounts (#2/#131, see [domain/money.md](domain/money.md) and
