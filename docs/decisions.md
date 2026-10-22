@@ -1,9 +1,8 @@
 # Owner decisions log
 
 One log of the owner's answers given in issue/PR comments or chat. **Newest first.** Times are Europe/Warsaw (UTC+2
-in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation: an entry without the owner's own words
-is marked "Not confirmed by the owner", and owner input that is not yet a decision is marked as input. Stack
-decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
+in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
+is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
 ## 2026-10-22 20:38 (Europe/Warsaw): end-of-month figure includes savings
 
@@ -48,8 +47,10 @@ decisions with a longer rationale live in the [ADRs](decisions/README.md). Add n
 - **Decision text (from the [#44 comment](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575), 2026-10-22 13:54):** "Owner decision (2026-10-22):
   react-native-chart-kit 7.0.4 (v2 charts) on react-native-svg 15.16.0 (SDK 58 pin). Minimum OS: Android 8.0
   (minSdk 26) and iOS 16.4. A 1-day spike validates the library before #89."
-- **Answer:** "Tak, potwierdzam chart-kit, Android 8 / iOS 16.4 i +0,5 MB; merguj #226 po poprawce R1" (confirmed by
-  the owner in chat, 2026-10-22 19:48)
+- **Answers:**
+  - "chart-kit v7, Android 8+ i iOS 16.4" (owner answer in chat, 2026-10-22)
+  - "Tak, potwierdzam chart-kit, Android 8 / iOS 16.4 i +0,5 MB; merguj #226 po poprawce R1" (owner answer in chat,
+    2026-10-22 19:48)
 - **Note:** follows the [Android 7 drop](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340036713) (13:50). About +0.5 MB of bundle per platform is accepted
   ([PR #226](https://github.com/alimek/budget-lens-offline/pull/226)); see [ADR 0014](decisions/0014-chart-library-and-minimum-os.md).
 - **Issues:** [#44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575), [#218](https://github.com/alimek/budget-lens-offline/issues/218), [#89](https://github.com/alimek/budget-lens-offline/issues/89), [PR #226](https://github.com/alimek/budget-lens-offline/pull/226)
@@ -58,20 +59,19 @@ decisions with a longer rationale live in the [ADRs](decisions/README.md). Add n
 
 - **Question:** the recommended answers to questions 1–3 on
   [#66](https://github.com/alimek/budget-lens-offline/issues/66) (E5 month closing).
-- **Answer:** "Tak, akceptuję odpowiedzi 1–3 z #66, merguj #225" (confirmed by the owner in chat, 2026-10-22 15:07)
+- **Answer:** "Tak, akceptuję odpowiedzi 1–3 z #66, merguj #225" (owner answer in chat, 2026-10-22 15:07)
 - **Meaning:** keep Check balance as check-only; later months are blocked only until the ended month is closed; the
   Remind me card shows only after the first close. The check-balance part is affected by the 20:29 owner input above.
 - **Issues:** [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6341377311), [PR #225](https://github.com/alimek/budget-lens-offline/pull/225)
 
-## 2026-10-22 14:15 (Europe/Warsaw): #43 and #45 recommended defaults (not confirmed by the owner)
+## 2026-10-22 14:15 (Europe/Warsaw): #43 and #45 recommended defaults accepted
 
 - **Question:** the "Decisions needed" lists in the research comments on
   [#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6339987487) (month lifecycle edge cases) and
   [#45](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340343141) (warning semantics and local notifications).
-- **Answer:** Not confirmed by the owner: decision recorded in the comment, no verbatim answer. Recorded text (same
-  on both): "Owner decision (2026-10-22): all recommended defaults in
-  the research comment above are accepted."
-- **Note (not confirmed by the owner: decision recorded in the comment, no verbatim answer):**
-  [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278) later superseded #43 on early close, estimated catch-up
+- **Answer:** "Tak, przyjmuję domyślne z #43 i #45" (owner answer in chat, 2026-10-22)
+- **Recorded in the comments (same text on both):** "Owner decision (2026-10-22): all recommended defaults in the
+  research comment above are accepted."
+- **Note:** [#66](https://github.com/alimek/budget-lens-offline/issues/66#issuecomment-6340848278) later superseded #43 on early close, estimated catch-up
   balances and the closing balance source.
 - **Issues:** [#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), [#45](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501)
