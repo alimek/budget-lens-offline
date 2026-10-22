@@ -153,7 +153,7 @@ The `settings` singleton in, core `Settings` out. What is a valid settings value
 | Column | Core | Notes |
 | --- | --- | --- |
 | `language` | `language` | `system`, `pl` or `en`. |
-| `base_currency` | `baseCurrency` | Locked after onboarding confirmation (#139, not implemented). |
+| `base_currency` | `baseCurrency` | Written only by a patch that names it, and locked after onboarding confirmation (#139, not implemented). |
 | `tracked_currencies` | `trackedCurrencies` | Read as raw JSON text: a damaged list cannot throw while Drizzle maps the row. |
 | `low_balance_threshold_minor`, `large_expense_threshold_minor` | `lowBalanceThreshold`, `largeExpenseThreshold` | Grosze of `base_currency`. |
 | `forecast_horizon_months`, `rate_max_age_business_days` | same names | Upper bounds are core's (`MAX_*`), not SQL CHECKs. |
@@ -163,11 +163,19 @@ The `settings` singleton in, core `Settings` out. What is a valid settings value
 - `readSettings(db)` maps the row to core field names and passes it through `loadSettings`, so a missing or invalid
   field reads as its `DEFAULT_SETTINGS` value and a damaged row is repaired on read instead of throwing. A database
   with no row – a fresh install – reads as `DEFAULT_SETTINGS`. **Reads never write**: the row appears with the first
-  `updateStoredSettings`, and `updateStoredSettings(db, {}, deps)` is how the app seeds the defaults explicitly.
+  `updateStoredSettings`, which in practice is the onboarding confirmation writing the chosen base currency
+  (#111/#139) rather than a seed at launch; `updateStoredSettings(db, {}, deps)` would store the defaults.
 - `updateStoredSettings(db, patch, { now })` runs the patch through core `updateSettings`. An invalid patch returns
   core's error codes and writes nothing; a valid one UPSERTs the singleton (`onConflictDoUpdate`, never
-  `INSERT OR REPLACE`) with `updated_at` from the injected clock, and returns the settings now stored. It is the
-  only writer of the singleton, which is where #139 will reject a `baseCurrency` patch once onboarding is confirmed.
+  `INSERT OR REPLACE`) with `updated_at` from the injected clock, and returns the settings now stored.
+- **`base_currency` is never healed.** Every amount in the budget is in it, so the UPSERT writes it only when the
+  patch names `baseCurrency`, and an unrelated change never restates it. If a stored code is one core no longer
+  recognises (a currency that left NBP table A, or a damaged row), the whole write is refused with
+  `stored-base-currency-invalid` and nothing is written, rather than the default being persisted over it; reads
+  still fall back to `DEFAULT_SETTINGS` per field.
+
+- This is the only writer of the singleton, which is where #139 will reject a `baseCurrency` patch once onboarding
+  is confirmed.
 
 Live reads again: `SETTINGS_TABLES` names the table `readSettings` depends on, so an app hook can re-read the
 settings on a change the same way it re-reads the item list.
@@ -196,7 +204,8 @@ the columns, several versions of one item resolving per month, a damaged row bei
 `test/settings-repository.test.ts` covers the settings rules: the defaults of a database with no row (and that a
 read writes nothing), a first write that stores the defaults a patch completes with amounts as whole grosze, core's
 error codes with the row untouched on an invalid patch, a damaged field falling back to its default while the valid
-ones survive, and the onboarding timestamp an update keeps.
+ones survive, the onboarding timestamp an update keeps, and the base currency: kept through an unrelated write,
+stored when a patch asks for it, and the whole write refused when the stored code is unreadable.
 
 The SQLCipher-specific path (key, cipher guard, a copy that is really ciphertext) is covered on devices by e2e
 (#75).

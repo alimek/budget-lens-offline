@@ -121,11 +121,16 @@ into the locked base currency. See [month-closing.md](month-closing.md) for the 
 **Persistence (`packages/db`, #78).** The `settings` singleton row maps to this model and back in
 `packages/db/src/settings-repository.ts`. `readSettings` runs the row through `loadSettings`, so a damaged or
 missing field reads as its default and a database without a row reads as `DEFAULT_SETTINGS`; a read never writes –
-the row appears with the first write, and an empty patch is how the app seeds the defaults.
-`updateStoredSettings` applies a patch through `updateSettings`, stores the result with `updated_at` from an
-injected clock, and returns core's error codes with the row untouched when the patch is invalid. It never writes
-`onboarding_completed_at`, which #139 owns: that lock goes into this one writer, and until it lands the rule above
-is enforced by the caller.
+the row appears with the first write, in practice the onboarding confirmation writing the chosen base currency
+(#111/#139). `updateStoredSettings` applies a patch through `updateSettings`, stores the result with `updated_at`
+from an injected clock, and returns core's error codes with the row untouched when the patch is invalid.
+
+`base_currency` is the one field a write never heals: every amount in the budget is in it, so the store writes it
+only when the patch names `baseCurrency`, and refuses the whole write with `stored-base-currency-invalid` while a
+stored code is one core no longer recognises (a currency that left NBP table A, or a damaged row) instead of
+persisting the PLN default over it. Reading still falls back to `DEFAULT_SETTINGS` per field, so the app can show a
+damaged budget rather than crash on it. The store never writes `onboarding_completed_at`, which #139 owns: that lock
+goes into this one writer, and until it lands the rule above is enforced by the caller.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
 

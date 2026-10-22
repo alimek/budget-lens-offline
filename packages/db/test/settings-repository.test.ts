@@ -18,6 +18,11 @@ const patch = (changes: Record<string, unknown>): SettingsPatch => changes as Se
 
 const stored = () => db.select().from(schema.settings).get();
 
+/** `base_currency` exactly as stored, for the cases where it is not a code core knows. */
+const storedBaseCurrency = () =>
+  db.all<{ base_currency: string }>(sql`SELECT base_currency FROM settings WHERE id = 1`)[0]
+    ?.base_currency;
+
 let db: ReturnType<typeof openTestDatabase>;
 let deps: { readonly now: () => number };
 
@@ -145,5 +150,56 @@ describe("settings repository", () => {
       onboardingCompletedAt: new Date(123),
       updatedAt: new Date(Date.UTC(2026, 9, 22)),
     });
+  });
+
+  it("keeps a base currency the patch does not mention, however the budget was onboarded", () => {
+    // Arrange: the budget runs in EUR.
+    db.insert(schema.settings)
+      .values({ ...settingsRow(1), baseCurrency: "EUR", trackedCurrencies: ["USD"] })
+      .run();
+
+    // Act
+    const result = updateStoredSettings(db, patch({ language: "pl" }), deps);
+
+    // Assert
+    expect(result.ok && result.settings.baseCurrency).toBe("EUR");
+    expect(stored()).toMatchObject({ baseCurrency: "EUR", language: "pl" });
+  });
+
+  it("stores the base currency of a patch that changes it, with the tracked list that drops it", () => {
+    // Arrange: moving the budget from PLN to EUR needs both fields in one patch (core's `base-currency-tracked`).
+    db.insert(schema.settings).values(settingsRow(1)).run();
+
+    // Act
+    expect(
+      updateStoredSettings(db, patch({ baseCurrency: "EUR", trackedCurrencies: ["USD"] }), deps).ok,
+    ).toBe(true);
+
+    // Assert
+    expect(stored()).toMatchObject({
+      baseCurrency: "EUR",
+      trackedCurrencies: ["USD"],
+      updatedAt: new Date(Date.UTC(2026, 9, 22)),
+    });
+  });
+
+  it("refuses every write while the stored base currency is unreadable and leaves the row as it was", () => {
+    // Arrange: a code that left the supported set (NBP table A) after onboarding was confirmed.
+    db.insert(schema.settings).values(settingsRow(1)).run();
+    db.run(
+      sql`UPDATE settings SET base_currency = 'RUB', onboarding_completed_at = 123 WHERE id = 1`,
+    );
+    const before = stored();
+
+    // Act: an unrelated change, which would otherwise have stored the default PLN in its place.
+    const result = updateStoredSettings(db, patch({ language: "pl" }), deps);
+
+    // Assert
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ field: "baseCurrency", code: "stored-base-currency-invalid" }],
+    });
+    expect(stored()).toEqual(before);
+    expect(storedBaseCurrency()).toBe("RUB");
   });
 });

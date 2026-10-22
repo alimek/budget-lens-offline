@@ -3,11 +3,12 @@
 // only maps columns and decides what to write.
 import {
   type CurrencyCode,
+  isCurrencyCode,
   type LanguagePreference,
   loadSettings,
   type MinorUnits,
   type Settings,
-  type SettingsError,
+  type SettingsErrorCode,
   updateSettings,
 } from "@budget-lens/core";
 import { eq, sql } from "drizzle-orm";
@@ -35,10 +36,22 @@ const SINGLETON_ID = 1;
 /** A change to one or more settings fields; a key that is not a `Settings` field is dropped by core. */
 export type SettingsPatch = Partial<Settings>;
 
-/** The result of a write: the settings now stored, or every core validation error that blocked it. */
+/**
+ * Why a write was refused: core's field codes, plus `stored-base-currency-invalid` for a stored base currency
+ * core no longer recognises, which no patch of ours can repair.
+ */
+export type SettingsWriteErrorCode = SettingsErrorCode | "stored-base-currency-invalid";
+
+/** A rejected write, as a field and a code for the UI to translate; never a message. */
+export interface SettingsWriteError {
+  readonly field: keyof Settings;
+  readonly code: SettingsWriteErrorCode;
+}
+
+/** The result of a write: the settings now stored, or every error that blocked it. */
 export type SettingsWriteResult =
   | { readonly ok: true; readonly settings: Settings }
-  | { readonly ok: false; readonly errors: readonly SettingsError[] };
+  | { readonly ok: false; readonly errors: readonly SettingsWriteError[] };
 
 /**
  * The columns `readSettings` maps, with `tracked_currencies` as the raw JSON text: Drizzle's JSON column would
@@ -98,6 +111,11 @@ function readStoredSettings(db: Database): StoredSettingsRow | undefined {
     .get();
 }
 
+/** A missing row is loaded as an empty object, which `loadSettings` answers with every default. */
+function loadedSettings(row: StoredSettingsRow | undefined): Settings {
+  return loadSettings(row === undefined ? {} : storedSettings(row));
+}
+
 /**
  * The stored settings as core `Settings`, with `DEFAULT_SETTINGS` for every missing or invalid field
  * (`loadSettings`), so a damaged row is repaired on read and never throws (#88 pattern).
@@ -107,16 +125,13 @@ function readStoredSettings(db: Database): StoredSettingsRow | undefined {
  * also how the app seeds the defaults (docs/domain/settings.md).
  */
 export function readSettings(db: Database): Settings {
-  const row = readStoredSettings(db);
-  return loadSettings(row === undefined ? {} : storedSettings(row));
+  return loadedSettings(readStoredSettings(db));
 }
 
-/** The core settings as columns. `onboarding_completed_at` is never written here (#139). */
-function settingsValues(settings: Settings, updatedAt: Date) {
+/** The columns a write stores, except the id and `base_currency`; `onboarding_completed_at` is never one of them. */
+function healedValues(settings: Settings, updatedAt: Date) {
   return {
-    id: SINGLETON_ID,
     language: settings.language,
-    baseCurrency: settings.baseCurrency,
     trackedCurrencies: settings.trackedCurrencies,
     lowBalanceThresholdMinor: settings.lowBalanceThreshold,
     largeExpenseThresholdMinor: settings.largeExpenseThreshold,
@@ -128,10 +143,12 @@ function settingsValues(settings: Settings, updatedAt: Date) {
 
 /**
  * Applies `patch` to the stored settings and stores the result. What is valid is core's decision: the patch goes
- * through `updateSettings`, and an invalid one returns core's error codes and writes nothing.
+ * through `updateSettings`, and an invalid one returns its error codes and writes nothing.
  *
- * The settings read first is the repaired one (`readSettings`), so a write also heals a damaged field: the
- * stored row afterwards holds the defaults for what was invalid.
+ * The settings read first are the repaired ones, so a write also heals a damaged field. `base_currency` is never
+ * healed or rewritten: it is the currency of every amount in the budget, so it changes only when the patch asks
+ * for it, and a stored code core no longer recognises refuses the whole write with
+ * `stored-base-currency-invalid` instead of being replaced by the default.
  *
  * This is the only place that writes the singleton, so the base-currency lock of #139 belongs here: once
  * `onboarding_completed_at` is set, a `baseCurrency` patch is rejected as well.
@@ -141,19 +158,32 @@ export function updateStoredSettings(
   patch: SettingsPatch,
   deps: SettingsRepositoryDeps,
 ): SettingsWriteResult {
-  const result = updateSettings(readSettings(db), patch);
+  const row = readStoredSettings(db);
+  // Every stored amount is in the base currency, so an unreadable one is damage to report, not a field to heal.
+  if (row !== undefined && !isCurrencyCode(row.baseCurrency)) {
+    return { ok: false, errors: [{ field: "baseCurrency", code: "stored-base-currency-invalid" }] };
+  }
+  const result = updateSettings(loadedSettings(row), patch);
   if (!result.ok) {
     return result;
   }
-  const values = settingsValues(result.settings, new Date(deps.now()));
+  const healed = healedValues(result.settings, new Date(deps.now()));
+  const values = {
+    id: SINGLETON_ID,
+    baseCurrency: result.settings.baseCurrency,
+    ...healed,
+    onboardingCompletedAt: null,
+  };
   // UPSERT, never INSERT OR REPLACE: the latter deletes the row and bypasses the update hook live reads use.
+  // On conflict the update writes `base_currency` only when the patch asked for it, so an unrelated change never
+  // restates the currency of the budget, and `onboarding_completed_at` keeps its value (#139).
+  const set =
+    patch.baseCurrency === undefined
+      ? healed
+      : { ...healed, baseCurrency: result.settings.baseCurrency };
   db.insert(schema.settings)
-    .values({ ...values, onboardingCompletedAt: null })
-    .onConflictDoUpdate({
-      target: schema.settings.id,
-      // The conflict update lists only the settings columns, so `onboarding_completed_at` keeps its value (#139).
-      set: values,
-    })
+    .values(values)
+    .onConflictDoUpdate({ target: schema.settings.id, set })
     .run();
   return { ok: true, settings: result.settings };
 }
