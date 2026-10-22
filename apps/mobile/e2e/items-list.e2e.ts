@@ -157,7 +157,9 @@ test("archives a row through the long-press menu", async (fixtures) => {
   // Act: a long press opens the row's actions in a menu, as the swipe does (#63: on Android this is the
   // discoverable path).
   await internet.longPress({ duration: 900 });
-  const archive = nativeButton(fixtures, `${rowID("internet")}-menu-archive`);
+  // The menu item is the test ID node itself on both platforms: a SwiftUI button on iOS, a Compose menu item
+  // wrapped in a group on Android, where tapping the wrapper is what selects the action.
+  const archive = screen.getByTestId(`${rowID("internet")}-menu-archive`);
   await expect(archive).toBeVisible();
   await settle();
   await app.screenshot("items-row-menu");
