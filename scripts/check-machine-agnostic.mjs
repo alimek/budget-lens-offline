@@ -33,28 +33,39 @@ const PATTERNS = [
   },
   {
     label: "agent setup",
-    pattern: "t3 code",
-    hits: ["T3 Code"],
-    misses: ["Hermes engine", "agent-device", "agent.act()"],
+    pattern: "\\.[a-z0-9_-]+/(worktrees|sessions)/",
+    hits: ["~/.some-agent/worktrees/repo", "see .tool/sessions/abc"],
+    misses: [
+      ".github/workflows/ci.yml",
+      "git worktree add ../wt",
+      "docs/sessions/",
+      "agent-device",
+    ],
   },
   {
     label: "team role",
-    pattern: `${START}(orchestrator|product owner|developer bot)`,
-    hits: ["Orchestrator decision", "Product Owner review", "the Developer bot"],
-    misses: ["a reviewer squash-merges", "developer build", "web developers"],
+    pattern: `${START}(product owner|[a-z]+er bot)([^a-z0-9]|$)`,
+    hits: ["Product Owner review", "the Developer bot", "ask the tester bot"],
+    misses: [
+      "a reviewer squash-merges",
+      "developer build",
+      "web developers",
+      "an agent or bot setup",
+      "register both",
+    ],
   },
 ];
 
 /**
- * Private terms (host, user and tool names of one specific setup) must not be committed, not even here, so they are
- * read from a file outside the repository: `~/.budget-lens-local/forbidden-terms.json` by default, or the file named
- * by the `MACHINE_AGNOSTIC_TERMS_FILE` env var. Format: `{ "terms": [...] }` (template:
- * `scripts/forbidden-terms.example.json`). Terms match literally and case-insensitively. Without the file (e.g. in
- * CI) this part is skipped with a note; the generic patterns above still run.
+ * Private terms (host, user, role and tool names of one specific setup) must not be committed, not even here, so they
+ * are read from a file outside the repository: `~/.budget-lens-local/forbidden-terms.json` by default, or the file
+ * named by the `MACHINE_AGNOSTIC_TERMS_FILE` env var. Format: `{ "terms": [...] }` (template:
+ * `scripts/forbidden-terms.example.json`). Terms match literally and case-insensitively. Without the default file
+ * (e.g. in CI) this part is skipped with a note and the generic patterns above still run. A file named by the env var
+ * must exist (a missing one is most likely a typo), and an unreadable file fails the check with one clear line.
  */
-const PRIVATE_TERMS_FILE =
-  process.env.MACHINE_AGNOSTIC_TERMS_FILE ||
-  join(homedir(), ".budget-lens-local", "forbidden-terms.json");
+const TERMS_FILE_ENV = "MACHINE_AGNOSTIC_TERMS_FILE";
+const DEFAULT_TERMS_FILE = join(homedir(), ".budget-lens-local", "forbidden-terms.json");
 
 /** Self-test for the private-terms matcher, with placeholder terms only. */
 const PRIVATE_TERMS_SAMPLE = {
@@ -63,19 +74,100 @@ const PRIVATE_TERMS_SAMPLE = {
   misses: ["an example host", "exXample", "example_tool"],
 };
 
-/** The `terms` array of the private terms file, or none when the file does not exist. */
-function readPrivateTermsFile() {
-  return existsSync(PRIVATE_TERMS_FILE)
-    ? JSON.parse(readFileSync(PRIVATE_TERMS_FILE, "utf8")).terms
-    : [];
+/**
+ * The private terms to check as `{ terms }`, a skip as `{ skip: reason }`, or a failure as `{ error: message }`.
+ * `read(file)` returns the file content, or `undefined` when the file does not exist (injected for the self-test).
+ * Messages never quote the file content, so no term can leak into a log.
+ */
+function resolvePrivateTerms({ file, explicit, read }) {
+  const text = read(file);
+  if (text === undefined) {
+    return missingTermsFile(file, explicit);
+  }
+  const parsed = termsFromText(text);
+  if (typeof parsed === "string") {
+    return { error: `Private terms file ${parsed}: ${file}` };
+  }
+  const terms = [...new Set(parsed.map((term) => String(term).trim()).filter(Boolean))];
+  return terms.length > 0 ? { terms } : { skip: `no terms in ${file}` };
 }
 
-function loadPrivateTerms() {
-  const terms = readPrivateTermsFile();
-  if (!Array.isArray(terms)) {
-    throw new Error('Private terms file: expected { "terms": ["..."] }');
+/** A missing default file is skipped; a missing file named by the env var is most likely a typo, so it fails. */
+function missingTermsFile(file, explicit) {
+  return explicit
+    ? { error: `${TERMS_FILE_ENV} names a file that does not exist: ${file}` }
+    : { skip: `no local terms file (see ${TERMS_FILE_ENV})` };
+}
+
+/** The `terms` array of a terms file's content, or the problem as a short phrase. */
+function termsFromText(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return "is not valid JSON";
   }
-  return [...new Set(terms.map((term) => String(term).trim()).filter(Boolean))];
+  return Array.isArray(data?.terms) ? data.terms : 'must look like { "terms": ["..."] }';
+}
+
+function readIfExists(file) {
+  return existsSync(file) ? readFileSync(file, "utf8") : undefined;
+}
+
+/** Self-test cases for `resolvePrivateTerms`: the skip, failure and success paths, with placeholder content. */
+const PRIVATE_TERMS_FILE_CASES = [
+  {
+    name: "default file missing (CI) skips",
+    explicit: false,
+    content: undefined,
+    expected: "skip",
+  },
+  {
+    name: "explicitly named file missing fails",
+    explicit: true,
+    content: undefined,
+    expected: "error",
+  },
+  { name: "malformed JSON fails", explicit: false, content: '{ "terms": [', expected: "error" },
+  {
+    name: "missing terms array fails",
+    explicit: false,
+    content: '{ "names": [] }',
+    expected: "error",
+  },
+  {
+    name: "non-array terms fails",
+    explicit: false,
+    content: '{ "terms": "x" }',
+    expected: "error",
+  },
+  {
+    name: "empty terms skips",
+    explicit: false,
+    content: '{ "terms": [" ", ""] }',
+    expected: "skip",
+  },
+  {
+    name: "valid file returns trimmed unique terms",
+    explicit: true,
+    content: '{ "terms": [" example-host ", "example-host", "example-tool"] }',
+    expected: "terms",
+    terms: ["example-host", "example-tool"],
+  },
+];
+
+function privateTermsFileFailures() {
+  return PRIVATE_TERMS_FILE_CASES.flatMap(({ name, explicit, content, expected, terms }) => {
+    const result = resolvePrivateTerms({ file: "terms.json", explicit, read: () => content });
+    const outcome = Object.keys(result)[0];
+    if (outcome !== expected) {
+      return [`private terms file, ${name}: expected ${expected}, got ${outcome}`];
+    }
+    if (terms && JSON.stringify(result.terms) !== JSON.stringify(terms)) {
+      return [`private terms file, ${name}: unexpected terms ${JSON.stringify(result.terms)}`];
+    }
+    return [];
+  });
 }
 
 /** An ERE (`git grep -E`) and JavaScript pattern matching any of `terms` literally, also inside longer words. */
@@ -128,6 +220,47 @@ function mismatches({ label, pattern }, samples, expected) {
     );
 }
 
+/**
+ * Findings of the grep-based checks plus notes. `grepLines(pattern, extraExcludes)` returns the matching lines
+ * (injected for the self-test). A skipped private-terms check only adds a note; the other checks still run.
+ */
+function grepFindings(privateTerms, grepLines) {
+  const findings = [];
+  const notes = [];
+  for (const { label, pattern } of PATTERNS) {
+    findings.push(...grepLines(pattern, []).map((line) => `${label}: ${line}`));
+  }
+  if (privateTerms.terms) {
+    const pattern = privateTermsPattern(privateTerms.terms);
+    findings.push(...grepLines(pattern, []).map((line) => `private term: ${line}`));
+  } else {
+    notes.push(`Private-terms check skipped: ${privateTerms.skip}.`);
+  }
+  findings.push(
+    ...grepLines(LABEL.pattern, [":(exclude).github/**"]).map((line) => `${LABEL.label}: ${line}`),
+  );
+  return { findings, notes };
+}
+
+/** Self-test of the skip path: with no terms file, there is one note and every generic check still reports. */
+function skipPathFailures() {
+  const { findings, notes } = grepFindings({ skip: "no local terms file" }, () => [
+    "docs/x.md:1:sample",
+  ]);
+  const expectedLabels = [...PATTERNS, LABEL].map(({ label }) => label);
+  const failures = [];
+  if (notes.length !== 1 || !notes[0].startsWith("Private-terms check skipped")) {
+    failures.push(`skip path: expected one skip note, got ${JSON.stringify(notes)}`);
+  }
+  const labels = findings.map((finding) => finding.split(": ")[0]);
+  if (JSON.stringify(labels) !== JSON.stringify(expectedLabels)) {
+    failures.push(
+      `skip path: expected findings from ${expectedLabels.join(", ")}, got ${labels.join(", ")}`,
+    );
+  }
+  return failures;
+}
+
 function selfTest() {
   const appConfigFailures = [
     ...APP_CONFIG.hits.filter((sample) => !hasExpoOwner(sample)).map((s) => ["expected a hit", s]),
@@ -139,6 +272,8 @@ function selfTest() {
       ...mismatches(entry, entry.misses, false),
     ]),
     ...appConfigFailures,
+    ...privateTermsFileFailures(),
+    ...skipPathFailures(),
     ...[true, false].flatMap((expected) =>
       mismatches(
         { label: "private terms", pattern: privateTermsPattern(PRIVATE_TERMS_SAMPLE.terms) },
@@ -183,24 +318,20 @@ if (selfTestFailures.length > 0) {
   process.exit(1);
 }
 
-const findings = [];
-for (const { label, pattern } of PATTERNS) {
-  for (const line of grep(pattern, []).split("\n").filter(Boolean)) {
-    findings.push(`${label}: ${line}`);
-  }
+const privateTerms = resolvePrivateTerms({
+  file: process.env[TERMS_FILE_ENV] || DEFAULT_TERMS_FILE,
+  explicit: Boolean(process.env[TERMS_FILE_ENV]),
+  read: readIfExists,
+});
+if (privateTerms.error) {
+  process.stderr.write(`Portability check failed: ${privateTerms.error}\n`);
+  process.exit(1);
 }
-const privateTerms = loadPrivateTerms();
-if (privateTerms.length > 0) {
-  for (const line of grep(privateTermsPattern(privateTerms), []).split("\n").filter(Boolean)) {
-    findings.push(`private term: ${line}`);
-  }
-} else {
-  process.stdout.write(
-    "Private-terms check skipped: no local terms file (see MACHINE_AGNOSTIC_TERMS_FILE).\n",
-  );
-}
-for (const line of grep(LABEL.pattern, [":(exclude).github/**"]).split("\n").filter(Boolean)) {
-  findings.push(`${LABEL.label}: ${line}`);
+const { findings, notes } = grepFindings(privateTerms, (pattern, extraExcludes) =>
+  grep(pattern, extraExcludes).split("\n").filter(Boolean),
+);
+for (const note of notes) {
+  process.stdout.write(`${note}\n`);
 }
 
 if (

@@ -84,7 +84,8 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   setup (see the hard rule in [AGENTS.md](../AGENTS.md)); `pnpm lint` runs `scripts/check-machine-agnostic.mjs`.
   It checks generic shapes (home paths, device serials) everywhere; names of a specific setup are checked only
   locally, from a terms file outside the repo (template: `scripts/forbidden-terms.example.json`, path override:
-  `MACHINE_AGNOSTIC_TERMS_FILE`). Local, machine-specific notes live outside the repo.
+  `MACHINE_AGNOSTIC_TERMS_FILE`, which must name an existing file). Without the default file (e.g. in CI) that part
+  is skipped with a note; a malformed file fails the check. Local, machine-specific notes live outside the repo.
 - PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).
 - CI gates: `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title`, `pr-body`; all must pass.
   Details: [ci.md](ci.md). Commands: [README.md](../README.md).
