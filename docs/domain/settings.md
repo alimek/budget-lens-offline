@@ -1,7 +1,8 @@
 # Settings
 
-Status: **implemented** in `packages/core/src/settings.ts` (#76); the currency fields are typed `CurrencyCode` and
-`baseCurrency` (#126).
+Status: **implemented** in `packages/core/src/settings.ts` (#76), the currency fields typed `CurrencyCode` and
+`baseCurrency` (#126), and persisted by the settings repository in `packages/db` (#78). The lock that keeps
+`baseCurrency` from changing after onboarding is still open (#139).
 
 One local `Settings` model drives every calculation that needs a currency, a warning threshold or the forecast
 horizon. No warning threshold or base currency is a constant anywhere else in `packages/core`.
@@ -116,6 +117,15 @@ loads as `[]`). The pre-rename
 Per-item currencies are now in MVP ([owner decision](https://github.com/alimek/budget-lens-offline/issues/39#issuecomment-6263015126)),
 superseding the earlier base-only item assumption in #39. Items retain their own currency; forecast/closing convert
 into the locked base currency. See [month-closing.md](month-closing.md) for the rate snapshot contract.
+
+**Persistence (`packages/db`, #78).** The `settings` singleton row maps to this model and back in
+`packages/db/src/settings-repository.ts`. `readSettings` runs the row through `loadSettings`, so a damaged or
+missing field reads as its default and a database without a row reads as `DEFAULT_SETTINGS`; a read never writes –
+the row appears with the first write, and an empty patch is how the app seeds the defaults.
+`updateStoredSettings` applies a patch through `updateSettings`, stores the result with `updated_at` from an
+injected clock, and returns core's error codes with the row untouched when the patch is invalid. It never writes
+`onboarding_completed_at`, which #139 owns: that lock goes into this one writer, and until it lands the rule above
+is enforced by the caller.
 
 ## Legacy behaviour (`user_settings`, `lib/db.ts`, `use-forecast.ts`)
 

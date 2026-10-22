@@ -28,10 +28,12 @@
   cover migrating forward, re-running migrations, table rebuilds that keep child rows, the encrypted pre-migration
   copy (taken only when a migration is pending and restored when a migration or the post-commit integrity check
   fails, #75), the constraints that encode business rules (one active month, one rule version per item and month,
-  singleton settings, required item currency, RESTRICT foreign keys) and the business rules of the items and
+  singleton settings, required item currency, RESTRICT foreign keys), the business rules of the items and
   rule-version repository (#81: the base-currency default, the currency that cannot change after creation,
   archiving instead of deleting, both schedule shapes round-tripping, and a damaged row being reported instead of
-  dropped). SQLCipher itself (the key, the cipher guard, an encrypted copy on disk) is covered on devices (#75, e2e);
+  dropped) and those of the settings repository (#78: the defaults of a database with no row, core's validation
+  codes with nothing written, a damaged field falling back to its default, and the onboarding timestamp an update
+  keeps). SQLCipher itself (the key, the cipher guard, an encrypted copy on disk) is covered on devices (#75, e2e);
   see [packages/db](../packages/db/README.md#tests).
 - **Typecheck of tests:** a separate TypeScript project.
   - `packages/core/tsconfig.json` covers `src` only, with `types: []`, so no Node.js types are available in core.
