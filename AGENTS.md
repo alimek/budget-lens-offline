@@ -32,8 +32,8 @@ platform-agnostic TypeScript package.
 - **Machine-agnostic repo.** No host-, user- or operator-specific data: no machine or host names, user names,
   absolute home paths, local scheduler jobs, device serials or local simulator/emulator instances, and no references
   to a specific agent or bot setup or who does what. Use env vars with documented defaults and generic wording ("a
-  local dev machine"); machine-specific automation lives outside the repo. `pnpm lint` enforces it
-  (`scripts/check-machine-agnostic.mjs`) and reviewers check it.
+  local dev machine"); machine-specific automation lives outside the repo. Reviewers check
+  it.
 
 Details and the rest of the conventions: [docs/conventions.md](docs/conventions.md).
 

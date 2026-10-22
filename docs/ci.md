@@ -26,7 +26,7 @@ status check. Making checks required in the `main` ruleset is the repository own
 
 | Job | Fails when |
 | --- | --- |
-| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or host-, user- or agent-setup-specific content, including an Expo account name (`expo.owner`) in `apps/mobile/app.json` (`scripts/check-machine-agnostic.mjs`, see [AGENTS.md](../AGENTS.md)), or a migration problem in `packages/db`: `drizzle-kit check` not clean, schema changes without a migration, a stale `migrations.generated.ts` or a migration not newer than the previous one (`db:check`, see [packages/db](../packages/db/README.md#migrations)) |
+| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or a migration problem in `packages/db`: `drizzle-kit check` not clean, schema changes without a migration, a stale `migrations.generated.ts` or a migration not newer than the previous one (`db:check`, see [packages/db](../packages/db/README.md#migrations)) |
 | `typecheck` | Any TypeScript 7 error with the strict options in `tsconfig.base.json` |
 | `test` | Any failing Vitest test (coverage is reported, no thresholds) |
 | `fallow` | Any unused file, export, type or dependency (dev dependencies too), unlisted dependency, cycle or stale suppression |

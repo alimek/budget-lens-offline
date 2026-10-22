@@ -81,7 +81,7 @@ Tool telemetry is disabled through environment variables, locally and in CI:
   `scripts/github/sync-labels.sh` applies it. Scripts, token scopes and the scheduling rules (pinned reviewed
   checkout, owner consent): [github-automation.md](github-automation.md).
 - **Machine-agnostic repo:** no host-, user- or operator-specific data and no references to a specific agent or bot
-  setup (see the hard rule in [AGENTS.md](../AGENTS.md)); `pnpm lint` runs `scripts/check-machine-agnostic.mjs`.
+  setup (see the hard rule in [AGENTS.md](../AGENTS.md)).
 - PR titles follow Conventional Commits (`feat(core): …`, `fix: …`, `ci: …`); CI checks it (`pr-title`).
 - CI gates: `lint`, `typecheck`, `test`, `fallow`, `audit`, `licenses`, `pr-title`, `pr-body`; all must pass.
   Details: [ci.md](ci.md). Commands: [README.md](../README.md).
