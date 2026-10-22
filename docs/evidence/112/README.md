@@ -3,7 +3,7 @@
 Screenshots from the TesterArmy `e2e` runs of `e2e/items-list.e2e.ts` on a local development build: the empty
 state, the seeded list with its recurrence summaries, the scheduled-change badge and the foreign-currency note, the
 archive confirmation, and the archived list. The runs used the dedicated iOS simulator `BudgetLens-CI` and the
-dedicated Android emulator `BudgetLens-Android` (`emulator-5556`) only, with telemetry disabled, sequentially, and a
+dedicated Android emulator `BudgetLens-Android` only, with telemetry disabled, sequentially, and a
 fresh Metro from this worktree on port 8073. Both runs used commit `574030c80dad7a95ea57e2d213b3c5a803e349b2` with
 `run.vcs.dirty: false`; the Android captures use the 9:41 demo clock.
 
