@@ -41,7 +41,9 @@ function parseMonth(value: unknown): { month: MonthNumber; year: number | undefi
 
 /**
  * The `monthName` formatter: `case` is `nominative` (default), `genitive`, `instrumental` or `locative`, and
- * `style` is `long` (default) or `short`. Only a long Polish non-nominative month comes from the table – an
+ * `style` is `long` (default) or `short`. `capitalize` (`true`, default off) then upper-cases the first letter of
+ * the chosen form, for a sentence that starts with a month: Polish month names are lowercase ("październik"),
+ * English ones are already upper-cased. Only a long Polish non-nominative month comes from the table – an
  * abbreviation does not inflect, so `short` is `Intl` in every language. A value that is not a month is rendered
  * unchanged rather than turned into a wrong date.
  */
@@ -62,11 +64,27 @@ export function formatMonthName(
   if (inflected !== undefined) {
     // The table holds all twelve months, and `parseMonth` only returns 1-12, so the form is always there.
     const name = MONTH_CASES[inflected][month - 1] as string;
-    return year === undefined ? name : `${name} ${year}`;
+    return capitalize(year === undefined ? name : `${name} ${year}`, lng, options);
   }
-  return new Intl.DateTimeFormat(language, {
-    month: style,
-    ...(year === undefined ? {} : { year: "numeric" as const }),
-    timeZone: "UTC",
-  }).format(Date.UTC(year ?? 1970, month - 1, 1));
+  return capitalize(
+    new Intl.DateTimeFormat(language, {
+      month: style,
+      ...(year === undefined ? {} : { year: "numeric" as const }),
+      timeZone: "UTC",
+    }).format(Date.UTC(year ?? 1970, month - 1, 1)),
+    lng,
+    options,
+  );
+}
+
+/** `{{month, monthName(capitalize: true)}}` – i18next passes the option as text, so both spellings count. */
+function capitalize(
+  text: string,
+  lng: string | undefined,
+  options: Record<string, unknown>,
+): string {
+  if (options["capitalize"] !== true && options["capitalize"] !== "true") {
+    return text;
+  }
+  return text.charAt(0).toLocaleUpperCase(lng) + text.slice(1);
 }

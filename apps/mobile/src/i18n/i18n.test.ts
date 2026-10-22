@@ -129,6 +129,20 @@ describe("the monthName formatter", () => {
       "Co roku · październik",
     ]);
   });
+
+  it("capitalises a month that starts a sentence", () => {
+    // Arrange: a fixture key – the copy that needs it belongs to #82.
+    const renderCapitalised = (language: "en" | "pl"): string =>
+      (createI18n(language).t as unknown as LooseT)("{{month, monthName(capitalize: true)}}", {
+        month: "2026-10",
+      });
+
+    // Act
+    const lines = [renderCapitalised("pl"), renderCapitalised("en")];
+
+    // Assert: Polish month names are lowercase and get their capital only here; English is unchanged.
+    expect(lines).toEqual(["Październik 2026", "October 2026"]);
+  });
 });
 
 describe("resolveLanguage", () => {
