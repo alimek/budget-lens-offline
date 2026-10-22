@@ -12,7 +12,8 @@ clients of both platforms were rebuilt from this branch before the runs (new arc
 
 Both suites ran sequentially on the dedicated iOS simulator BudgetLens-CI and Android emulator BudgetLens-Android at
 commit `734fb58679d76b0a154569c07bbb68840e91b79a` with `run.vcs.dirty: false`, telemetry disabled, and a fresh Metro
-from this worktree on port 8073. Final HEAD differs from that commit only under `docs/`. The three
+from this worktree on port 8073. The later commits on this branch add documentation and a Vitest test file only,
+neither of which is in the app bundle, so the runs above still stand. The three
 chart tests are `e2e/chart-spike.e2e.ts`: the chart box, the tapped last month with both amounts, and a second tap
 that moves the readout to an earlier month. Android screenshots use the 9:41 demo clock.
 
