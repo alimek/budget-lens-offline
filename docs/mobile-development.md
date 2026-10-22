@@ -40,6 +40,8 @@ development build can also show the boot screens and check that this build reall
 `budget-lens:///dev/storage-check`, which reports the cipher pragmas, the encryption state of the database file and
 of the copy, and the files a "start over" kept. `budget-lens:///dev/forget-key` (#75 R6) forgets the stored key, so
 a cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.
+`budget-lens:///dev/chart-spike` (#218) draws the forecast-style chart spike: the twelve-month sample of
+`src/dev/forecast-chart.ts` through `react-native-chart-kit`, with the tapped month and its amounts below it.
 `budget-lens:///dev/items-seed?gen=N` (#112) writes and archives a small deterministic set of items through
 `createItem` and `archiveItem`, so an e2e run can start from an empty Items list and from a populated one on the
 same device; the `gen` parameter keeps each run's rows (`dev-seed-N-…`) apart from what an earlier run archived.

@@ -86,9 +86,13 @@ export default function DevChartSpike() {
             }
             height={CHART_HEIGHT}
             interaction={{
+              // Keep the readout when a tap lands on the legend or an axis label: chart-kit covers the plot's
+              // margins with invisible outside-press surfaces while this option is on, which would make a tap
+              // close to the last month clear the selection instead of reporting it.
+              deselectOnOutsidePress: false,
               mode: "tap",
-              onSelect: (event) => setTapped(event.index),
               onDeselect: () => setTapped(undefined),
+              onSelect: (event) => setTapped(event.index),
             }}
             legend
             referenceLines={[

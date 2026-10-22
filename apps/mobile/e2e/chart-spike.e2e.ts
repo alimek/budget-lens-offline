@@ -13,13 +13,14 @@ function chart({ screen }: Pick<Fixtures, "screen">) {
 }
 
 /**
- * Taps the chart at a point of its own box. The nearest point to the tap is the one that gets selected, so the
- * far right is the last month and a point further left is an earlier one.
+ * Taps the chart at a fraction of its own width. The point nearest to the tap is the one that gets selected, so
+ * the far right of the plot is the last month and a smaller fraction is an earlier one. The vertical centre is
+ * inside the plot at any month.
  */
-async function tapChart(fixtures: Fixtures, xFromRight: number) {
+async function tapChart(fixtures: Fixtures, widthFraction: number) {
   const box = await chart(fixtures).boundingBox();
   if (!box) throw new Error("the chart has no bounds");
-  await chart(fixtures).tap({ position: { x: box.width - xFromRight, y: box.height * 0.45 } });
+  await chart(fixtures).tap({ position: { x: box.width * widthFraction, y: box.height * 0.5 } });
   await settle();
 }
 
@@ -45,17 +46,19 @@ test("reports the month and the amounts of the tapped point", async (fixtures) =
   await openDevScreen(fixtures, "chart-spike", "screen-dev-chart-spike");
   await expect(chart(fixtures)).toBeVisible();
 
-  // Act: the last of the twelve projected months, at the right edge of the chart.
-  await tapChart(fixtures, 8);
+  // Act: the last of the twelve projected months, at the right edge of the plot.
+  await tapChart(fixtures, 0.99);
 
   // Assert
   await expect(fixtures.screen.getByTestId("chart-spike-hint")).toHaveCount(0);
   await expect(fixtures.screen.getByTestId("chart-spike-selected-month")).toHaveText(
     "October 2027",
   );
-  await expect(fixtures.screen.getByTestId("chart-spike-selected-balance")).toHaveText(/693[.,]95/);
+  await expect(fixtures.screen.getByTestId("chart-spike-selected-balance")).toHaveText(
+    /2[.,]?693[.,]95/,
+  );
   await expect(fixtures.screen.getByTestId("chart-spike-selected-total-funds")).toHaveText(
-    /330[.,]6/,
+    /3[.,]?306[.,]05/,
   );
   await app.screenshot("chart-spike-tapped");
 });
@@ -65,11 +68,11 @@ test("reports another month when the chart is tapped further left", async (fixtu
   const { screen } = fixtures;
   await openDevScreen(fixtures, "chart-spike", "screen-dev-chart-spike");
   await expect(chart(fixtures)).toBeVisible();
-  await tapChart(fixtures, 8);
+  await tapChart(fixtures, 0.99);
   await expect(screen.getByTestId("chart-spike-selected-month")).toHaveText("October 2027");
 
-  // Act: one step of the chart's own point spacing further left.
-  await tapChart(fixtures, 36);
+  // Act: the middle of the same chart.
+  await tapChart(fixtures, 0.5);
 
   // Assert: the readout moved to an earlier month, so the tap really picked a point.
   await expect(screen.getByTestId("chart-spike-selected-month")).not.toHaveText("October 2027");
