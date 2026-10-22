@@ -30,10 +30,10 @@ platform-agnostic TypeScript package.
   them; `.env*` is gitignored ([#15 e2e
   decisions](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252)).
 - **Machine-agnostic repo.** No host-, user- or operator-specific data: no machine or host names, user names,
-  absolute home paths, local scheduler jobs, device serials or local simulator/emulator instances, and no references
-  to a specific agent or bot setup or who does what. Use env vars with documented defaults and generic wording ("a
-  local dev machine"); machine-specific automation lives outside the repo. `pnpm lint` enforces it
-  (`scripts/check-machine-agnostic.mjs`) and reviewers check it.
+  absolute home paths, local scheduler jobs, device serials or local simulator/emulator instances, no Expo account
+  name (no `expo.owner` in `apps/mobile/app.json`), and no references to a specific agent or bot setup or who does
+  what. Use env vars with documented defaults and generic wording ("a local dev machine"); machine-specific
+  automation lives outside the repo. Reviewers check it.
 
 Details and the rest of the conventions: [docs/conventions.md](docs/conventions.md).
 
@@ -89,5 +89,7 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
   runtime version, channels, publishing and rollback)
 - [docs/github-automation.md](docs/github-automation.md) – label sync from `.github/labels.tsv` and the per-label
   issue queue export (`scripts/github/`), token scopes and scheduling rules
+- [docs/decisions.md](docs/decisions.md) – log of the owner's answers in issue/PR comments or chat, newest first
+- [docs/roadmap.md](docs/roadmap.md) – work deferred to later stages, one line per item with the original issue
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
   [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)

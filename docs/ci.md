@@ -12,6 +12,8 @@ status check. Making checks required in the `main` ruleset is the repository own
 - `.github/workflows/pr.yml` checks the PR metadata on `opened`, `edited`, `reopened` and `synchronize`:
   `pr-title`, `pr-body`. A separate workflow, so editing the title or body re-runs only these jobs. They do not
   run on push to `main` (there is no PR there).
+- `.github/workflows/issue-status-cleanup.yml` runs when an issue is closed: it removes every `status:*` label and,
+  for issues closed as completed, adds `status:done`. It uses only the default `GITHUB_TOKEN` with `issues: write`.
 - Every job runs on the GitHub-hosted `ubuntu-latest` runner. CI keeps only fast checks; native builds and E2E tests
   do not run in GitHub Actions. See [Native builds and E2E (local)](#native-builds-and-e2e-local).
 - Shared setup: `.github/actions/setup` (pnpm from `packageManager` with the pnpm store cache, Node.js from `.nvmrc`,
@@ -24,7 +26,7 @@ status check. Making checks required in the `main` ruleset is the repository own
 
 | Job | Fails when |
 | --- | --- |
-| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or host-, user- or agent-setup-specific content, including an Expo account name (`expo.owner`) in `apps/mobile/app.json` (`scripts/check-machine-agnostic.mjs`, see [AGENTS.md](../AGENTS.md)), or a migration problem in `packages/db`: `drizzle-kit check` not clean, schema changes without a migration, a stale `migrations.generated.ts` or a migration not newer than the previous one (`db:check`, see [packages/db](../packages/db/README.md#migrations)) |
+| `lint` | Any Biome diagnostic, including warnings (`biome check --error-on-warnings`), or a migration problem in `packages/db`: `drizzle-kit check` not clean, schema changes without a migration, a stale `migrations.generated.ts` or a migration not newer than the previous one (`db:check`, see [packages/db](../packages/db/README.md#migrations)) |
 | `typecheck` | Any TypeScript 7 error with the strict options in `tsconfig.base.json` |
 | `test` | Any failing Vitest test (coverage is reported, no thresholds) |
 | `fallow` | Any unused file, export, type or dependency (dev dependencies too), unlisted dependency, cycle or stale suppression |

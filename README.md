@@ -72,7 +72,7 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 
 | Job (status check) | Command |
 | --- | --- |
-| `lint` | `pnpm turbo run lint` (Biome check, `--error-on-warnings`, and the portability check `scripts/check-machine-agnostic.mjs`) |
+| `lint` | `pnpm turbo run lint` (Biome check, `--error-on-warnings`) |
 | `typecheck` | `pnpm turbo run typecheck` (TypeScript 7 `tsc`, strict options) |
 | `test` | `pnpm turbo run test:coverage` (Vitest + coverage summary in the job summary and a `coverage` artifact) |
 | `fallow` | `pnpm turbo run fallow` |
