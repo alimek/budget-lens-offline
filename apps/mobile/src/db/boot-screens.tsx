@@ -380,7 +380,7 @@ export function BootScreen({
       </Text>
       <FixSteps testID={`${spec.prefix}-steps`} steps={spec.steps} />
       {/* Pins the actions low on a tall screen and collapses so the whole page scrolls at large text. */}
-      <View className="min-h-8 flex-1" />
+      <View className="min-h-8" />
       {status === null ? null : (
         <StatusRow testID={`${spec.prefix}-status`} text={status} spinner={showSpinner} />
       )}

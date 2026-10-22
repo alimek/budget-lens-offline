@@ -1,4 +1,3 @@
-import { Button } from "@expo/ui/swift-ui";
 import {
   buttonStyle,
   controlSize,
@@ -6,7 +5,7 @@ import {
   tint,
 } from "@expo/ui/swift-ui/modifiers";
 import { useThemeColors } from "../use-theme";
-import { ButtonHost, fullWidthFrame } from "./button.ios";
+import { StyledButton } from "./button.ios";
 import type { ButtonProps } from "./types";
 
 /**
@@ -26,22 +25,20 @@ export function DestructiveButton({
 }: ButtonProps) {
   const theme = useThemeColors();
   return (
-    <ButtonHost fullWidth={fullWidth}>
-      {/* `role` is the SwiftUI button role, which draws and announces the action as destructive. */}
-      {/* biome-ignore lint/a11y/useValidAriaRole: the Expo UI Button takes it, the DOM does not */}
-      <Button
-        role="destructive"
-        label={label}
-        onPress={onPress}
-        testID={testID}
-        modifiers={[
-          buttonStyle("borderless"),
-          controlSize("large"),
-          tint(theme.destructive),
-          disabledModifier(disabled),
-          ...fullWidthFrame(fullWidth),
-        ]}
-      />
-    </ButtonHost>
+    // biome-ignore lint/a11y/useValidAriaRole: StyledButton takes the SwiftUI button role, not an ARIA role
+    <StyledButton
+      label={label}
+      onPress={onPress}
+      testID={testID}
+      fullWidth={fullWidth}
+      // `role` is the SwiftUI button role, which draws and announces the action as destructive.
+      role="destructive"
+      modifiers={[
+        buttonStyle("borderless"),
+        controlSize("large"),
+        tint(theme.destructive),
+        disabledModifier(disabled),
+      ]}
+    />
   );
 }

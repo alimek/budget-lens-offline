@@ -223,4 +223,15 @@ test("keeps the recovery screen visible while retrying a real failure", async (f
   await expect(status).toHaveText(/Nothing has been changed/);
   await expect(screen.getByTestId("screen-recovery")).toBeVisible();
   await app.screenshot("recovery-retry-failed");
+
+  // Clean up: start over for real, so the next test finds a device with a readable budget again
+  const { confirm } = appAlert(
+    fixtures,
+    "recovery-start-over-alert",
+    "Start over with an empty budget?",
+    "Start over",
+  );
+  await tapUntilVisible(nativeButton(fixtures, "recovery-start-over"), confirm);
+  await confirm.tap();
+  await expect(screen.getByTestId("screen-home")).toBeVisible();
 });

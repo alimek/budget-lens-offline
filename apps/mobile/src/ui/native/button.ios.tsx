@@ -1,10 +1,11 @@
-import { Button, Host } from "@expo/ui/swift-ui";
+import { Button, type ButtonRole, Host, Text as NativeText } from "@expo/ui/swift-ui";
 import {
   buttonStyle,
   controlSize,
   disabled as disabledModifier,
   foregroundStyle,
   frame,
+  type ModifierConfig,
   tint,
 } from "@expo/ui/swift-ui/modifiers";
 import type { ReactElement } from "react";
@@ -12,7 +13,7 @@ import { useThemeColors } from "../use-theme";
 import type { ButtonProps } from "./types";
 
 /** The host of a button: sized to its content, or stretched across the screen when `fullWidth` asks for it. */
-export function ButtonHost({
+function ButtonHost({
   fullWidth,
   children,
 }: {
@@ -29,9 +30,50 @@ export function ButtonHost({
   );
 }
 
-/** The modifier every full-width button needs so SwiftUI fills the stretched host (#60). */
-export function fullWidthFrame(fullWidth: boolean | undefined) {
-  return fullWidth === true ? [frame({ maxWidth: Number.POSITIVE_INFINITY })] : [];
+/**
+ * A button of one style, so the three actions share the stretching of #60. SwiftUI draws the `.bordered`
+ * background around the label, so a frame on the button itself would only move it: a full-width button therefore
+ * hands the button a label of its own that fills the host and centres its text, and the background follows it.
+ */
+export function StyledButton({
+  label,
+  onPress,
+  testID,
+  modifiers,
+  role,
+  fullWidth,
+}: {
+  readonly label: string;
+  readonly onPress: () => void;
+  readonly testID: string;
+  readonly modifiers: readonly ModifierConfig[];
+  readonly role?: ButtonRole;
+  readonly fullWidth: boolean | undefined;
+}) {
+  // The label is either the string or the filling view above, never both: SwiftUI would nest them.
+  const content =
+    fullWidth === true
+      ? {
+          children: (
+            <NativeText
+              modifiers={[frame({ maxWidth: Number.POSITIVE_INFINITY, alignment: "center" })]}
+            >
+              {label}
+            </NativeText>
+          ),
+        }
+      : { label };
+  return (
+    <ButtonHost fullWidth={fullWidth}>
+      <Button
+        {...content}
+        {...(role === undefined ? {} : { role })}
+        onPress={onPress}
+        testID={testID}
+        modifiers={[...modifiers]}
+      />
+    </ButtonHost>
+  );
 }
 
 /** Filled primary action: SwiftUI `.borderedProminent`, tint `primary`, label `primary-foreground`. */
@@ -44,21 +86,19 @@ export function PrimaryButton({
 }: ButtonProps) {
   const theme = useThemeColors();
   return (
-    <ButtonHost fullWidth={fullWidth}>
-      <Button
-        label={label}
-        onPress={onPress}
-        testID={testID}
-        modifiers={[
-          buttonStyle("borderedProminent"),
-          controlSize("large"),
-          tint(theme.primary),
-          foregroundStyle(theme["primary-foreground"]),
-          disabledModifier(disabled),
-          ...fullWidthFrame(fullWidth),
-        ]}
-      />
-    </ButtonHost>
+    <StyledButton
+      label={label}
+      onPress={onPress}
+      testID={testID}
+      fullWidth={fullWidth}
+      modifiers={[
+        buttonStyle("borderedProminent"),
+        controlSize("large"),
+        tint(theme.primary),
+        foregroundStyle(theme["primary-foreground"]),
+        disabledModifier(disabled),
+      ]}
+    />
   );
 }
 
@@ -72,19 +112,17 @@ export function SecondaryButton({
 }: ButtonProps) {
   const theme = useThemeColors();
   return (
-    <ButtonHost fullWidth={fullWidth}>
-      <Button
-        label={label}
-        onPress={onPress}
-        testID={testID}
-        modifiers={[
-          buttonStyle("bordered"),
-          controlSize("large"),
-          tint(theme.primary),
-          disabledModifier(disabled),
-          ...fullWidthFrame(fullWidth),
-        ]}
-      />
-    </ButtonHost>
+    <StyledButton
+      label={label}
+      onPress={onPress}
+      testID={testID}
+      fullWidth={fullWidth}
+      modifiers={[
+        buttonStyle("bordered"),
+        controlSize("large"),
+        tint(theme.primary),
+        disabledModifier(disabled),
+      ]}
+    />
   );
 }
