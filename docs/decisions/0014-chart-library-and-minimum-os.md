@@ -23,9 +23,10 @@ hand-drawn `react-native-svg` chart.
 sample (`apps/mobile/src/dev/forecast-chart.ts`) with two series, legend, zero line, threshold line and dotted
 reference style, and reports the tapped month with both amounts. Development builds of both platforms from that
 branch, new architecture on, build, render and take a tap; the e2e run is `apps/mobile/e2e/chart-spike.e2e.ts`.
-Measured with `npx expo export` (production Hermes bytecode, same tree with and without the chart screen and
-module): Android 5,405,827 → 5,947,114 bytes, iOS 5,294,294 → 5,830,871 bytes, about +10 % of the JavaScript bundle
-on both platforms. No Skia, Reanimated or Gesture Handler import is involved in the chart's own hit testing.
+Measured with `npx expo export --platform ios --platform android` (production Hermes bytecode, the same tree with
+and without the chart screen and its data module): Android 5,405,828 → 5,947,112 bytes and iOS 5,294,294 →
+5,830,870 bytes, so about +10 % of the JavaScript bundle on both platforms. Nothing outside `react-native-svg` is
+pulled in by the chart's own hit testing: chart-kit 7.0.4 needs no Skia, Reanimated or Gesture Handler.
 
 **Consequences.**
 - Two new native modules and a new native configuration mean the fingerprint changes, so the merged branch needs a
