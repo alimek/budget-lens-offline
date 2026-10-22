@@ -17,10 +17,12 @@ import {
   accessibilityLabel,
   background,
   buttonStyle,
+  contentShape,
   font,
   foregroundStyle,
   listStyle,
   monospacedDigit,
+  onTapGesture,
   padding,
   shapes,
   tint,
@@ -98,13 +100,24 @@ export function ListSection({ title, testID, footer, children }: ListSectionProp
 export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
   const theme = useThemeColors();
   return (
-    <Button onPress={onPress} testID={testID} modifiers={[buttonStyle("plain")]}>
-      <HStack spacing={12}>
-        <Text modifiers={[foregroundStyle(theme.foreground)]}>{label}</Text>
-        <Spacer />
-        <Image systemName="chevron.right" size={13} color={theme["muted-foreground"]} />
-      </HStack>
-    </Button>
+    <HStack
+      spacing={12}
+      modifiers={[
+        // A `Button` here hit-tests only its visible content, so a tap in the middle of the row – over the
+        // `Spacer` – would do nothing. A tap gesture on the row with a rectangular content shape takes the whole
+        // row instead, which is what a list row that goes somewhere is.
+        contentShape(shapes.rectangle()),
+        onTapGesture(onPress),
+        accessibilityElement("combine"),
+        accessibilityLabel(label),
+        accessibilityIdentifier(testID),
+        accessibilityAddTraits(["isButton"]),
+      ]}
+    >
+      <Text modifiers={[foregroundStyle(theme.foreground)]}>{label}</Text>
+      <Spacer />
+      <Image systemName="chevron.right" size={13} color={theme["muted-foreground"]} />
+    </HStack>
   );
 }
 
