@@ -15,6 +15,7 @@ const monthly = (id: string, name: string, amount: number) => ({
   id,
   name,
   itemType: "expense" as const,
+  currency: "PLN" as const,
   amount: toMinorUnits(amount),
   schedule: { kind: "recurring" as const, intervalMonths: 1, anchor: ym("2026-01") },
 });
@@ -98,6 +99,49 @@ describe("resolveOccurrences", () => {
     ]);
   });
 
+  it("reports each occurrence in its item's currency, also when an override changed the amount", () => {
+    // Arrange: a JPY income (no minor unit) overridden this month, next to a PLN expense.
+    const salary: ScheduledItem = {
+      id: "salary",
+      itemType: "income",
+      currency: "JPY",
+      amount: toMinorUnits(300_000),
+      schedule: { kind: "recurring", intervalMonths: 1, anchor: ym("2026-01") },
+    };
+    const override: OccurrenceOverride = {
+      id: "o1",
+      itemType: "income",
+      itemId: "salary",
+      month: ym("2026-11"),
+      amount: toMinorUnits(320_000),
+    };
+
+    // Act
+    const { occurrences } = resolveOccurrences([salary, internet], [override], ym("2026-11"));
+
+    // Assert: the amounts keep the scale of their own currency; nothing is rescaled or converted.
+    expect(occurrences.map(({ item, currency, amount }) => [item.id, currency, amount])).toEqual([
+      ["salary", "JPY", 320_000],
+      ["internet", "PLN", 7_999],
+    ]);
+  });
+
+  it("reports an item whose stored currency is not supported instead of resolving it", () => {
+    // Arrange: an `items.currency` value that no longer maps to a supported currency.
+    const unknownCurrency: ScheduledItem = JSON.parse(JSON.stringify({ ...rent, currency: "XXX" }));
+
+    // Act
+    const { occurrences, invalidItems } = resolveOccurrences(
+      [unknownCurrency, internet],
+      [],
+      ym("2026-11"),
+    );
+
+    // Assert
+    expect(occurrences.map(({ item }) => item.id)).toEqual(["internet"]);
+    expect(invalidItems).toEqual([unknownCurrency]);
+  });
+
   it("skips and reports malformed and duplicate stored overrides instead of failing the month", () => {
     // Arrange: rows as they may come from a corrupt database or a JSON backup.
     const withoutSchedule: ScheduledItem = JSON.parse(
@@ -148,6 +192,7 @@ describe("findOrphanedOverrides", () => {
     const tv: ScheduledItem = {
       id: "tv",
       itemType: "expense",
+      currency: "PLN",
       amount: toMinorUnits(200_000),
       schedule: { kind: "one-time", month: ym("2026-11") },
     };
@@ -200,6 +245,7 @@ describe("validateOverride", () => {
   const laptop: ScheduledItem = {
     id: "rent",
     itemType: "expense",
+    currency: "PLN",
     amount: toMinorUnits(600_000),
     schedule: { kind: "one-time", month: ym("2026-11") },
   };

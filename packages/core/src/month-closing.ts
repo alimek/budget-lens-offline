@@ -4,7 +4,7 @@ import {
   isMinorUnits,
   type MinorUnits,
   subtractMinorUnits,
-  sumMinorUnits,
+  sumCurrencyAmounts,
   toMinorUnits,
 } from "./money";
 import {
@@ -24,10 +24,11 @@ export interface PaymentStatus {
   readonly settled: boolean;
 }
 
-/** Scheduled amounts remain in the item's own currency. */
-export interface ClosingItem extends ScheduledItem {
-  readonly currency: CurrencyCode;
-}
+/**
+ * An item closing plans a month from: `ScheduledItem`, whose `amount` and occurrence overrides are minor units of
+ * its own required `currency` (#138). Closing converts each effective occurrence into the base currency.
+ */
+export type ClosingItem = ScheduledItem;
 
 /** Base-currency major units per source major unit, selected by the caller for the closing month. */
 export interface ClosingConversion {
@@ -211,6 +212,21 @@ export function buildClosedOccurrences(
   return { ok: true, value: Object.freeze(snapshot) };
 }
 
+/**
+ * Base-currency total of snapshot rows: each `baseAmount` is tagged with the base currency, so a foreign-currency
+ * amount reaching this sum is reported instead of being added to a total of another currency (#138).
+ */
+function baseTotal(
+  rows: readonly ClosedOccurrence[],
+  baseCurrency: CurrencyCode,
+): Result<MinorUnits> {
+  const total = sumCurrencyAmounts(
+    baseCurrency,
+    rows.map((row) => ({ currency: baseCurrency, amount: row.baseAmount })),
+  );
+  return total.ok ? { ok: true, value: total.value.amount } : failure("invalid-currency");
+}
+
 export interface CloseMonthInput extends ClosingConversion {
   readonly currentMonth: YearMonth;
   readonly closingBalance: MinorUnits;
@@ -258,17 +274,17 @@ export function closeMonth(
   const snapshot = buildClosedOccurrences(resolved.occurrences, input.paymentStatuses, input);
   if (!snapshot.ok) return snapshot;
   try {
-    const totalIncome = sumMinorUnits(
-      snapshot.value.filter((row) => row.itemType === "income").map((row) => row.baseAmount),
-    );
-    const totalExpenses = sumMinorUnits(
-      snapshot.value.filter((row) => row.itemType === "expense").map((row) => row.baseAmount),
-    );
+    const incomeRows = snapshot.value.filter((row) => row.itemType === "income");
+    const expenseRows = snapshot.value.filter((row) => row.itemType === "expense");
+    const totalIncome = baseTotal(incomeRows, input.baseCurrency);
+    if (!totalIncome.ok) return totalIncome;
+    const totalExpenses = baseTotal(expenseRows, input.baseCurrency);
+    if (!totalExpenses.ok) return totalExpenses;
     const closed: ClosedMonth = Object.freeze({
       ...updated.value,
       status: "closed",
-      totalIncome,
-      totalExpenses,
+      totalIncome: totalIncome.value,
+      totalExpenses: totalExpenses.value,
       baseCurrency: input.baseCurrency,
       closedOccurrences: snapshot.value,
     });

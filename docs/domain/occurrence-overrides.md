@@ -12,8 +12,10 @@ An `OccurrenceOverride` changes **one occurrence of one recurring item in one mo
 { id, itemType: "expense" | "income", itemId, month: YearMonth, amount?: MinorUnits, skipped?: boolean, note? }
 ```
 
-- Override amounts are `MinorUnits` in the **item's own** currency (#138: `VersionedItem.currency`, fixed after
-  creation); closing converts the effective occurrence into the locked base
+- An override has **no currency of its own** (#138). Its `amount` is `MinorUnits` in the currency of the item it
+  overrides: `ScheduledItem.currency` / `VersionedItem.currency`, fixed after creation. So is the item's own
+  `amount`, and a resolved occurrence reports that same currency in `currency` even when an override replaced its
+  amount. Closing converts the effective occurrence into the locked base
   currency and snapshots the rate ([month-closing.md](month-closing.md), #84).
 - Either `amount` (the occurrence uses this amount instead of the item's) or `skipped: true` (the occurrence is left
   out). Unique per `(itemType, itemId, month)`.
@@ -36,15 +38,19 @@ An `OccurrenceOverride` changes **one occurrence of one recurring item in one mo
 ## Functions
 
 - `resolveOccurrences(items, overrides, month)` – the effective occurrences of `ScheduledItem`s
-  (`{ id, itemType, amount, schedule }`) in `month`, in item order, as
-  `{ occurrences, rejectedOverrides, invalidItems }`. Each occurrence is `{ item, month, day?, amount, override? }`,
-  with overridden amounts applied and skipped occurrences removed.
+  (`{ id, itemType, currency, amount, schedule }`) in `month`, in item order, as
+  `{ occurrences, rejectedOverrides, invalidItems }`. Each occurrence is
+  `{ item, month, day?, amount, currency, override? }`, with overridden amounts applied and skipped occurrences
+  removed. `currency` is always the item's (#138), also for an overridden occurrence: both amounts are minor units
+  of it, and nothing is converted or rescaled while resolving.
   - Bad stored data never breaks the month. An override that fails `validateStoredOverride` or shares
     `(itemType, itemId, month)` with another override (every copy, none is applied) is left out and reported in
     `rejectedOverrides` with its error codes. An item with an invalid schedule (`validateSchedule`, e.g.
-    `schedule: null`) is left out and reported in `invalidItems`.
-  - Items themselves (`id`, `itemType`, `amount`) are not validated here: the items storage (epic E3) must validate
-    them when they are loaded, before `resolveOccurrences`.
+    `schedule: null`) or a currency outside the supported set (`isCurrencyCode`, e.g. `currency: "XXX"` from a
+    corrupt row or a backup) is left out and reported in `invalidItems`: its amounts are minor units of a currency
+    core does not know, so it is never resolved as if it were another one (#138).
+  - The other item fields (`id`, `itemType`, `amount`) are not validated here: the items storage (epic E3) must
+    validate them when they are loaded, before `resolveOccurrences`.
   - `rejectedOverrides` is the same for every month of the same input, so the caller reports it once per load.
 - `findOrphanedOverrides(items, overrides)` – valid overrides that resolving does not apply: `unknown-item` (e.g. the
   item was deleted), `one-time-item` (the item is a one-time item, e.g. after a rule change from recurring to

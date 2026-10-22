@@ -1,21 +1,31 @@
+import { type CurrencyCode, isCurrencyCode } from "./currency";
 import { isMinorUnits, type MinorUnits } from "./money";
 import { isActiveInMonth, occurrencesInRange, type Schedule, validateSchedule } from "./recurrence";
 import { isYearMonth, type YearMonth } from "./year-month";
 
 export type ItemType = "expense" | "income";
 
-/** The fields of a budget item (expense or income) that decide its occurrences. */
+/**
+ * The fields of a budget item (expense or income) that decide its occurrences and their amount.
+ */
 export interface ScheduledItem {
   readonly id: string;
   readonly itemType: ItemType;
+  /**
+   * ISO 4217 code of the item's currency: `amount`, every override amount and every resolved occurrence amount
+   * are minor units of it (#138). Fixed when the item is created; a different currency means a new item
+   * ([#81 owner decision](https://github.com/alimek/budget-lens-offline/issues/81#issuecomment-6276228839)).
+   */
+  readonly currency: CurrencyCode;
   readonly amount: MinorUnits;
   readonly schedule: Schedule;
 }
 
 /**
  * A change of one occurrence of a recurring item in one month: a different `amount` (≥ 0), or `skipped`. At most
- * one override exists per `(itemType, itemId, month)`. Overrides never change other months; "from this month on" is
- * a change of the item's rule (a rule version, see `rule-versions.ts`), not an override.
+ * one override exists per `(itemType, itemId, month)`. `amount` is in the currency of the item it overrides –
+ * an override carries no currency of its own (#138). Overrides never change other months; "from this month on"
+ * is a change of the item's rule (a rule version, see `rule-versions.ts`), not an override.
  */
 export interface OccurrenceOverride {
   readonly id: string;
@@ -32,7 +42,10 @@ export interface ResolvedOccurrence<T extends ScheduledItem> {
   readonly item: T;
   readonly month: YearMonth;
   readonly day?: number;
+  /** Minor units of {@link ResolvedOccurrence.currency}: the item's amount, or the override's when there is one. */
   readonly amount: MinorUnits;
+  /** The currency of `amount`: always the item's, also when an override replaced its amount (#138). */
+  readonly currency: CurrencyCode;
   readonly override?: OccurrenceOverride;
 }
 
@@ -64,7 +77,7 @@ export interface ResolvedMonth<T extends ScheduledItem> {
   readonly occurrences: readonly ResolvedOccurrence<T>[];
   /** Invalid or duplicate overrides; the same for every month of the same input. */
   readonly rejectedOverrides: readonly RejectedOverride[];
-  /** Items left out because their schedule is invalid (see `validateSchedule`). */
+  /** Items left out because their currency is unsupported or their schedule is invalid (see `validateSchedule`). */
   readonly invalidItems: readonly T[];
 }
 
@@ -241,7 +254,7 @@ const itemsByItemKey = (items: readonly ScheduledItem[]): ReadonlyMap<string, Sc
  *
  * Bad stored data never breaks the month: an override that fails `validateStoredOverride` or shares
  * `(itemType, itemId, month)` with another one (all copies) is left out and reported in `rejectedOverrides`;
- * an item with an invalid schedule is left out and reported in `invalidItems`.
+ * an item with an invalid schedule or an unsupported currency is left out and reported in `invalidItems`.
  */
 export function resolveOccurrences<T extends ScheduledItem>(
   items: readonly T[],
@@ -252,7 +265,9 @@ export function resolveOccurrences<T extends ScheduledItem>(
   const occurrences: ResolvedOccurrence<T>[] = [];
   const invalidItems: T[] = [];
   for (const item of items) {
-    if (validateSchedule(item.schedule).length > 0) {
+    // An unsupported currency (e.g. a malformed code from storage) makes the item unresolvable: its amounts are
+    // minor units of that currency (#138). It is reported, never resolved as another currency.
+    if (!isCurrencyCode(item.currency) || validateSchedule(item.schedule).length > 0) {
       invalidItems.push(item);
       continue;
     }
@@ -264,6 +279,7 @@ export function resolveOccurrences<T extends ScheduledItem>(
       occurrences.push({
         item,
         ...occurrence,
+        currency: item.currency,
         amount: override?.amount ?? item.amount,
         ...(override === undefined ? {} : { override }),
       });

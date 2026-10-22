@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  addCurrencyAmounts,
   addMinorUnits,
+  type CurrencyAmount,
   type CurrencyCode,
   convertMinorExact,
   convertViaPln,
@@ -10,6 +12,7 @@ import {
   multiplyByRate,
   negateMinorUnits,
   subtractMinorUnits,
+  sumCurrencyAmounts,
   sumMinorUnits,
   toMinorUnits,
 } from "./index";
@@ -153,6 +156,61 @@ describe("addMinorUnits / subtractMinorUnits", () => {
     expect(difference).toBe(-10);
     expect(() => addMinorUnits(max, ten)).toThrow(RangeError);
     expect(() => subtractMinorUnits(negateMinorUnits(max), ten)).toThrow(RangeError);
+  });
+});
+
+describe("addCurrencyAmounts / sumCurrencyAmounts", () => {
+  const pln = (value: number): CurrencyAmount => ({
+    currency: "PLN",
+    amount: toMinorUnits(value),
+  });
+  const yen = (value: number): CurrencyAmount => ({
+    currency: "JPY",
+    amount: toMinorUnits(value),
+  });
+
+  it("adds amounts of one currency and keeps that currency", () => {
+    // Arrange
+    const rent = pln(300_000);
+    const fee = pln(12_500);
+
+    // Act
+    const total = addCurrencyAmounts(rent, fee);
+
+    // Assert
+    expect(total).toEqual({ ok: true, value: { currency: "PLN", amount: 312_500 } });
+  });
+
+  it("refuses to add amounts of different currencies and reports both codes", () => {
+    // Arrange
+    const rent = pln(300_000);
+    const salary = yen(300_000);
+
+    // Act
+    const pair = addCurrencyAmounts(rent, salary);
+    const sum = sumCurrencyAmounts("PLN", [rent, salary, rent]);
+
+    // Assert: never a total that mixes the scales of two currencies
+    expect(pair).toEqual({ ok: false, error: "currency-mismatch", currencies: ["PLN", "JPY"] });
+    expect(sum).toEqual({ ok: false, error: "currency-mismatch", currencies: ["PLN", "JPY"] });
+  });
+
+  it("sums amounts of one currency, starting at zero in that currency", () => {
+    // Arrange
+    const amounts = [yen(1000), yen(250)];
+
+    // Act
+    const total = sumCurrencyAmounts("JPY", amounts);
+    const none = sumCurrencyAmounts("JPY", []);
+
+    // Assert: JPY minor units are whole yen, unchanged by summing
+    expect(total).toEqual({ ok: true, value: { currency: "JPY", amount: 1250 } });
+    expect(none).toEqual({ ok: true, value: { currency: "JPY", amount: 0 } });
+  });
+
+  it("rejects an amount without its currency at compile time", () => {
+    // @ts-expect-error every amount must say which currency it is in
+    expect(addCurrencyAmounts({ amount: toMinorUnits(10) }, pln(20)).ok).toBe(false);
   });
 });
 

@@ -23,8 +23,9 @@ A `Schedule` decides in which months an item (expense **or** income – both use
   (29 in leap years). An `Occurrence` is `{ month, day? }`; `day` is present only when the schedule has a
   `dayOfMonth`.
 - A schedule says **when**, never **how much** and not **in which currency**: an item's amounts come from its rule
-  versions and are `MinorUnits` of the item's own currency (`VersionedItem.currency`, #138), which is fixed after
-  the item is created ([rule versions](rule-versions.md), [money](money.md)).
+  versions and are `MinorUnits` of the item's own required currency (`ScheduledItem.currency` of the item model that
+  resolving uses, `VersionedItem.currency` of a versioned item, #138), which is fixed after the item is created
+  ([rule versions](rule-versions.md), [money](money.md), [occurrence overrides](occurrence-overrides.md)).
 
 Functions (pure, the month range is always passed in):
 

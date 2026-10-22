@@ -19,8 +19,9 @@ export type {
   ForecastWarning,
 } from "./forecast";
 export { forecast } from "./forecast";
-export type { MinorUnits } from "./money";
+export type { CurrencyAmount, CurrencyAmountResult, MinorUnits } from "./money";
 export {
+  addCurrencyAmounts,
   addMinorUnits,
   convertMinor,
   convertMinorExact,
@@ -30,6 +31,7 @@ export {
   multiplyByRate,
   negateMinorUnits,
   subtractMinorUnits,
+  sumCurrencyAmounts,
   sumMinorUnits,
   toMinorUnits,
 } from "./money";

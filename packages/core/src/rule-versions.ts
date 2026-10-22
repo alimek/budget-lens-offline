@@ -1,4 +1,4 @@
-import type { CurrencyCode } from "./currency";
+import { type CurrencyCode, isCurrencyCode } from "./currency";
 import { isMinorUnits, type MinorUnits } from "./money";
 import {
   type ItemType,
@@ -142,7 +142,7 @@ export interface ResolvedVersionedMonth<T extends VersionedItem> {
   readonly occurrences: readonly ResolvedOccurrence<ItemInForce<T>>[];
   /** Invalid or duplicate overrides; the same for every month of the same input. */
   readonly rejectedOverrides: readonly RejectedOverride[];
-  /** Items left out because their versions are invalid (see {@link validateRuleVersions}). */
+  /** Items left out because their versions are invalid (see {@link validateRuleVersions}) or their currency is unsupported. */
   readonly invalidItems: readonly T[];
 }
 
@@ -150,6 +150,8 @@ export interface ResolvedVersionedMonth<T extends VersionedItem> {
  * The effective occurrences of versioned `items` in `month`: each item uses the version in force in that month,
  * then `resolveOccurrences` (#5) applies the overrides, which stay keyed by `(itemType, itemId, month)` and do not
  * depend on versions. Items without a version in force yet have no occurrence.
+ * An item whose stored currency is not a supported code is left out with the invalid-version items: every version
+ * amount is in that currency, so nothing can be resolved from it (#138).
  */
 export function resolveVersionedOccurrences<T extends VersionedItem>(
   items: readonly T[],
@@ -159,7 +161,7 @@ export function resolveVersionedOccurrences<T extends VersionedItem>(
   const invalidItems: T[] = [];
   const inForce: ItemInForce<T>[] = [];
   for (const item of items) {
-    if (validateRuleVersions(item.versions).length > 0) {
+    if (!isCurrencyCode(item.currency) || validateRuleVersions(item.versions).length > 0) {
       invalidItems.push(item);
       continue;
     }

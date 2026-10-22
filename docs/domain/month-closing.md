@@ -41,8 +41,9 @@ opening balances against history.
 per-item currency is in MVP. Base currency is selected during onboarding and locked once onboarding is confirmed;
 changing it later is not supported. Onboarding/persistence enforce that lifecycle rule, not the pure closing function.
 
-Closing takes `ClosingItem` (`ScheduledItem` plus required `currency: CurrencyCode`). Its amount and occurrence
-overrides are minor units of that item's currency. `baseCurrency` comes from the locked `Settings.baseCurrency`.
+Closing takes `ClosingItem`, which since #138 **is** `ScheduledItem`: `{ id, itemType, currency, amount, schedule }`
+with the required `currency: CurrencyCode`. Its amount and occurrence overrides are minor units of that item's
+currency, and each resolved occurrence exposes it. `baseCurrency` comes from the locked `Settings.baseCurrency`.
 `rates` maps each used foreign currency to a finite **positive** number: base-currency major units per one
 source-currency major unit, selected by the caller for the month being closed. Rates have the same decimal-number
 representation as `multiplyByRate`; arithmetic uses their decimal form with BigInt, not floating-point products.
@@ -117,7 +118,7 @@ Codes only, never UI messages:
 | `future-month` | The active month is after the supplied current calendar month. |
 | `month-sequence-conflict` | The active month is already closed, or is not later than every closed month. |
 | `month-out-of-range` | `9999-12` has no successor in the supported `YearMonth` range. |
-| `invalid-currency` | Base currency or an effective occurrence currency is unsupported. |
+| `invalid-currency` | Base currency or an effective occurrence currency is unsupported, or a snapshot total tried to add a `baseAmount` of another currency (`sumCurrencyAmounts`, #138). |
 | `missing-exchange-rate` | An effective foreign-currency occurrence has no supplied rate. |
 | `invalid-exchange-rate` | A used foreign rate is not a finite positive number. |
 | `invalid-amount` | A supplied balance or resolved amount is not a safe integer; occurrence amounts must be nonnegative. |

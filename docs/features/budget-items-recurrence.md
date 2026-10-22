@@ -19,8 +19,9 @@ version and never rewrites history. Edits in the month view are always one-off o
 **In:**
 - Recurrence engine ([#4](https://github.com/alimek/budget-lens-offline/issues/4), done).
 - Per-item currency in core ([#138](https://github.com/alimek/budget-lens-offline/issues/138): a required
-  `currency` on a versioned item, landed with
-  [#81](https://github.com/alimek/budget-lens-offline/issues/81)).
+  `currency` on the item models (`ScheduledItem`, `VersionedItem`) and on every resolved occurrence, with money
+  that core never adds across currencies; landed with
+  [#81](https://github.com/alimek/budget-lens-offline/issues/81) for versioned items).
 - Rule versioning ([#80](https://github.com/alimek/budget-lens-offline/issues/80), done in core: [rule versions](../domain/rule-versions.md)).
 - Items tables and repository ([#81](https://github.com/alimek/budget-lens-offline/issues/81), done in
   [`packages/db`](../../packages/db/README.md#items-and-rule-version-repository-srcitems-repositoryts-81)).
