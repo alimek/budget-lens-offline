@@ -1,9 +1,10 @@
-import { toMinorUnits } from "@budget-lens/core";
+import { type CurrencyCode, toMinorUnits } from "@budget-lens/core";
 import { Redirect, useRouter } from "expo-router";
 import { type PropsWithChildren, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { validateAmountInput } from "@/ui/amount-input";
+import { formatAmountNumber } from "@/ui/amount";
+import { amountInputPlaceholder, validateAmountInput } from "@/ui/amount-input";
 import type { CalendarDate } from "@/ui/calendar-date";
 import { AmountText } from "@/ui/components/amount-text";
 import { Badge } from "@/ui/components/badge";
@@ -14,15 +15,18 @@ import { Separator } from "@/ui/components/separator";
 import { Text } from "@/ui/components/text";
 import { type ColorScheme, type ColorToken, colors } from "@/ui/lib/theme";
 import { AppAlert } from "@/ui/native/alert";
+import { AmountInput } from "@/ui/native/amount-input";
 import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
 import { AppContextMenu } from "@/ui/native/context-menu";
 import { AppDatePicker } from "@/ui/native/date-picker";
 import { AppPicker } from "@/ui/native/picker";
 import { SegmentedControl } from "@/ui/native/segmented-control";
 import { AppSheet } from "@/ui/native/sheet";
+import { AppStepper } from "@/ui/native/stepper";
 import { AppTextField } from "@/ui/native/text-field";
 import { AppToggle } from "@/ui/native/toggle";
 import type { TypeVariant } from "@/ui/typography";
+import { useLanguage } from "@/ui/use-language";
 import { useStackedRows } from "@/ui/use-stacked-rows";
 
 const TYPE_VARIANTS: readonly TypeVariant[] = [
@@ -40,6 +44,9 @@ const TYPE_VARIANTS: readonly TypeVariant[] = [
 ];
 
 const SCHEMES: readonly ColorScheme[] = ["light", "dark"];
+
+/** The currencies of the showcase amount input; the real picker orders them in #82. */
+const CURRENCY_CHOICES: readonly CurrencyCode[] = ["PLN", "EUR", "USD", "JPY"];
 
 type Scope = "only-this-month" | "from-this-month";
 
@@ -158,6 +165,7 @@ export default function DesignSystemScreen() {
             onChangeText={setAmount}
             error={amountResult.ok ? undefined : t(amountResult.errorKey)}
           />
+          <ItemFormControls />
           <AppTextField
             testID="ds-secure-field"
             label={t("dev.designSystem.recoverySecret")}
@@ -340,5 +348,72 @@ function Overlays() {
         onDismiss={() => setAlertOpen(false)}
       />
     </Card>
+  );
+}
+
+/**
+ * The controls the item sheet of #82 is built from, each with its own state: the amount field of #61 in its
+ * editable and in its locked form, and the "Every N months" stepper.
+ */
+function ItemFormControls() {
+  const { t } = useTranslation();
+  const { t: tItems } = useTranslation("items");
+  const lang = useLanguage();
+  const [currency, setCurrency] = useState<CurrencyCode>("PLN");
+  const [editableAmount, setEditableAmount] = useState("12,345");
+  const [lockedAmount, setLockedAmount] = useState("2 450,00");
+  const [intervalMonths, setIntervalMonths] = useState(3);
+  const amountResult = validateAmountInput(editableAmount, currency);
+  return (
+    <>
+      <AmountInput
+        testID="ds-amount-input"
+        label={t("amountInput.label")}
+        value={editableAmount}
+        onChangeText={setEditableAmount}
+        lang={lang}
+        currency={currency}
+        currencies={CURRENCY_CHOICES.map((choice) => ({
+          value: choice,
+          label: `${choice} · ${t(`currency.names.${choice}`)}`,
+        }))}
+        onCurrencyChange={setCurrency}
+        placeholder={amountInputPlaceholder((value) =>
+          formatAmountNumber(value, { lang, currency }),
+        )}
+        error={amountResult.ok === false ? t(amountResult.errorKey) : undefined}
+        helper={tItems("form.amountHint")}
+        doneLabel={t("common.done")}
+        currencyAccessibilityLabel={t("amountInput.currencyA11y", {
+          code: currency,
+          name: t(`currency.names.${currency}`),
+        })}
+      />
+      <AmountInput
+        testID="ds-amount-input-locked"
+        label={t("amountInput.label")}
+        value={lockedAmount}
+        onChangeText={setLockedAmount}
+        lang={lang}
+        currency="EUR"
+        currencies={[]}
+        placeholder={amountInputPlaceholder((value) =>
+          formatAmountNumber(value, { lang, currency: "EUR" }),
+        )}
+        helper={tItems("form.currencyLocked")}
+        hint={t("amountInput.hint.noRate")}
+        doneLabel={t("common.done")}
+      />
+      <AppStepper
+        testID="ds-stepper"
+        label={tItems("form.everyN", { count: intervalMonths })}
+        value={intervalMonths}
+        min={1}
+        max={120}
+        onValueChange={setIntervalMonths}
+        decreaseLabel={tItems("form.decrease")}
+        increaseLabel={tItems("form.increase")}
+      />
+    </>
   );
 }

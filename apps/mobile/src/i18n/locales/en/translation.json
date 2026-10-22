@@ -127,17 +127,40 @@
   "common": {
     "ok": "OK",
     "cancel": "Cancel",
-    "retry": "Try again"
+    "retry": "Try again",
+    "done": "Done"
   },
   "transaction": {
     "paidLabel": "Paid: {{title}}",
     "actionLabel": "{{action}}: {{title}}"
   },
   "amountInput": {
+    "label": "Amount",
     "empty": "Enter an amount",
     "invalidFormat": "Enter a number, e.g. 1 234,56",
-    "tooManyFractionDigits": "Use at most 2 decimal places",
-    "outOfRange": "This amount is too large"
+    "tooManyFractionDigits_one": "Use at most {{count}} decimal place",
+    "tooManyFractionDigits_other": "Use at most {{count}} decimal places",
+    "noFractionDigits": "Whole amounts only for {{currency}}",
+    "outOfRange": "This amount is too large",
+    "currency": "Currency",
+    "currencyA11y": "Currency: {{code}}, {{name}}",
+    "sign": {
+      "positive": "+ Positive",
+      "negative": "− Negative"
+    },
+    "hint": {
+      "nbp": "≈ {{amount}} · NBP rate of {{date}}",
+      "manual": "≈ {{amount}} · your rate of {{date}}",
+      "stale": "outdated",
+      "noRate": "No exchange rate yet",
+      "enterRate": "Enter rate manually"
+    },
+    "a11y": {
+      "value": "{{kind}}, {{amount}}",
+      "kindExpense": "expense",
+      "kindIncome": "income",
+      "kindBalance": "balance"
+    }
   },
   "boot": {
     "encryptionUnavailable": {
@@ -159,6 +182,42 @@
     "storageUnreachable": {
       "title": "Secure storage is unavailable",
       "body": "Budget Lens could not read this device’s secure storage, so it cannot open your budget. Nothing has been changed or deleted."
+    }
+  },
+  "currency": {
+    "names": {
+      "AUD": "Australian dollar",
+      "BRL": "Brazilian real",
+      "CAD": "Canadian dollar",
+      "CHF": "Swiss franc",
+      "CLP": "Chilean peso",
+      "CNY": "Chinese yuan",
+      "CZK": "Czech koruna",
+      "DKK": "Danish krone",
+      "EUR": "euro",
+      "GBP": "British pound",
+      "HKD": "Hong Kong dollar",
+      "HUF": "Hungarian forint",
+      "IDR": "Indonesian rupiah",
+      "ILS": "Israeli shekel",
+      "INR": "Indian rupee",
+      "ISK": "Icelandic krona",
+      "JPY": "Japanese yen",
+      "KRW": "South Korean won",
+      "MXN": "Mexican peso",
+      "MYR": "Malaysian ringgit",
+      "NOK": "Norwegian krone",
+      "NZD": "New Zealand dollar",
+      "PHP": "Philippine peso",
+      "PLN": "Polish zloty",
+      "RON": "Romanian leu",
+      "SEK": "Swedish krona",
+      "SGD": "Singapore dollar",
+      "THB": "Thai baht",
+      "TRY": "Turkish lira",
+      "UAH": "Ukrainian hryvnia",
+      "USD": "US dollar",
+      "ZAR": "South African rand"
     }
   }
 }

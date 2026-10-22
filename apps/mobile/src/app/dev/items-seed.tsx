@@ -2,7 +2,8 @@
 // the real repository, the other archives them again, so an e2e run can start from an empty list and from a
 // populated one on the same device. Names come from i18n like every other text; the row ids carry a `gen` query
 // parameter the test chooses, so a fresh run seeds new rows instead of colliding with the archived ones that the
-// previous run left behind.
+// previous run left behind. Both presses also open the current month when none is open yet (#82), because a
+// screen may only plan a change against a stored month and onboarding (#111) is not built yet.
 import {
   addMonths,
   type CurrencyCode,
@@ -10,9 +11,17 @@ import {
   type MinorUnits,
   type RuleVersion,
   type Schedule,
+  toMinorUnits,
   type YearMonth,
 } from "@budget-lens/core";
-import { archiveItem, createItem, readItems } from "@budget-lens/db";
+import {
+  archiveItem,
+  type BudgetDatabase,
+  createItem,
+  readActiveMonth,
+  readItems,
+  schema,
+} from "@budget-lens/db";
 import { randomUUID } from "expo-crypto";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -45,6 +54,31 @@ const SEED_PREFIX = "dev-seed-";
 
 /** The repository deps: the clock and the new version ids are injected, never read inside the package (#81). */
 const deps = { now: () => Date.now(), newId: randomUUID };
+
+/**
+ * Opens `month` as the app's active month when no month is open yet, so the seeded data is read by a screen that
+ * has a month to anchor to. Onboarding (#111) will be the real writer of the first month; until it exists the
+ * `months` table is empty and #82's sheet refuses to plan a change against the clock (its Save stays off with
+ * the reason shown), which no e2e run could get past. Seeding a zeroed `active` row is the smallest development
+ * stand-in for it: the balances belong to month closing (#85), which recomputes them.
+ */
+function ensureActiveMonth(db: BudgetDatabase, month: YearMonth): void {
+  if (readActiveMonth(db) !== undefined) return;
+  const at = new Date();
+  db.insert(schema.months)
+    .values({
+      month,
+      status: "active",
+      openingBalanceMinor: toMinorUnits(0),
+      closingBalanceMinor: toMinorUnits(0),
+      totalIncomeMinor: toMinorUnits(0),
+      totalExpensesMinor: toMinorUnits(0),
+      netChangeMinor: toMinorUnits(0),
+      createdAt: at,
+      updatedAt: at,
+    })
+    .run();
+}
 
 /** The names of the seeded items, typed so the translated lookup stays type-safe. */
 type SeedNameKey =
@@ -181,6 +215,7 @@ export default function DevItemsSeed() {
   const [result, setResult] = useState("");
 
   const seed = () => {
+    ensureActiveMonth(db, month);
     const known = new Set(readItems(db, { includeArchived: true }).items.map((item) => item.id));
     for (const spec of SPECS) {
       const id = `${SEED_PREFIX}${gen}-${spec.slug}`;
@@ -203,6 +238,7 @@ export default function DevItemsSeed() {
   };
 
   const clear = () => {
+    ensureActiveMonth(db, month);
     const seeded = readItems(db, { includeArchived: true }).items.filter((item) =>
       item.id.startsWith(SEED_PREFIX),
     );
@@ -218,6 +254,9 @@ export default function DevItemsSeed() {
       <Text testID="dev-items-seed-result">{result}</Text>
       <Text>{t("dev.itemsSeed.monthCases")}</Text>
       <Text testID="dev-month-cases">{polishMonthCases}</Text>
+      {/* The month the rows are anchored to, which is the month a screen may plan against (#82): an e2e run
+          reads it back instead of guessing from its own clock, which a stale `months` row could disagree with. */}
+      <Text testID="dev-items-seed-month">{month}</Text>
       <PrimaryButton testID="dev-items-seed-seed" label={t("dev.itemsSeed.seed")} onPress={seed} />
       <SecondaryButton
         testID="dev-items-seed-clear"

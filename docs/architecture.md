@@ -155,7 +155,11 @@ already discloses ([updates.md](release/updates.md#installation-id-storage)). A 
 work with the final #60 screens. The Items list is the first screen to read the database (#112): the ready
 connection reaches the screens through `DatabaseProvider`/`useDatabase()` (`src/db/database-provider.tsx`),
 `useLiveRead` re-runs a repository read when one of its tables changes, and `useActiveMonth` anchors the list
-to the active `months` row, falling back to the device's calendar month until onboarding (#111) opens one.
+to the active `months` row, falling back to the device's calendar month until onboarding (#111) opens one. The
+item sheet (#82) is the first screen to write: its form is the pure model in `src/features/items/item-form.ts`,
+which maps onto `createItem` or onto a `planRuleEdit` of the stored active month, persisted by `applyRulePlan` so
+rule versions and one-off overrides are written in one transaction. It plans only against a `months` row, never
+against the calendar fallback, and shows why its Save is off while no month is open.
 
 The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
 Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,

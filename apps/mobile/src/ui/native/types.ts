@@ -1,4 +1,4 @@
-import type { CurrencyCode, MinorUnits } from "@budget-lens/core";
+import type { CurrencyCode, Language, MinorUnits } from "@budget-lens/core";
 import type { ReactNode } from "react";
 import type { AmountSign } from "../amount";
 import type { CalendarDate } from "../calendar-date";
@@ -59,6 +59,11 @@ export interface PickerOption<T extends string> {
 export interface PickerProps<T extends string> {
   /** Visible label and accessible name of the picker. */
   label: string;
+  /**
+   * Hide the visible caption and keep `label` as the accessible name only: for a picker that sits inside another
+   * control's row, where a caption of its own would read as a second field.
+   */
+  hideLabel?: boolean | undefined;
   options: readonly PickerOption<T>[];
   value: T;
   onValueChange: (value: T) => void;
@@ -70,6 +75,65 @@ export interface DatePickerProps {
   label: string;
   value: CalendarDate;
   onValueChange: (value: CalendarDate) => void;
+  testID: string;
+}
+
+/** The "Every N months" stepper of #63: a native stepper on iOS, a field with ± buttons on Android. */
+export interface StepperProps {
+  /** Visible label and accessible name, naming the value it holds ("Every 4 months"). */
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onValueChange: (value: number) => void;
+  /** Accessible name of the Android minus button; the iOS stepper names its own. */
+  decreaseLabel: string;
+  /** Accessible name of the Android plus button. */
+  increaseLabel: string;
+  /** Test ID of the control; the Android buttons get `<testID>-decrease` and `<testID>-increase`. */
+  testID: string;
+}
+
+/** One currency of the amount input's picker, labelled the way the #61 menu lists it ("USD · US dollar"). */
+export interface AmountCurrencyOption {
+  value: CurrencyCode;
+  label: string;
+}
+
+/**
+ * The amount field of #61: a decimal field whose value is read against a currency, with the currency inside the
+ * field. The field holds raw text: it never rewrites what the user typed while it is focused, and reformats a
+ * valid value only when it loses focus.
+ */
+export interface AmountInputProps {
+  /** Visible label and accessible name of the field ("Amount"). */
+  label: string;
+  /** What the field holds; the caller owns it, so the field can be re-read after a currency change. */
+  value: string;
+  /** The language the value is rewritten in when the field loses focus (#61, decision 2). */
+  lang: Language;
+  onChangeText: (value: string) => void;
+  /** The currency the amount is counted in. */
+  currency: CurrencyCode;
+  /** The currencies the picker offers, in the order of #61 (base, then used, then A–Z). */
+  currencies: readonly AmountCurrencyOption[];
+  /** Omitted when the currency is locked: an existing item keeps its currency (#82). */
+  onCurrencyChange?: ((currency: CurrencyCode) => void) | undefined;
+  /** Placeholder of the empty field: the zero of the app language in the currency's digits. */
+  placeholder: string;
+  /** Error under the field, in `expense`; absent while what is typed is valid. */
+  error?: string | undefined;
+  /** Helper line under the field (#63's amount hint, or the reason the currency is locked). */
+  helper?: string | undefined;
+  /** Base-value line of a foreign amount (#61), or its no-rate state; `muted-foreground`. */
+  hint?: string | undefined;
+  /** Label of the iOS keyboard's Done button: the decimal pad has no return key of its own (#61). */
+  doneLabel: string;
+  /** Accessible name of the currency control, read with its value (#61 `currencyA11y`). */
+  currencyAccessibilityLabel?: string | undefined;
+  /** Accessible name of the amount itself, e.g. "expense, 240,00" (#61 `a11y.value`). */
+  accessibilityLabel?: string | undefined;
+  /** Test ID of the field; the currency control takes `<testID>-currency`. */
   testID: string;
 }
 
@@ -152,13 +216,15 @@ export type PaidRowProps = RowContentProps & {
 
 /**
  * A status-less row (`showStatus={false}`): an item row, which has no paid state to show (#63). It is one
- * accessibility element named by `accessibilityLabel`, and it has no press handler yet: tapping an item row opens
- * the edit sheet (#82), which is where that goes.
+ * accessibility element named by `accessibilityLabel`, and the whole row is the button that opens the item
+ * sheet (#82) – absent on a list whose rows open nothing, such as the archived one.
  */
 export type StatuslessRowProps = RowContentProps & {
   showStatus: false;
   /** Accessible name of the whole row: name, kind, amount and summary as one sentence. */
   accessibilityLabel: string;
+  /** Tapping the row; the row is not a button without it. */
+  onPress?: (() => void) | undefined;
   paid?: undefined;
   onPaidChange?: undefined;
 };

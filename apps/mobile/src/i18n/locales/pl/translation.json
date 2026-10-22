@@ -127,17 +127,42 @@
   "common": {
     "ok": "OK",
     "cancel": "Anuluj",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "done": "Gotowe"
   },
   "transaction": {
     "paidLabel": "Zapłacone: {{title}}",
     "actionLabel": "{{action}}: {{title}}"
   },
   "amountInput": {
+    "label": "Kwota",
     "empty": "Wpisz kwotę",
     "invalidFormat": "Wpisz liczbę, np. 1 234,56",
-    "tooManyFractionDigits": "Użyj najwyżej 2 miejsc po przecinku",
-    "outOfRange": "Ta kwota jest za duża"
+    "tooManyFractionDigits_one": "Użyj najwyżej {{count}} miejsca po przecinku",
+    "tooManyFractionDigits_few": "Użyj najwyżej {{count}} miejsc po przecinku",
+    "tooManyFractionDigits_many": "Użyj najwyżej {{count}} miejsc po przecinku",
+    "tooManyFractionDigits_other": "Użyj najwyżej {{count}} miejsc po przecinku",
+    "noFractionDigits": "Dla {{currency}} tylko pełne kwoty",
+    "outOfRange": "Ta kwota jest za duża",
+    "currency": "Waluta",
+    "currencyA11y": "Waluta: {{code}}, {{name}}",
+    "sign": {
+      "positive": "+ Dodatnie",
+      "negative": "− Ujemne"
+    },
+    "hint": {
+      "nbp": "≈ {{amount}} · kurs NBP z {{date}}",
+      "manual": "≈ {{amount}} · Twój kurs z {{date}}",
+      "stale": "nieaktualny",
+      "noRate": "Brak kursu wymiany",
+      "enterRate": "Wpisz kurs ręcznie"
+    },
+    "a11y": {
+      "value": "{{kind}}, {{amount}}",
+      "kindExpense": "wydatek",
+      "kindIncome": "przychód",
+      "kindBalance": "saldo"
+    }
   },
   "boot": {
     "encryptionUnavailable": {
@@ -159,6 +184,42 @@
     "storageUnreachable": {
       "title": "Pamięć zabezpieczona jest niedostępna",
       "body": "Budget Lens nie mógł odczytać zabezpieczonej pamięci tego urządzenia, więc nie może otworzyć Twojego budżetu. Nic nie zostało zmienione ani usunięte."
+    }
+  },
+  "currency": {
+    "names": {
+      "AUD": "dolar australijski",
+      "BRL": "real brazylijski",
+      "CAD": "dolar kanadyjski",
+      "CHF": "frank szwajcarski",
+      "CLP": "peso chilijskie",
+      "CNY": "juan chiński",
+      "CZK": "korona czeska",
+      "DKK": "korona duńska",
+      "EUR": "euro",
+      "GBP": "funt szterling",
+      "HKD": "dolar hongkoneski",
+      "HUF": "forint węgierski",
+      "IDR": "rupia indonezyjska",
+      "ILS": "szykel izraelski",
+      "INR": "rupia indyjska",
+      "ISK": "korona islandzka",
+      "JPY": "jen japoński",
+      "KRW": "won południowokoreański",
+      "MXN": "peso meksykańskie",
+      "MYR": "ringgit malezyjski",
+      "NOK": "korona norweska",
+      "NZD": "dolar nowozelandzki",
+      "PHP": "peso filipińskie",
+      "PLN": "złoty polski",
+      "RON": "lej rumuński",
+      "SEK": "korona szwedzka",
+      "SGD": "dolar singapurski",
+      "THB": "baht tajski",
+      "TRY": "lira turecka",
+      "UAH": "hrywna ukraińska",
+      "USD": "dolar amerykański",
+      "ZAR": "rand południowoafrykański"
     }
   }
 }

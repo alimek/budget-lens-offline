@@ -43,6 +43,14 @@ const CURRENCY_EXPONENTS = {
 export type CurrencyCode = keyof typeof CURRENCY_EXPONENTS;
 
 /**
+ * Every supported currency code, sorted A–Z: the list a currency picker starts from (#61). The table above is
+ * already in that order, so this is its keys; a picker that wants another order sorts or moves entries itself.
+ */
+export const CURRENCY_CODES: readonly CurrencyCode[] = Object.keys(
+  CURRENCY_EXPONENTS,
+) as CurrencyCode[];
+
+/**
  * Whether `value` is a supported currency code: PLN or an NBP table A currency except XDR (owner decision on #117).
  * Use it to narrow an unchecked code (e.g. from storage) before formatting or parsing.
  */

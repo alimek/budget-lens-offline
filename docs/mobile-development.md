@@ -43,6 +43,9 @@ a cold start afterwards reaches the recovery screen through a real unreadable da
 `budget-lens:///dev/items-seed?gen=N` (#112) writes and archives a small deterministic set of items through
 `createItem` and `archiveItem`, so an e2e run can start from an empty Items list and from a populated one on the
 same device; the `gen` parameter keeps each run's rows (`dev-seed-N-…`) apart from what an earlier run archived.
+Both presses also open the current month as the app's one `active` row when there is none yet, which onboarding
+(#111) will do for real: a screen may only plan a change against a stored month (#82), and the screen shows that
+month so a test reads it back instead of guessing from its own clock.
 
 **The screens under `src/app/dev` never run in a release build (#75 R7).** Forgetting the key of a database that is
 still on the device makes that budget unreadable for good, so this is guarded in three places: those routes are

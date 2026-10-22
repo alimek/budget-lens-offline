@@ -338,6 +338,16 @@ function RowSurface({ children }: { readonly children: ReactNode }) {
   );
 }
 
+/** The actions of a row that has them, in the order the menu and the swipe show them. */
+function rowActions(props: StatuslessRowProps): readonly MenuAction<string>[] {
+  return props.actions ?? [];
+}
+
+/** Only a row that opens something is a button to TalkBack; a row without an action stays plain text. */
+function pressRole(onPress: (() => void) | undefined): "button" | undefined {
+  return onPress === undefined ? undefined : "button";
+}
+
 /**
  * The row without a paid status (#112): one accessibility element named by `accessibilityLabel`, and a long
  * press that opens the row's actions in a `DropdownMenu` next to the swipe.
@@ -346,7 +356,7 @@ function StatuslessRow(props: StatuslessRowProps) {
   const theme = useThemeColors();
   const [open, setOpen] = useState(false);
   const amount = useRowAmount(props);
-  const actions = props.actions ?? [];
+  const actions = rowActions(props);
   const content = (
     <RowContent
       title={props.title}
@@ -361,7 +371,9 @@ function StatuslessRow(props: StatuslessRowProps) {
     <Pressable
       testID={props.testID}
       accessible
+      accessibilityRole={pressRole(props.onPress)}
       accessibilityLabel={props.accessibilityLabel}
+      onPress={props.onPress}
       onLongPress={actions.length === 0 ? undefined : () => setOpen(true)}
       android_ripple={{ color: theme["muted-foreground"], foreground: true }}
     >

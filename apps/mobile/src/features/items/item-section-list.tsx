@@ -14,7 +14,10 @@ export interface ItemSectionListProps {
   readonly rowTestIdPrefix: string;
   /** Row actions and their handler; absent on a read-only list. */
   readonly actions?: readonly MenuAction<string>[] | undefined;
-  readonly onAction?: ((row: ItemRow) => void) | undefined;
+  /** A row action, with its key: "edit" opens the sheet, "archive" confirms (#82). */
+  readonly onAction?: ((row: ItemRow, key: string) => void) | undefined;
+  /** Tapping a row opens the item sheet (#82); absent on a read-only list. */
+  readonly onPress?: ((row: ItemRow) => void) | undefined;
   /** Muted note under the last section, e.g. the unreadable-items note. */
   readonly note?: string | undefined;
 }
@@ -26,6 +29,7 @@ export function ItemSectionList({
   rowTestIdPrefix,
   actions,
   onAction,
+  onPress,
   note,
 }: ItemSectionListProps) {
   const { t } = useTranslation("items");
@@ -35,7 +39,8 @@ export function ItemSectionList({
         key={row.id}
         row={row}
         actions={actions}
-        onAction={onAction === undefined ? undefined : () => onAction(row)}
+        onAction={onAction === undefined ? undefined : (key) => onAction(row, key)}
+        {...(onPress === undefined ? {} : { onPress: () => onPress(row) })}
         testIdPrefix={rowTestIdPrefix}
       />
     ));
