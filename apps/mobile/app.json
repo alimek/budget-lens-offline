@@ -57,7 +57,18 @@
           "backgroundColor": "#0F766E"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "fingerprint"

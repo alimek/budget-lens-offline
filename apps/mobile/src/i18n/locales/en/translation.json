@@ -118,6 +118,17 @@
         "oldPhone": "Old phone plan",
         "salary": "Salary"
       }
+    },
+    "chartSpike": {
+      "title": "Chart spike",
+      "intro": "The E6 forecast chart, drawn with react-native-chart-kit on a development build (#218).",
+      "description": "Line chart of the projected balance and total funds for twelve months",
+      "balance": "Balance",
+      "totalFunds": "Total funds",
+      "zero": "Zero",
+      "lowBalance": "Low balance",
+      "hint": "Tap a point on the chart to read that month.",
+      "selected": "{{month, monthName(capitalize: true)}}"
     }
   },
   "budget": {

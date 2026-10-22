@@ -1,0 +1,54 @@
+name: Issue status cleanup
+
+# When an issue is closed, remove all of its `status:*` labels and, if it was closed as completed, add
+# `status:done` (only when that label exists in the repository). Idempotent: a re-run or an issue without status
+# labels changes nothing and succeeds. Only `gh` from the runner image, no third-party actions.
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: issue-status-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  status-cleanup:
+    name: status-cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Remove status labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number }}
+          STATE_REASON: ${{ github.event.issue.state_reason }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Current labels (not the event payload, which can be stale on a re-run).
+          labels="$(gh api --paginate "repos/$REPO/issues/$ISSUE/labels" --jq '.[].name')"
+          while IFS= read -r name; do
+            [[ "$name" == status:* && "$name" != "status:done" ]] || continue
+            encoded="$(jq -rn --arg n "$name" '$n | @uri')"
+            # A 404 means the label is already gone (e.g. removed meanwhile); that is fine.
+            if gh api -X DELETE "repos/$REPO/issues/$ISSUE/labels/$encoded" --silent 2>/dev/null; then
+              echo "Removed $name"
+            else
+              echo "Could not remove $name (already removed?)"
+            fi
+          done <<< "$labels"
+
+          if [[ "$STATE_REASON" != "completed" ]]; then
+            echo "Closed as ${STATE_REASON:-unknown}; not adding status:done."
+            exit 0
+          fi
+          if gh api "repos/$REPO/labels/status%3Adone" --silent 2>/dev/null; then
+            gh api -X POST "repos/$REPO/issues/$ISSUE/labels" -f 'labels[]=status:done' --silent
+            echo "Added status:done"
+          else
+            echo "Label status:done does not exist; not adding it."
+          fi

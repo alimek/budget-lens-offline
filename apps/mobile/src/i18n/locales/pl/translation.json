@@ -118,6 +118,17 @@
         "oldPhone": "Stary telefon",
         "salary": "Wynagrodzenie"
       }
+    },
+    "chartSpike": {
+      "title": "Wykres – test biblioteki",
+      "intro": "Wykres prognozy z E6 narysowany biblioteką react-native-chart-kit w wersji developerskiej (#218).",
+      "description": "Wykres liniowy prognozowanego salda i łącznych środków przez dwanaście miesięcy",
+      "balance": "Saldo",
+      "totalFunds": "Łączne środki",
+      "zero": "Zero",
+      "lowBalance": "Niskie saldo",
+      "hint": "Dotknij punkt na wykresie, aby odczytać ten miesiąc.",
+      "selected": "{{month, monthName(capitalize: true)}}"
     }
   },
   "budget": {
