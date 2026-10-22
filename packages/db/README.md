@@ -145,6 +145,18 @@ depends on. The app subscribes to `addDatabaseChangeListener` once and re-runs `
 one of those; the hook itself lives in the app, because `addDatabaseChangeListener` and React do too (this package
 imports no React). Statements are synchronous Drizzle: microseconds each at this size (#35 §3).
 
+## Months repository (`src/months-repository.ts`, #112)
+
+One fact for now: which month is active. Month closing (#85) owns everything else about a month row, so this
+repository computes no balances and opens or closes nothing.
+
+- `readActiveMonth(db)` returns the `month` of the single `status = 'active'` row (the partial unique index keeps it
+  to one) as a core `YearMonth`, or `undefined` while no month has been opened. Onboarding (#111) creates the first
+  row, so a database written before it has none and the app falls back to the device's calendar month
+  (`apps/mobile/src/db/active-month.ts`).
+- `MONTH_TABLES` names the table that read depends on, the way `ITEM_LIST_TABLES` and `SETTINGS_TABLES` do, so the
+  app's live-read hook re-runs it when the row appears.
+
 ## Settings repository (`src/settings-repository.ts`, #78)
 
 The `settings` singleton in, core `Settings` out. What is a valid settings value stays core's decision
@@ -200,6 +212,8 @@ only the decisions above. Covered:
 units, the currency that cannot change, archiving instead of deleting, both schedule shapes round-tripping through
 the columns, several versions of one item resolving per month, a damaged row being reported instead of dropped, a
 `cancel-scheduled` plan that writes no versions, and the item a plan empties being archived.
+
+`test/months-repository.test.ts` covers the one fact: no month row and no active row both read as no active month, the active row is read, a closed month is not the active one, and an active row is found among closed ones.
 
 `test/settings-repository.test.ts` covers the settings rules: the defaults of a database with no row (and that a
 read writes nothing), a first write that stores the defaults a patch completes with amounts as whole grosze, core's
