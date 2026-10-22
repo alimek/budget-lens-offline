@@ -4,6 +4,19 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-22 22:47 (Europe/Warsaw): at most one simulator task in progress at a time
+
+- **Words:** "nie powinniśmy nigdy mieć dwóch tasków na raz działających, próbujących coś testować na UI-u" (owner
+  words relayed in chat, 2026-10-22 22:47)
+- **Confirmation:** at 22:53 in chat: "Orkiestrator przekazał też Twoje słowa: „nie powinniśmy nigdy mieć dwóch tasków
+  na raz działających, próbujących coś testować na UI-u”. Wpisać to do dziennika decyzji jako Twoją decyzję?" – "Tak,
+  wpisz".
+- **Context:** there is only one simulator.
+- **Meaning:** at most one issue or PR labeled `needs:simulator` is in progress at a time. Mixed work is split into a
+  UI part (needs the simulator, label `needs:simulator`) and a non-UI part (core, db, logic: unit tests only) that may
+  run in parallel ([testing.md](testing.md#one-simulator)).
+- **Issues:** [#238](https://github.com/alimek/budget-lens-offline/issues/238)
+
 ## 2026-10-22 22:45 (Europe/Warsaw): six components move to universal Expo UI after the current stage
 
 - **Question:** "Przenieść sześć komponentów na uniwersalne Expo UI?"
