@@ -28,3 +28,15 @@ export {
   runMigrationsWithSafetyCopy,
 } from "./run-migrations";
 export * as schema from "./schema";
+export type {
+  SettingsPatch,
+  SettingsRepositoryDeps,
+  SettingsWriteError,
+  SettingsWriteErrorCode,
+  SettingsWriteResult,
+} from "./settings-repository";
+export {
+  readSettings,
+  SETTINGS_TABLES,
+  updateStoredSettings,
+} from "./settings-repository";

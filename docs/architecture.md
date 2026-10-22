@@ -27,7 +27,8 @@ What exists today in `packages/core`:
 ```
 apps/mobile/             # Expo development client, Router, i18n, provider-scoped Zustand
 packages/core/           # pure TypeScript domain logic, tested with Vitest
-packages/db/             # Drizzle schema v1, migrations, runMigrations() and the items repository (#74/#81)
+packages/db/             # Drizzle schema v1, migrations, runMigrations(), the items and settings repositories
+                         # (#74/#81/#78)
   src/index.ts           # public API – everything exported from here
   test/                  # legacy characterization tests (#3): fixtures, legacy reference, snapshots, LEGACY.md
 docs/                    # architecture, conventions, glossary, domain, decisions (ADRs), testing
