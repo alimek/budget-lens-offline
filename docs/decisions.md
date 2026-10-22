@@ -4,6 +4,17 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-22 22:09 (Europe/Warsaw): the machine-agnostic check script is removed
+
+- **Question:** "Mam zamknąć zmianę z przeniesieniem nazw i otworzyć nową, która całkiem usuwa ten skrypt z repo i z
+  CI?"
+- **Answer:** "Tak, usuń skrypt całkiem" (owner answer in chat, 2026-10-22 22:09)
+- **Context:** earlier in the same chat (22:06) the owner wrote: "moim zdaniem do wywalenia".
+- **Meaning:** `scripts/check-machine-agnostic.mjs` and its call from `pnpm lint` (and so CI) are removed; the
+  machine-agnostic rule (#171) stays in [AGENTS.md](../AGENTS.md) and is enforced in review. Supersedes
+  [PR #235](https://github.com/alimek/budget-lens-offline/pull/235).
+- **Issues:** [#234](https://github.com/alimek/budget-lens-offline/issues/234), [PR #236](https://github.com/alimek/budget-lens-offline/pull/236), [#171](https://github.com/alimek/budget-lens-offline/issues/171)
+
 ## 2026-10-22 21:20 (Europe/Warsaw): #11, #12 and #13 move to the roadmap
 
 - **Question:** "Zamknąć te trzy zadania i przenieść je do roadmapy?"
