@@ -3,7 +3,8 @@
   "globalDependencies": [".nvmrc"],
   "tasks": {
     "//#lint": {
-      "cache": false
+      "cache": false,
+      "passThroughEnv": ["MACHINE_AGNOSTIC_TERMS_FILE"]
     },
     "//#fallow": {
       "cache": false

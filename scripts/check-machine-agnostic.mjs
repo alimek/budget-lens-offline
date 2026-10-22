@@ -3,6 +3,8 @@
 // Anyone must be able to clone the repo and work with it. Policy: AGENTS.md (Hard rules).
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 /** Leading word boundary that works in both POSIX ERE (`git grep -E`) and JavaScript regular expressions. */
 const START = "(^|[^a-z0-9])";
@@ -10,25 +12,18 @@ const START = "(^|[^a-z0-9])";
 /**
  * Case-insensitive extended regular expressions, checked with `git grep` over tracked files. `hits` and `misses`
  * are injected samples verified on every run (self-test), so a broken pattern fails loudly instead of passing.
+ * Only generic shapes live here; names tied to one specific setup are private terms (see below).
  */
 const PATTERNS = [
   {
-    label: "host name",
-    pattern: "aliclaw|trawowa|mac[ -]?studio",
-    hits: ["built on the Mac Studio", "MacStudio", "mac-studio"],
-    misses: ["open it in Android Studio"],
-  },
-  {
     label: "absolute home or temp path",
     pattern: "/Users/[A-Za-z]|/home/[a-z_][a-z0-9_-]*/|/private/tmp/",
-    hits: ["/Users/bob/projects", "/home/alice/projects", "/private/tmp/wt"],
+    hits: [
+      ["", "Users", "someone", "projects"].join("/"),
+      "/home/alice/projects",
+      "/private/tmp/wt",
+    ],
     misses: ["see docs/home.md", "/home/"],
-  },
-  {
-    label: "local scheduler job",
-    pattern: String.raw`launchd|LaunchAgents|com\.aliclaw\.`,
-    hits: ["a launchd job", "~/Library/LaunchAgents/x.plist"],
-    misses: ["bundle id com.budgetlens.offline"],
   },
   {
     label: "local tooling path",
@@ -44,23 +39,55 @@ const PATTERNS = [
   },
   {
     label: "agent setup",
-    pattern:
-      "grok ?bot|t3 code|machineId|bl (developer|reviewer|designer|orchestrator|tester)|paperclip",
-    hits: ["Grok Bot", "T3 Code", "machineId", "BL Developer", "Paperclip"],
+    pattern: "t3 code",
+    hits: ["T3 Code"],
     misses: ["Hermes engine", "agent-device", "agent.act()"],
   },
   {
     label: "team role",
-    pattern: `${START}(orchestrator|orkiestrator|product owner|developer bot)`,
-    hits: [
-      "Orchestrator decision",
-      "the orkiestrator",
-      "Product Owner review",
-      "the Developer bot",
-    ],
+    pattern: `${START}(orchestrator|product owner|developer bot)`,
+    hits: ["Orchestrator decision", "Product Owner review", "the Developer bot"],
     misses: ["a reviewer squash-merges", "developer build", "web developers"],
   },
 ];
+
+/**
+ * Private terms (host, user and tool names of one specific setup) must not be committed, not even here, so they are
+ * read from a file outside the repository: `~/.budget-lens-local/forbidden-terms.json` by default, or the file named
+ * by the `MACHINE_AGNOSTIC_TERMS_FILE` env var. Format: `{ "terms": [...] }` (template:
+ * `scripts/forbidden-terms.example.json`). Terms match literally and case-insensitively. Without the file (e.g. in
+ * CI) this part is skipped with a note; the generic patterns above still run.
+ */
+const PRIVATE_TERMS_FILE =
+  process.env.MACHINE_AGNOSTIC_TERMS_FILE ||
+  join(homedir(), ".budget-lens-local", "forbidden-terms.json");
+
+/** Self-test for the private-terms matcher, with placeholder terms only. */
+const PRIVATE_TERMS_SAMPLE = {
+  terms: ["example-host", "Example Tool", "ex.ample"],
+  hits: ["built on EXAMPLE-HOST", "run it with example tool", "see ex.ample/x", "example-hosting"],
+  misses: ["an example host", "exXample", "example_tool"],
+};
+
+/** The `terms` array of the private terms file, or none when the file does not exist. */
+function readPrivateTermsFile() {
+  return existsSync(PRIVATE_TERMS_FILE)
+    ? JSON.parse(readFileSync(PRIVATE_TERMS_FILE, "utf8")).terms
+    : [];
+}
+
+function loadPrivateTerms() {
+  const terms = readPrivateTermsFile();
+  if (!Array.isArray(terms)) {
+    throw new Error('Private terms file: expected { "terms": ["..."] }');
+  }
+  return [...new Set(terms.map((term) => String(term).trim()).filter(Boolean))];
+}
+
+/** An ERE (`git grep -E`) and JavaScript pattern matching any of `terms` literally, also inside longer words. */
+function privateTermsPattern(terms) {
+  return terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+}
 
 /** GitHub configuration may name `agent:*` labels; everything else may not. */
 const LABEL = {
@@ -118,6 +145,13 @@ function selfTest() {
       ...mismatches(entry, entry.misses, false),
     ]),
     ...appConfigFailures,
+    ...[true, false].flatMap((expected) =>
+      mismatches(
+        { label: "private terms", pattern: privateTermsPattern(PRIVATE_TERMS_SAMPLE.terms) },
+        expected ? PRIVATE_TERMS_SAMPLE.hits : PRIVATE_TERMS_SAMPLE.misses,
+        expected,
+      ),
+    ),
   ];
 }
 
@@ -160,6 +194,16 @@ for (const { label, pattern } of PATTERNS) {
   for (const line of grep(pattern, []).split("\n").filter(Boolean)) {
     findings.push(`${label}: ${line}`);
   }
+}
+const privateTerms = loadPrivateTerms();
+if (privateTerms.length > 0) {
+  for (const line of grep(privateTermsPattern(privateTerms), []).split("\n").filter(Boolean)) {
+    findings.push(`private term: ${line}`);
+  }
+} else {
+  process.stdout.write(
+    "Private-terms check skipped: no local terms file (see MACHINE_AGNOSTIC_TERMS_FILE).\n",
+  );
 }
 for (const line of grep(LABEL.pattern, [":(exclude).github/**"]).split("\n").filter(Boolean)) {
   findings.push(`${LABEL.label}: ${line}`);
