@@ -35,7 +35,13 @@ export function fullWidthFrame(fullWidth: boolean | undefined) {
 }
 
 /** Filled primary action: SwiftUI `.borderedProminent`, tint `primary`, label `primary-foreground`. */
-export function PrimaryButton({ label, onPress, testID, disabled, fullWidth }: ButtonProps) {
+export function PrimaryButton({
+  label,
+  onPress,
+  testID,
+  disabled = false,
+  fullWidth,
+}: ButtonProps) {
   const theme = useThemeColors();
   return (
     <ButtonHost fullWidth={fullWidth}>
@@ -57,7 +63,13 @@ export function PrimaryButton({ label, onPress, testID, disabled, fullWidth }: B
 }
 
 /** Secondary action: SwiftUI `.bordered`, tint `primary`. */
-export function SecondaryButton({ label, onPress, testID, disabled, fullWidth }: ButtonProps) {
+export function SecondaryButton({
+  label,
+  onPress,
+  testID,
+  disabled = false,
+  fullWidth,
+}: ButtonProps) {
   const theme = useThemeColors();
   return (
     <ButtonHost fullWidth={fullWidth}>

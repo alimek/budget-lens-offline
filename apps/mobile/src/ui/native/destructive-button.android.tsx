@@ -9,7 +9,13 @@ import type { ButtonProps } from "./types";
  * label in `destructive`, filled width (#60). Colour is never the only signal: the label says what it does, and
  * the screen asks again before doing it.
  */
-export function DestructiveButton({ label, onPress, testID, disabled, fullWidth }: ButtonProps) {
+export function DestructiveButton({
+  label,
+  onPress,
+  testID,
+  disabled = false,
+  fullWidth,
+}: ButtonProps) {
   const theme = useThemeColors();
   return (
     <ButtonHost fullWidth={fullWidth}>

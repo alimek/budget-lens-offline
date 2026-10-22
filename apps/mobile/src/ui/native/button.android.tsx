@@ -30,7 +30,13 @@ export function fullWidthModifiers(fullWidth: boolean | undefined) {
 }
 
 /** Filled primary action: Material 3 `Button`, container `primary`, content `primary-foreground`. */
-export function PrimaryButton({ label, onPress, testID, disabled, fullWidth }: ButtonProps) {
+export function PrimaryButton({
+  label,
+  onPress,
+  testID,
+  disabled = false,
+  fullWidth,
+}: ButtonProps) {
   const theme = useThemeColors();
   return (
     <ButtonHost fullWidth={fullWidth}>
@@ -47,7 +53,13 @@ export function PrimaryButton({ label, onPress, testID, disabled, fullWidth }: B
 }
 
 /** Secondary action: Material 3 `OutlinedButton`, content `primary`. */
-export function SecondaryButton({ label, onPress, testID, disabled, fullWidth }: ButtonProps) {
+export function SecondaryButton({
+  label,
+  onPress,
+  testID,
+  disabled = false,
+  fullWidth,
+}: ButtonProps) {
   const theme = useThemeColors();
   return (
     <ButtonHost fullWidth={fullWidth}>

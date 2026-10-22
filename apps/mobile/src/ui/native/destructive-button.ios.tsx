@@ -17,7 +17,13 @@ import type { ButtonProps } from "./types";
  * while a plain `destructive` label on `background` reaches 4.87:1 in light and 7.52:1 in dark. Colour is never
  * the only signal either — the label says what it does, and the screen asks again before doing it.
  */
-export function DestructiveButton({ label, onPress, testID, disabled, fullWidth }: ButtonProps) {
+export function DestructiveButton({
+  label,
+  onPress,
+  testID,
+  disabled = false,
+  fullWidth,
+}: ButtonProps) {
   const theme = useThemeColors();
   return (
     <ButtonHost fullWidth={fullWidth}>
