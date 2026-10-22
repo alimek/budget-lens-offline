@@ -63,6 +63,9 @@ Direction from the [owner, 2026-10-19](https://github.com/alimek/budget-lens-off
 - On Android the only backup prompt is the onboarding Google Drive consent step; on iOS there is none.
 - A backup made on device A restores on device B with identical data, including closed months and rate snapshots.
   Older backup versions are migrated on restore.
+- After a restore an integrity check confirms exactly one active month, a contiguous month sequence and opening =
+  previous closing. A restore that rewinds the active month leads to the catch-up close ([E5](month-closing.md)), not
+  an error ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), row 13).
 
 ## Success criteria
 
