@@ -1,8 +1,9 @@
 # Occurrence overrides
 
 Status: **implemented** in `packages/core/src/occurrence-overrides.ts` (#5). The `occurrence_overrides` table exists
-in schema v1 (#74); writing overrides in the repository is #83, so `packages/db` reads items and rule versions only
-(#81) and leaves a plan's override fields to the caller.
+in schema v1 (#74), and `packages/db/src/occurrences-repository.ts` reads and writes overrides and payment statuses
+and applies a rule-edit plan's override fields with its versions (#83). Writing them from the app is the month view
+(#114); closed months are immutable there.
 
 ## Model
 
@@ -93,6 +94,11 @@ show a "conflicting adjustments, choose one" state for the rejected duplicates o
 | `inactive-month` | The item has no occurrence in that month (`validateOverride` only). |
 
 ## Table sketch (Drizzle, `expo-sqlite`) – Stage 1 (#74)
+
+> **Superseded by what shipped** (#35 Q1 as reviewed 2026-10-19, #83): there is no `item_type` column – the key is
+> `(item_id, month)` with a foreign key to `items` and `ON DELETE RESTRICT`, and the type comes from `items.kind`.
+> The shape CHECK is `overrides_shape_chk` (added by migration 0001, whose SQL is the rule above), the amount column
+> is `amount_minor`, and `packages/db/src/occurrences-repository.ts` writes rows as UPSERTs on that key.
 
 ```ts
 export const occurrenceOverrides = sqliteTable(

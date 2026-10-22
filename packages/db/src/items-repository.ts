@@ -245,6 +245,71 @@ function resultingVersions(
     .concat(plan.upsertVersions);
 }
 
+/**
+ * What writing the version part of a plan would break, checked before anything is written: the item's
+ * **resulting** version list, not the subset the plan writes (#81). `stored` is the item's `items` row.
+ */
+export function ruleVersionPlanError(
+  db: Database,
+  stored: ItemRow,
+  plan: RuleVersionChanges,
+): ItemErrorCode | undefined {
+  const remaining = resultingVersions(storedVersions(db, stored.id), plan);
+  // No versions left is core's `no-versions-left` notice, not damage: the item is archived instead (#81).
+  const errors = remaining.length === 0 ? [] : validateRuleVersions(remaining);
+  return errors.length === 0 ? undefined : { code: "invalid-versions", errors };
+}
+
+/**
+ * Writes the version part of a plan: `upsertVersions` by `(item_id, effective_from)` with an UPSERT,
+ * `deleteVersions` by `effective_from`, and the archive of an item the plan leaves without versions. `db` may be a
+ * transaction handle, so #83 writes the versions and the overrides of one plan in one transaction (#40 Q4). Check
+ * the plan with {@link ruleVersionPlanError} first: this writes what it is given.
+ */
+export function writeRuleVersions(
+  db: Database,
+  stored: ItemRow,
+  plan: RuleVersionChanges,
+  deps: ItemsRepositoryDeps,
+): void {
+  const emptied = resultingVersions(storedVersions(db, stored.id), plan).length === 0;
+  const createdAt = new Date(deps.now());
+  if (plan.deleteVersions.length > 0) {
+    db.delete(schema.itemRuleVersions)
+      .where(
+        and(
+          eq(schema.itemRuleVersions.itemId, stored.id),
+          inArray(schema.itemRuleVersions.effectiveFrom, [...plan.deleteVersions]),
+        ),
+      )
+      .run();
+  }
+  for (const version of plan.upsertVersions) {
+    const values = versionValues(stored.id, deps.newId(), version, createdAt);
+    db.insert(schema.itemRuleVersions)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [schema.itemRuleVersions.itemId, schema.itemRuleVersions.effectiveFrom],
+        set: {
+          amountMinor: values.amountMinor,
+          intervalMonths: values.intervalMonths,
+          anchorMonth: values.anchorMonth,
+          targetMonth: values.targetMonth,
+          dayOfMonth: values.dayOfMonth,
+          endMonth: values.endMonth,
+        },
+      })
+      .run();
+  }
+  // The last version is gone: archive the item instead of leaving it active with an empty rule (#81).
+  if (emptied && stored.archivedAt === null) {
+    db.update(schema.items)
+      .set({ archivedAt: createdAt, updatedAt: createdAt })
+      .where(eq(schema.items.id, stored.id))
+      .run();
+  }
+}
+
 /** The base currency of the `settings` singleton, or `undefined` when it is missing or unreadable (#139). */
 function baseCurrency(db: Database): CurrencyCode | undefined {
   const [row] = db
@@ -387,7 +452,10 @@ export function archiveItem(db: Database, id: string, deps: ItemsRepositoryDeps)
  * deleting, and an active item without versions would be a versionless rule rather than an unused one.
  *
  * The plan's `upsertOverrides`, `orphanedOverrides` and `resetOverrides` are occurrence overrides, which belong
- * to #83: this repository does not write them, so the caller writes or confirms them itself.
+ * to #83: this repository does not write them, so a caller that only edits the rule uses this function.
+ * `applyRulePlan` in `occurrences-repository.ts` writes the versions and the overrides of one plan together.
+ *
+ * Closed months are #83's concern: a rule edit that would change one is rejected by core's `planRuleEdit`.
  */
 export function applyRuleVersionPlan(
   db: Database,
@@ -399,48 +467,12 @@ export function applyRuleVersionPlan(
   if (stored === undefined) {
     return rejected({ code: "item-not-found" });
   }
-  const remaining = resultingVersions(storedVersions(db, itemId), plan);
-  const emptied = remaining.length === 0;
-  const versionErrors = emptied ? [] : validateRuleVersions(remaining);
-  if (versionErrors.length > 0) {
-    return rejected({ code: "invalid-versions", errors: versionErrors });
+  const planError = ruleVersionPlanError(db, stored, plan);
+  if (planError !== undefined) {
+    return rejected(planError);
   }
-  const createdAt = new Date(deps.now());
   db.transaction((tx) => {
-    if (plan.deleteVersions.length > 0) {
-      tx.delete(schema.itemRuleVersions)
-        .where(
-          and(
-            eq(schema.itemRuleVersions.itemId, itemId),
-            inArray(schema.itemRuleVersions.effectiveFrom, [...plan.deleteVersions]),
-          ),
-        )
-        .run();
-    }
-    for (const version of plan.upsertVersions) {
-      const values = versionValues(itemId, deps.newId(), version, createdAt);
-      tx.insert(schema.itemRuleVersions)
-        .values(values)
-        .onConflictDoUpdate({
-          target: [schema.itemRuleVersions.itemId, schema.itemRuleVersions.effectiveFrom],
-          set: {
-            amountMinor: values.amountMinor,
-            intervalMonths: values.intervalMonths,
-            anchorMonth: values.anchorMonth,
-            targetMonth: values.targetMonth,
-            dayOfMonth: values.dayOfMonth,
-            endMonth: values.endMonth,
-          },
-        })
-        .run();
-    }
-    // The last version is gone: archive the item instead of leaving it active with an empty rule (#81).
-    if (emptied && stored.archivedAt === null) {
-      tx.update(schema.items)
-        .set({ archivedAt: createdAt, updatedAt: createdAt })
-        .where(eq(schema.items.id, itemId))
-        .run();
-    }
+    writeRuleVersions(tx, stored, plan, deps);
   });
   return { ok: true };
 }

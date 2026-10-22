@@ -20,6 +20,30 @@ export {
   updateItem,
 } from "./items-repository";
 export type { MigrationBundle } from "./migration-bundle";
+export type {
+  MonthOccurrence,
+  MonthOccurrencesRead,
+  OccurrenceErrorCode,
+  OccurrenceResult,
+  OccurrencesRepositoryDeps,
+  OverrideChange,
+  OverrideReadErrorCode,
+  OverridesRead,
+  RejectedOverrideRow,
+} from "./occurrences-repository";
+export {
+  applyRulePlan,
+  clearOverride,
+  MONTH_OCCURRENCES_TABLES,
+  OVERRIDE_TABLES,
+  PAYMENT_STATUS_TABLES,
+  readMonthOccurrences,
+  readOverrides,
+  readPaymentStatuses,
+  setOverride,
+  settleOccurrence,
+  unsettleOccurrence,
+} from "./occurrences-repository";
 export {
   MigrationIntegrityError,
   MigrationRestoreError,

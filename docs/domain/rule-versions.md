@@ -134,7 +134,8 @@ after an edit.
 ## Not covered yet
 
 - Loading versions from storage and passing them to the forecast belongs to the forecast data hook (#88).
-- Occurrence overrides in storage belong to #83: `applyRuleVersionPlan` writes a plan's versions only.
+- Occurrence overrides in storage belong to #83: `applyRuleVersionPlan` writes a plan's versions only, while
+  `applyRulePlan` in the same package writes a plan's versions and overrides in one transaction (#40 Q4).
 
 ## Legacy behaviour
 
