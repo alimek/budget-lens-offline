@@ -26,7 +26,7 @@ describe("forecastSample", () => {
       totalFunds: toMinorUnits(1_265_000),
     });
     expect(sample[11]?.month).toBe(toYearMonth("2027-10"));
-    // A month with no net change of its own still moves the balance by the sum of those before it.
+    // Each month carries the running total, so this one is the start plus the eight changes up to it.
     expect(sample[7]?.balance).toBe(toMinorUnits(-1_344_395));
     // Total funds is always the balance plus the constant savings, never a number of its own.
     for (const row of sample) {
@@ -57,8 +57,8 @@ describe("forecastChartRows", () => {
 });
 
 describe("forecastChartDomain", () => {
-  it("keeps the zero line and the low-balance threshold on the axis", () => {
-    // Arrange: a horizon that never goes near either line.
+  it("lifts the axis up to the low-balance threshold no month of the sample reaches", () => {
+    // Arrange: a horizon between 200,00 zł and 320,00 zł, below the 2 000,00 zł threshold.
     const sample = [
       {
         month: toYearMonth("2027-01"),
@@ -68,11 +68,28 @@ describe("forecastChartDomain", () => {
     ];
 
     // Act
-    const [lowest, highest] = forecastChartDomain(sample, LOW_BALANCE_THRESHOLD);
+    const [, highest] = forecastChartDomain(sample, LOW_BALANCE_THRESHOLD);
+
+    // Assert: converted back to minor units, the top of the axis is at or above the threshold, which only
+    // the threshold itself – and not any projected month – can reach.
+    expect(chartValueToMinorUnits(highest)).toBeGreaterThanOrEqual(LOW_BALANCE_THRESHOLD);
+  });
+
+  it("keeps the axis at least at zero when every month is below it", () => {
+    // Arrange: a horizon in debt, with a threshold below the whole of it, so only the zero line
+    // itself can lift the top of the axis back to zero.
+    const sample = [
+      {
+        month: toYearMonth("2027-01"),
+        balance: toMinorUnits(-50_000),
+        totalFunds: toMinorUnits(-10_000),
+      },
+    ];
+
+    // Act
+    const [, highest] = forecastChartDomain(sample, toMinorUnits(-100_000));
 
     // Assert
-    expect(lowest).toBeLessThanOrEqual(0);
-    expect(highest).toBeGreaterThanOrEqual(20_000 / 100);
-    expect(lowest).toBeLessThanOrEqual(LOW_BALANCE_THRESHOLD / 100);
+    expect(chartValueToMinorUnits(highest)).toBeGreaterThanOrEqual(0);
   });
 });

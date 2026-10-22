@@ -29,8 +29,12 @@ and without the chart screen and its data module): Android 5,405,828 → 5,947,1
 pulled in by the chart's own hit testing: chart-kit 7.0.4 needs no Skia, Reanimated or Gesture Handler.
 
 **Consequences.**
-- Two new native modules and a new native configuration mean the fingerprint changes, so the merged branch needs a
-  new native build; an OTA update alone cannot carry it.
+- `react-native-svg` is the only new native module: `react-native-chart-kit` 7.0.4 is plain JavaScript and
+  `expo-build-properties` is a configuration plugin. The new native module and the new minimum OS still change the
+  fingerprint, so the merged branch needs a new native build ([release/updates.md](../release/updates.md)). Until
+  that build ships, installs on the current runtime – build 6 included – keep getting updates published from the old
+  fingerprint and receive nothing published from this one, because an update never installs on a build whose
+  runtime differs.
 - iOS 16.4 is already the SDK 58 floor, so only Android loses devices: below API 26 (about 0.2 % of Polish and
   0.3 % of global mobile traffic, StatCounter September 2026, as measured on #44).
 - With `interaction` in `tap` mode and `deselectOnOutsidePress` left on (the default), chart-kit covers the plot's
