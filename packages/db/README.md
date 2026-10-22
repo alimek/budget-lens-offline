@@ -9,7 +9,8 @@ pinned exactly. Stay on 0.45.x until the Drizzle 1.0 upgrade gate in #35 §6 is 
 The package is TypeScript source with no build step. It does not open, key or locate the database file: the app
 does that (`apps/mobile/src/db/encrypted-database.ts` opens `budget-lens.db` with `PRAGMA cipher_version`,
 `PRAGMA key` and the device key from expo-secure-store). The items and rule-version repository is here (#81,
-below); the month-close transaction (#85) is not here yet.
+below), with the occurrence override and payment status repository (#83); the month-close transaction (#85) is not
+here yet.
 
 ## Schema v1 (`src/schema.ts`)
 
@@ -17,8 +18,8 @@ below); the month-close transaction (#85) is not here yet.
 | --- | --- | --- |
 | `items` | `id` | Expenses and incomes, with `kind`. `currency` is required and has no SQL default. `archived_at` archives an item (#81). |
 | `item_rule_versions` | `id`, unique `(item_id, effective_from)` | "From this month on" versions (#40). Amount is in the item's currency. One-time XOR recurring shape CHECK. |
-| `occurrence_overrides` | `id`, unique `(item_id, month)` | "Only this month". Amount (NULL = rule amount) is in the item's currency. |
-| `payment_statuses` | `(item_id, month)` | Row present = paid or received. |
+| `occurrence_overrides` | `id`, unique `(item_id, month)` | "Only this month". Amount (NULL = rule amount) is in the item's currency. `overrides_shape_chk` keeps exactly one of an amount or a skip (#83, migration 0001). |
+| `payment_statuses` | `(item_id, month)` | Row present = paid or received. Written by #83 (below). |
 | `months` | `month` | Core `BudgetMonth`. At most one `active` row (partial unique index). Closed rows need `closed_at` and `base_currency`. |
 | `closed_occurrences` | `(month, item_id)` | Frozen close snapshot: original amount and currency, rate used (`rate_mid` PLN per unit, `rate_source`, `rate_effective_date`; all NULL for base-currency items) and the base-currency amount. |
 | `settings` | `id = 1` (CHECK) | Typed singleton for core `Settings` plus `onboarding_completed_at` (locks `base_currency`, #139). No SQL defaults: `DEFAULT_SETTINGS` in core is the only source. |
@@ -94,6 +95,20 @@ Foreign keys are a per-connection setting, so the app uses this one migrated con
 Any migration that rebuilds a table (`__new_<table>`) needs a test that seeds rows first; see
 `test/migrations.test.ts`.
 
+### Migration 0001 (`0001_override_shape_check`)
+
+It rebuilds `occurrence_overrides` to add `overrides_shape_chk`, the SQL form of core's rule that an override is
+exactly one of an amount and a skip. The rebuild copies every row into the new table, so a v1 row with neither
+(`amount_minor` NULL and `skipped` 0, core's `empty-override`) or with both (core's `skipped-with-amount`) fails the
+`INSERT INTO __new_occurrence_overrides` and the migration throws. That hard failure is deliberate: no shipped
+database can hold such a row. Schema v1 shipped in TestFlight build 6, but no build before #83 ever wrote
+`occurrence_overrides`; since #83 the only writer is this repository, behind core's shape validation and now the
+CHECK; and there is no backup restore yet. If a row like that ever appears, the user loses nothing they had: the
+transaction rolls back, `runMigrationsWithSafetyCopy` restores the encrypted pre-migration copy, and the boot shows
+the `migration_failed` screen (#75, #210). Anything that writes overrides from outside this repository later
+(encrypted backup restore, #30; an import) must validate the shape with core before writing, or rely on the CHECK to
+reject it. `test/migrations.test.ts` pins both the rebuild of valid rows and this failure path.
+
 ## Items and rule-version repository (`src/items-repository.ts`, #81)
 
 Rows in, `@budget-lens/core` types out. Picking the version in force per month stays in core
@@ -128,9 +143,10 @@ and return `{ ok } | { ok: false, error }` with codes:
   reject every `cancel-scheduled` with `no-versions`. When the plan leaves the item with no versions (core's
   `no-versions-left` notice), the item is archived in the same transaction rather than left active with an empty
   rule (#81: archive, never delete). The plan's `upsertOverrides`, `orphanedOverrides` and `resetOverrides` are
-  occurrence overrides, which belong to #83: this repository does not write them, so the caller writes or confirms
-  them itself. #83 can pass a Drizzle transaction handle and write the versions and the overrides of one plan
-  together, as [#40 Q4](https://github.com/alimek/budget-lens-offline/issues/40) expects.
+  occurrence overrides, which belong to #83: this repository does not write them, so a caller that only edits the
+  rule uses `applyRuleVersionPlan`. `applyRulePlan` below writes the versions and the overrides of one plan in one
+  transaction, as [#40 Q4](https://github.com/alimek/budget-lens-offline/issues/40) expects, reusing the two helpers
+  this function is built from (`ruleVersionPlanError`, `writeRuleVersions`).
 
 `readItems(db)` returns `{ items, invalidItems }`: every item with its versions in `effectiveFrom` order, plus the
 items that were left out and the core error codes that say why (`unsupported-currency`, `invalid-item-type`, or
@@ -180,6 +196,72 @@ The `settings` singleton in, core `Settings` out. What is a valid settings value
 Live reads again: `SETTINGS_TABLES` names the table `readSettings` depends on, so an app hook can re-read the
 settings on a change the same way it re-reads the item list.
 
+## Occurrence override and payment status repository (`src/occurrences-repository.ts`, #83)
+
+`occurrence_overrides` and `payment_statuses` rows in, `@budget-lens/core` types out. What an override is, which
+occurrence it applies to and which months are closed stay in core
+([domain/occurrence-overrides.md](../../docs/domain/occurrence-overrides.md),
+[domain/month-closing.md](../../docs/domain/month-closing.md)): nothing here decides them of its own. There is no
+`item_type` column: the key is `(item_id, month)` and the type comes from `items.kind` (#35 Q1), so an override read
+is two single-table selects and no join. An amount is never converted here and a month is never a date: an override
+is in the currency of the item it overrides (#138), months are `YYYY-MM` text with no time zone, and timestamps are
+UTC milliseconds from the injected clock.
+
+| Column | Core | Notes |
+| --- | --- | --- |
+| `occurrence_overrides.item_id` + `month` | `itemId`, `month` | The key of one occurrence; `id` is the row's own. |
+| `items.kind` (a separate select) | `itemType` | There is no `item_type` column (#35 Q1). |
+| `amount_minor` | `amount` | Minor units of the **item's** currency (#138); NULL is absent, never 0. |
+| `skipped` | `skipped` | `false` is absent in core's model, not a field with a value. |
+| `note` | `note` | NULL is absent. |
+| a `payment_statuses` row | `PaymentStatus` with `settled: true` | Unsettled is the absence of a row (#35 Q4). |
+| `id`, `created_at`, `updated_at`, `settled_at` | – | Row metadata; ids and timestamps come from the injected `newId` and `now`. |
+
+Reads:
+
+- `readOverrides(db, { months? })` maps rows to core `OccurrenceOverride`s. Like `readItems`, a row core rejects – or
+  whose `items` row is gone – is **skipped and reported** in `rejectedOverrides` with its codes (`unknown-item` for
+  the missing item, core's codes otherwise), never thrown. Without `months`, every month is read.
+- `readPaymentStatuses(db, { months? })` gives core `PaymentStatus`es with `settled: true`. Payment status is
+  independent of currency (#39): the item carries its own.
+- `readMonthOccurrences(db, month)` is one **open** month for the month view (#114) and for closing (#84): the
+  active items of `readItems`, the overrides and the payment statuses of that month, through core's
+  `resolveVersionedOccurrences` (#80). Each occurrence carries the item's `currency`, its effective `amount`, its
+  `override` when it has one, and `settled`. A skipped occurrence is absent and keeps its payment row, which applies
+  again when the skip is cleared. **A closed month is read from its `closed_occurrences` snapshot instead**
+  (#85/#86), never resolved again from the live rule (#40 Q3).
+- For the app's live hook, `OVERRIDE_TABLES`, `PAYMENT_STATUS_TABLES` and `MONTH_OCCURRENCES_TABLES` name the tables
+  each read depends on, as `ITEM_LIST_TABLES` does for the item list.
+
+Writes take `deps: { now, newId }` and an explicit `{ activeMonth }` context – core's `RuleEditContext`, which the
+caller reads from the `months` table and never from a clock (the months repository is #112) – and return
+`{ ok } | { ok: false, error: { code } }`:
+
+- `setOverride(db, { itemId, month, amount? | skipped?, note? }, context, deps)` – "only this month", core's
+  `only-month`. Core validates it (`validateOverride`) against the item's version in force for that month, so an
+  unknown item (`item-not-found`), an archived one (`item-archived`), a damaged one (`invalid-item`), a one-time
+  item (`one-time-item`), a month with no occurrence (`inactive-month`) and a shape that is not an override
+  (`empty-override`, `skipped-with-amount`) all write nothing. Then it UPSERTs `(item_id, month)`: a second edit of
+  the same occurrence replaces the first, keeps the row id and `created_at`, and stamps `updated_at`. The override's
+  own `note` replaces the stored one: an edit replaces the whole override.
+- `clearOverride(db, itemId, month, context)` – back to the rule amount. It never touches the payment row.
+- `settleOccurrence(db, itemId, month, context, deps)` / `unsettleOccurrence(db, itemId, month, context)` – insert
+  the payment row (idempotent: a second call keeps the first `settled_at`) or delete it. The deletes take no `deps`:
+  they stamp nothing. A payment status is per item and month and independent of the rule, so an item can be settled
+  for a month its rule does not schedule: the row is a fact the month view and closing use, and #114 decides what to
+  show for it.
+- `applyRulePlan(db, itemId, plan, context, deps)` – a whole core `RuleEditPlan` in **one transaction**: the versions
+  exactly as `applyRuleVersionPlan` applies them, the `upsertOverrides` UPSERTed, and the `orphanedOverrides` plus
+  `resetOverrides` deleted (#40 Q4). `keptOverrides` are left untouched: an override of a later month keeps its own
+  amount or skip unless the plan resets it (#40 Q5). A plan never writes or deletes a payment row: an edit changes
+  the rule, not what was paid. When anything is refused, or a write fails, nothing is written.
+
+**Closed months are immutable.** Every write above, and every delete including a plan's, is refused with
+`month-closed` and writes nothing when the month is before `activeMonth` (core's `planRuleEdit` rule) or its `months`
+row has `status = 'closed'` (core's `validateMonthEditable`): the same policy those two express, in the same code,
+read from the caller's context and the `months` table rather than from a clock. An invalid `month` or `activeMonth`
+is `invalid-month`.
+
 ## Tests
 
 `pnpm --filter @budget-lens/db test` runs Vitest on Node with sql.js (SQLite in WebAssembly) as the driver, used
@@ -206,6 +288,18 @@ read writes nothing), a first write that stores the defaults a patch completes w
 error codes with the row untouched on an invalid patch, a damaged field falling back to its default while the valid
 ones survive, the onboarding timestamp an update keeps, and the base currency: kept through an unrelated write,
 stored when a patch asks for it, and the whole write refused when the stored code is unreadable.
+
+`test/occurrences-repository.test.ts` covers the override and payment rules: setting one occurrence twice keeps one
+row with the last amount and the first `created_at`; overrides of a PLN and of a JPY item stay whole minor units of
+their own currency; a one-time item and a month without an occurrence are refused; a damaged row is reported rather
+than dropped or thrown; settling twice keeps the first `settled_at`; a skipped occurrence disappears while its
+payment row survives and returns with it; an override stays keyed by its month across a rule-version change and a
+year rollover; a plan that ends a recurrence deletes its orphaned overrides and keeps (or, when it resets them,
+deletes) the later ones; a refused plan writes neither versions nor overrides; every closed-month write is refused
+and writes nothing; and `forecast()` reaches the totals it should from what these reads return.
+`test/migrations.test.ts` upgrades a database that already holds overrides of both valid shapes and payment rows
+through the 0001 rebuild, with `foreign_key_check` clean and the shape CHECK refusing an amount with a skip, and
+neither of them, afterwards.
 
 The SQLCipher-specific path (key, cipher guard, a copy that is really ciphertext) is covered on devices by e2e
 (#75).

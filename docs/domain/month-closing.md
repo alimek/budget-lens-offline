@@ -1,7 +1,8 @@
 # Month closing
 
 Status: **implemented** in `packages/core/src/month-closing.ts` (#84). Persistence and its atomic transaction
-belong to #85; payment-status storage belongs to #83.
+belong to #85; payment-status storage is `packages/db/src/occurrences-repository.ts` (#83), which refuses a status
+change of a closed month with `month-closed`.
 
 ## Model and transitions
 

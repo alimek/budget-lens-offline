@@ -1,6 +1,4 @@
 import { eq, sql } from "drizzle-orm";
-import { drizzle, type SQLJsDatabase } from "drizzle-orm/sql-js";
-import initSqlJs from "sql.js";
 import { describe, expect, it } from "vitest";
 import {
   type MigrationBundle,
@@ -12,46 +10,10 @@ import {
   schema,
 } from "../src";
 import schemaMigrations from "../src/migrations.generated";
-import { item, ruleVersion } from "./helpers";
+import { item, openTestDatabaseFile, ruleVersion } from "./helpers";
 
-const SQL = await initSqlJs();
-
-/**
- * The database file and the encrypted copy of it (#35 §2, #75), modelled with sql.js bytes: `create` saves them,
- * `restore` makes them the live file again, and `connect` is what a launch does – open the current file. The app
- * copies a file with SQLCipher (`sqlcipher_export`); the bytes of an sql.js database are the same whole-file copy
- * without the encryption, which is covered on devices (#75, e2e).
- */
-function databaseFile(): {
-  connect: () => SQLJsDatabase;
-  copy: MigrationSafetyCopy;
-  calls: { created: number; restored: number; discarded: number };
-} {
-  let live = new SQL.Database();
-  let saved: Uint8Array | undefined;
-  const calls = { created: 0, restored: 0, discarded: 0 };
-  return {
-    calls,
-    connect: () => drizzle(live),
-    copy: {
-      create() {
-        calls.created += 1;
-        saved = live.export();
-      },
-      restore() {
-        calls.restored += 1;
-        if (saved === undefined) {
-          throw new Error("There is no copy to restore");
-        }
-        live = new SQL.Database(saved);
-      },
-      discard() {
-        calls.discarded += 1;
-        saved = undefined;
-      },
-    },
-  };
-}
+/** What a launch does: `file.connect()` opens the current file, `file.copy` is the encrypted pre-migration copy. */
+const databaseFile = openTestDatabaseFile;
 
 /** The shipped migrations plus one more entry, as a later app release would ship them. */
 function withMigration(tag: string, query: string): MigrationBundle {

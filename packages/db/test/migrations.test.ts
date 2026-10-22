@@ -1,8 +1,15 @@
+import { toMinorUnits, toYearMonth } from "@budget-lens/core";
 import { eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { type MigrationBundle, MigrationIntegrityError, runMigrations, schema } from "../src";
+import {
+  type MigrationBundle,
+  MigrationIntegrityError,
+  runMigrations,
+  runMigrationsWithSafetyCopy,
+  schema,
+} from "../src";
 import schemaMigrations from "../src/migrations.generated";
-import { item, openTestDatabase, ruleVersion } from "./helpers";
+import { item, openTestDatabase, openTestDatabaseFile, ruleVersion, sqliteError } from "./helpers";
 
 /** A later schema version that changes a column default on `items`: drizzle-kit 0.31.11 output, verbatim. */
 const REBUILD_ITEMS = `PRAGMA foreign_keys=OFF;--> statement-breakpoint
@@ -36,6 +43,42 @@ function withMigration(tag: string, query: string): MigrationBundle {
     migrations: { ...schemaMigrations.migrations, [`m${String(idx).padStart(4, "0")}`]: query },
   };
 }
+
+/** The shipped migrations up to `count` entries: a database migrated with them is at that schema version. */
+function shippedUpTo(count: number): MigrationBundle {
+  const entries = schemaMigrations.journal.entries.slice(0, count);
+  const migrations: Record<string, string> = {};
+  for (const entry of entries) {
+    const key = `m${String(entry.idx).padStart(4, "0")}`;
+    const sqlText = schemaMigrations.migrations[key];
+    if (sqlText === undefined) throw new Error(`missing migration ${key}`);
+    migrations[key] = sqlText;
+  }
+  return { journal: { entries }, migrations };
+}
+
+const at = new Date(Date.UTC(2026, 9, 1));
+
+/** An override of the shape core allows: `skipped` and an amount are mutually exclusive. */
+const amountOverride: typeof schema.occurrenceOverrides.$inferInsert = {
+  id: "override-1",
+  itemId: "item-1",
+  month: toYearMonth("2026-10"),
+  amountMinor: toMinorUnits(320_000),
+  skipped: false,
+  note: null,
+  createdAt: at,
+  updatedAt: at,
+};
+
+const skippedOverride: typeof schema.occurrenceOverrides.$inferInsert = {
+  ...amountOverride,
+  id: "override-2",
+  month: toYearMonth("2026-11"),
+  amountMinor: null,
+  skipped: true,
+  note: "on holiday",
+};
 
 const tableNames = (db: ReturnType<typeof openTestDatabase>) =>
   db
@@ -148,6 +191,70 @@ describe("runMigrations", () => {
     expect(db.select().from(schema.appMeta).all()).toEqual([]);
     expect(db.all(sql`SELECT * FROM __drizzle_migrations`)).toEqual(recorded);
     expect(foreignKeysEnabled(db)).toBe(true);
+  });
+
+  it("rebuilds occurrence_overrides for the shape CHECK without losing the stored overrides", () => {
+    // Arrange
+    const db = openTestDatabase();
+    runMigrations(db, shippedUpTo(1));
+    db.insert(schema.items).values(item("item-1")).run();
+    db.insert(schema.occurrenceOverrides).values([amountOverride, skippedOverride]).run();
+    db.insert(schema.paymentStatuses)
+      .values({ itemId: "item-1", month: toYearMonth("2026-10"), settledAt: at })
+      .run();
+
+    // Act
+    const applied = runMigrations(db);
+
+    // Assert
+    expect(applied).toBe(schemaMigrations.journal.entries.length - 1);
+    expect(db.select().from(schema.occurrenceOverrides).all()).toEqual([
+      amountOverride,
+      skippedOverride,
+    ]);
+    expect(db.select().from(schema.paymentStatuses).all()).toEqual([
+      { itemId: "item-1", month: toYearMonth("2026-10"), settledAt: at },
+    ]);
+    expect(db.all(sql`PRAGMA foreign_key_check`)).toEqual([]);
+  });
+
+  it("refuses an override that is not exactly one of an amount or a skip after the rebuild", () => {
+    // Arrange
+    const db = openTestDatabase();
+    runMigrations(db, shippedUpTo(1));
+    runMigrations(db);
+    db.insert(schema.items).values(item("item-1")).run();
+    const both = { ...amountOverride, id: "override-both", skipped: true };
+    const neither = { ...amountOverride, id: "override-neither", amountMinor: null };
+
+    // Act
+    const bothError = sqliteError(() => db.insert(schema.occurrenceOverrides).values(both).run());
+    const neitherError = sqliteError(() =>
+      db.insert(schema.occurrenceOverrides).values(neither).run(),
+    );
+
+    // Assert
+    expect(bothError).toContain("CHECK constraint failed: overrides_shape_chk");
+    expect(neitherError).toContain("CHECK constraint failed: overrides_shape_chk");
+    expect(db.select().from(schema.occurrenceOverrides).all()).toEqual([]);
+  });
+
+  it("restores the pre-migration copy when the shape CHECK rebuild meets a row that is not an override", () => {
+    // Arrange: a v1 database holding the one row 0001 cannot rebuild: neither an amount nor a skip.
+    const file = openTestDatabaseFile();
+    runMigrations(file.connect(), shippedUpTo(1));
+    file.connect().insert(schema.items).values(item("item-1")).run();
+    const neither = { ...amountOverride, amountMinor: null, skipped: false };
+    file.connect().insert(schema.occurrenceOverrides).values(neither).run();
+
+    // Act
+    const migrate = () => runMigrationsWithSafetyCopy(file.connect(), file.copy);
+
+    // Assert: nothing is half-migrated – the copy is put back, and the launch after it sees v1 as it was (#75).
+    expect(migrate).toThrow();
+    expect(file.calls).toEqual({ created: 1, restored: 1, discarded: 0 });
+    expect(file.connect().select().from(schema.occurrenceOverrides).all()).toEqual([neither]);
+    expect(file.connect().all(sql`SELECT * FROM __drizzle_migrations`)).toHaveLength(1);
   });
 
   it("stops with an integrity error when a migration leaves rows without their parent", () => {

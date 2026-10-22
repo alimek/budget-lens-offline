@@ -104,7 +104,11 @@ export const itemRuleVersions = sqliteTable(
   ],
 );
 
-/** "Only this month" changes (E4), keyed by (item, month); `amount_minor` is in the item's currency. */
+/**
+ * "Only this month" changes (E4), keyed by (item, month); `amount_minor` is in the item's currency.
+ * `overrides_shape_chk` is the SQL of core's shape rule (#83): exactly one of an amount or a skip, so neither an
+ * empty override nor a skipped one with an amount can be stored. Clearing an override deletes the row.
+ */
 export const occurrenceOverrides = sqliteTable(
   "occurrence_overrides",
   {
@@ -125,6 +129,10 @@ export const occurrenceOverrides = sqliteTable(
     check("overrides_month_chk", isMonth(t.month)),
     check("overrides_amount_chk", sql`${c(t.amountMinor)} IS NULL OR ${c(t.amountMinor)} >= 0`),
     check("overrides_skipped_chk", isBoolean(t.skipped)),
+    check(
+      "overrides_shape_chk",
+      sql`(${c(t.amountMinor)} IS NULL AND ${c(t.skipped)} = 1) OR (${c(t.amountMinor)} IS NOT NULL AND ${c(t.skipped)} = 0)`,
+    ),
   ],
 );
 

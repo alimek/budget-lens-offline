@@ -1,3 +1,4 @@
+import { toMinorUnits, toYearMonth } from "@budget-lens/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { runMigrations, schema } from "../src";
@@ -105,6 +106,37 @@ describe("schema v1 constraints", () => {
 
     // Assert
     expect(error).toContain("NOT NULL constraint failed: items.currency");
+  });
+
+  it("keeps an override exactly one of an amount or a skip", () => {
+    // Arrange
+    db.insert(schema.items).values(item("item-1")).run();
+    const { createdAt, updatedAt } = item("item-1");
+    const override = {
+      id: "override-1",
+      itemId: "item-1",
+      month: toYearMonth("2026-10"),
+      amountMinor: toMinorUnits(10_000),
+      skipped: true,
+      createdAt,
+      updatedAt,
+    };
+
+    // Act
+    const bothError = sqliteError(() =>
+      db.insert(schema.occurrenceOverrides).values(override).run(),
+    );
+    const neitherError = sqliteError(() =>
+      db
+        .insert(schema.occurrenceOverrides)
+        .values({ ...override, id: "override-2", amountMinor: null, skipped: false })
+        .run(),
+    );
+
+    // Assert: core calls these `skipped-with-amount` and `empty-override`; both are not overrides.
+    expect(bothError).toContain("CHECK constraint failed: overrides_shape_chk");
+    expect(neitherError).toContain("CHECK constraint failed: overrides_shape_chk");
+    expect(db.select().from(schema.occurrenceOverrides).all()).toEqual([]);
   });
 
   it("refuses to delete an item that still has rule versions", () => {
