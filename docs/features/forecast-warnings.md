@@ -24,7 +24,7 @@ opens the savings screen (E7); Savings is not a tab.
 - Forecast hook ([#88](https://github.com/alimek/budget-lens-offline/issues/88)), forecast screen with chart ([#89](https://github.com/alimek/budget-lens-offline/issues/89)), dashboard ([#90](https://github.com/alimek/budget-lens-offline/issues/90)).
 - Chart library: **`react-native-chart-kit` 7.0.4 (`/v2` charts) on `react-native-svg` 15.16.0** (the SDK 58 pin),
   validated by a one-day spike on iOS and Android dev builds before #89 ([#218](https://github.com/alimek/budget-lens-offline/issues/218); [decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575)).
-  If the spike fails, the fallback is a hand-drawn chart on `react-native-svg`.
+  If the spike fails, the fallback is a hand-drawn chart on `react-native-svg` ([#218](https://github.com/alimek/budget-lens-offline/issues/218), [#44 research](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6339984974)).
 - Optional local notifications ([#91](https://github.com/alimek/budget-lens-offline/issues/91)): opt-in, local only, pre-scheduled on app open with
   `expo-notifications` ([#45 research](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340343141), [accepted](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501)).
 
@@ -51,8 +51,8 @@ opens the savings screen (E7); Savings is not a tab.
 ## Acceptance criteria (high level)
 
 - The forecast is a pure, deterministic core function; all amounts in the output are in the base currency.
-- Conversion uses the #124 strategy (one rounding, half away from zero). A missing rate gives a translatable
-  warning, never a silent 0.
+- Conversion uses the #124 strategy (one rounding, half away from zero). A missing or invalid rate makes the
+  forecast fail with a translatable code (`missing-rate` / `invalid-rate`), never a silent 0.
 - Closed months use snapshotted rates; only open and future months use current rates.
 - Warnings ([decided on #45](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501)): exactly the three core codes, all comparisons strict (`<`); zero
   thresholds don't disable them, and warnings can't be disabled in the MVP.
@@ -66,10 +66,13 @@ opens the savings screen (E7); Savings is not a tab.
 - Warnings are derived, never stored: recomputed by `forecast()` on app open, on item/override/payment/settings/rate
   changes and after a month close, fully offline. Identity and dedup key `(code, month)`; ordered by month, balance
   warning before outflow. No dismiss or snooze in the MVP.
-- Overview shows the earliest warning plus "+N more" (or "No warnings in the next 13 months"); the Forecast tab shows
+- Overview shows the earliest warning plus "+N more" (or "No warnings in the next 13 months", i.e. the active month
+  plus 12); the Forecast tab shows
   the list, chart markers and month-row icons. Severity is always icon + text + spoken prefix, never colour alone.
-- Missing rate, older (stale) rate, unclosed past month and backup overdue are status indicators on their own
-  screens, not forecast warnings (#67).
+- A missing or invalid rate is a **blocking forecast state** (#67, [#45 research](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340343141), "Other conditions
+  considered"): Overview and the Forecast tab show it instead of a projection.
+- Older (stale) rate, unclosed past month and backup overdue are status indicators on their own screens, not
+  forecast warnings (#67).
 - The forecast and chart start at the **active month**; past calendar months that are not closed yet are labelled
   "not closed" next to the catch-up banner, so their unsettled items stay in the projection ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), row 3).
 - Notifications ([#91](https://github.com/alimek/budget-lens-offline/issues/91), [#45](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501)):
@@ -84,6 +87,7 @@ opens the savings screen (E7); Savings is not a tab.
     per day (same-day items are merged).
   - Text is in the current language and contains **no amounts or item names**; Android `lockscreenVisibility` is
     PRIVATE.
+  - The spike verifies that local-only notifications on Android need no Firebase config.
 - The chart uses full amounts (optionally whole units), with no compact axis labels such as "5K" / "5 tys."
   ([ADR 0012](../decisions/0012-native-intl-money-formatting.md)).
 - Rates: rates are fetched **on app open** when a newer NBP table may exist (at most hourly retries before it is published); both sources become stale when at least `Settings.rateMaxAgeBusinessDays` business days (Mon–Fri, 2 by default, no Polish holidays in the MVP) lie between the effective date and today, per the [decision on #8, 2026-10-19](https://github.com/alimek/budget-lens-offline/issues/8#issuecomment-6277037751), which supersedes the 24 h and fetch-age rules. Offline the last stored rate is used; **only the current rate per currency is stored** (no rate history) ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950), [owner review #35, Q7](https://github.com/alimek/budget-lens-offline/issues/35#issuecomment-6263677802)). Manual rates (`1 X = y PLN`) win on a newer or equal effective date; cross rates go via PLN; table A only. At most one current NBP rate plus one current manual rate is kept per
@@ -103,9 +107,7 @@ opens the savings screen (E7); Savings is not a tab.
 
 ## Open questions
 
-- Charting library: [#44](https://github.com/alimek/budget-lens-offline/issues/44) (Decided on [#44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575) (2026-10-22): chart-kit 7.0.4 on react-native-svg
-  15.16.0; minimum OS in [E1](app-shell-storage.md)).
-- Warning semantics & notifications: [#45](https://github.com/alimek/budget-lens-offline/issues/45) (Decided on [#45](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501) (2026-10-22): all recommended
-  defaults).
+- Charting library: decided on [#44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575) (2026-10-22), see Scope; minimum OS in [E1](app-shell-storage.md).
+- Warning semantics & notifications: decided on [#45](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340493501) (2026-10-22), see Acceptance criteria.
 - NBP caching & refresh: triggers and max age decided ([owner review #124](https://github.com/alimek/budget-lens-offline/issues/124#issuecomment-6263679950)); [#46](https://github.com/alimek/budget-lens-offline/issues/46) covers the remaining edge cases
   (weekends/holidays, errors, fixtures).
