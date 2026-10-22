@@ -37,8 +37,10 @@ and migrates its plain local SQLite database (#242) before rendering data screen
 development build can also show the recovery screen and the files this app owns, on deep links:
 `budget-lens:///dev/boot-screen` (the one recovery screen, with its retry and start-over) and
 `budget-lens:///dev/storage-check`, which reports whether the database file and its pre-migration copy are SQLite
-files — taking a copy for real, through the same steps a migration takes — and lists the files a failed update left
-behind or a "start over" kept. `budget-lens:///dev/damage-database`
+files and says what it did about the copy — it takes one for real, through the same steps a migration takes, but
+only when there is a database to copy and nothing is being kept already, removes again only the copy it took
+itself, and reports a copy the file refused instead of failing — and it lists the files a failed update left behind
+or a "start over" kept. `budget-lens:///dev/damage-database`
 (#75 R6, #242) replaces the database file with bytes that are not a database and keeps the file that was there, so a
 cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.
 `budget-lens:///dev/chart-spike` (#218) draws the forecast-style chart spike: the twelve-month sample of

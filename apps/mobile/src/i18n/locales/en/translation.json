@@ -96,6 +96,11 @@
       "sqlite": "SQLite file",
       "foreign": "not a SQLite file",
       "missing": "missing",
+      "copyCheck": "Copy check",
+      "copyKept": "kept by an earlier launch",
+      "copyTaken": "taken and discarded by this check",
+      "copyAbsent": "nothing to copy",
+      "copyFailed": "the file refused the copy",
       "kept": "Kept files",
       "none": "none"
     },

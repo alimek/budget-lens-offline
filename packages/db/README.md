@@ -68,9 +68,11 @@ consistent even while the connection is open, #35 §2); this package only decide
   it and rethrows, so the app can put the file back and show the recovery screen (#75);
 - putting the copy back fails: that error is what the caller sees, in place of the migration error. The copy stays
   where it is: it is the only intact state left, the app must not discard or replace it, and its recovery screen may
-  not claim the database was restored (#75 R1). A database this build cannot open at all — the plain file of an
-  older encrypted install (#242), a truncated file — never reaches this wrapper: the app shows the recovery screen
-  before migrating, and there the file is only ever renamed, never deleted.
+  not claim the database was restored (#75 R1). A database this build cannot open at all — the file an older
+  encrypted install left behind (#242), a truncated file — does reach this wrapper and fails in the pending-migration
+  count, which is its first act and the only read that happens before a copy is taken or discarded. The caller sees
+  that error and shows its recovery screen; nothing before the count touched a file, and there the file is only ever
+  renamed, never deleted.
 
 `runMigrations(db)` applies pending migrations and returns how many it applied. Use it instead of Drizzle's
 `useMigrations`/`migrate`. Drizzle runs all pending migrations in one transaction, and inside a transaction

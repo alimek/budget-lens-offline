@@ -9,7 +9,8 @@ import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
 /**
  * The one screen the database can lead to (#34 §2, #60, #242): it is there and cannot be opened or migrated.
  * #60 has no approved mockups yet, so this is built from the design-system components alone, with the
- * `screen-<name>` test ID; the final look is follow-up.
+ * `screen-<name>` test ID; the final look is follow-up. It stands in for the whole app rather than sitting in a
+ * navigator, so it keeps itself clear of the status bar with `topInset` (#242).
  */
 export function RecoveryScreen({
   onRetry,
@@ -21,7 +22,7 @@ export function RecoveryScreen({
   const { t } = useTranslation();
   const [confirmVisible, setConfirmVisible] = useState(false);
   return (
-    <Screen testID="screen-recovery">
+    <Screen testID="screen-recovery" topInset>
       <Card testID="recovery-card">
         <CardHeader>
           <CardTitle accessibilityRole="header">{t("boot.recovery.title")}</CardTitle>

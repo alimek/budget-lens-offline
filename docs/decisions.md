@@ -8,7 +8,7 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 - **Question:** whether an install that already has an encrypted database gets a migration path when the encryption
   is removed (asked 2026-10-22 23:33).
-- **Answer:** option A: no migration (confirmed directly by the owner in chat, 2026-10-22 23:33)
+- **Answer:** "A: zaczynamy od pustej bazy, bez migracji" (confirmed directly by the owner in chat, 2026-10-22 23:33)
 - **Meaning:** an install updating from a build of #75 cannot open its own file, because the key it needs is no
   longer stored, and rewriting the file would mean keeping exactly the key handling #242 removes. Such an install
   therefore gets the single recovery screen; accepting "Start over" renames its encrypted file aside and continues
@@ -19,13 +19,13 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
   [app-shell-storage](features/app-shell-storage.md) and [packages/db](../packages/db/README.md).
 - **Issues:** [#242](https://github.com/alimek/budget-lens-offline/issues/242)
 
-## 2026-10-22 23:26 (Europe/Warsaw): the database is plain SQLite; the recovery screens are simplified
+## 2026-10-22 23:24 (Europe/Warsaw): the database is plain SQLite; the recovery screens are simplified
 
-- **Question:** "Usuwam szyfrowanie bazy (SQLCipher) i upraszczam ekrany awaryjne, dane trzymamy w zwykłym SQLite?"
-  (owner's own chat, 2026-10-22 23:26)
-- **Answer:** "Tak, usuń szyfrowanie" (confirmed directly by the owner in chat, 2026-10-22 23:26); to the follow-up
-  question "Kiedy usuwamy szyfrowanie bazy?" — "Teraz, przed formularzem".
-- **Original (another chat, relayed, 23:20):** question "Jak przechowujemy dane?", answer "A: zwykły SQLite bez
+- **Question:** whether the database encryption (SQLCipher) is dropped in favour of a plain local SQLite file, with
+  the failure and recovery screens simplified (asked 2026-10-22 23:24).
+- **Answer:** "Tak, usuń szyfrowanie" (confirmed directly by the owner in chat, 2026-10-22 23:24). Asked when to
+  do it: "Teraz, przed formularzem" (2026-10-22 23:26).
+- **Original (another chat, relayed, 23:20):** asked how the data is stored, answered "A: zwykły SQLite bez
   własnego szyfrowania, uprościć ekrany awaryjne".
 - **Meaning:** the data lives in a plain expo-sqlite database: no SQLCipher (`useSQLCipher`), no database key in
   secure storage, no cipher checks, no key pairing or orphan keys, and no app-level encryption at all; privacy rests

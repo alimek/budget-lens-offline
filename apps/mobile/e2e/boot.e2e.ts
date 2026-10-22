@@ -31,6 +31,11 @@ test("reports a plain SQLite database and its pre-migration copy", async (fixtur
   // takes (#35 §2, #242): neither of them is ciphertext and neither is a file this app did not write.
   await expect(database).toHaveText("Database: SQLite file");
   await expect(copy).toHaveText("Pre-migration copy: SQLite file");
+  // Whether the copy on disk is the check's own or one an earlier launch left behind, the check says so and
+  // leaves a kept copy alone (#75 R1).
+  await expect(screen.getByTestId("storage-check-copy-check")).toHaveText(
+    /kept by an earlier launch|taken and discarded by this check/,
+  );
   await app.screenshot("storage-check");
 });
 
@@ -74,9 +79,11 @@ test("recovers from a real unreadable database and keeps its file", async (fixtu
   await expect(screen.getByTestId("screen-home")).toBeVisible();
   await openDevScreen(fixtures, "storage-check", "screen-storage-check");
 
-  // Assert: the budget that could not be opened is still here, and it is still a plain SQLite file
+  // Assert: what "Start over" kept is the unreadable file it could not open — an orphan whose bytes are still not
+  // a database. The healthy file `/dev/damage-database` renamed aside is a separate, older orphan, and the fresh
+  // budget the app went on to write is the live file (#242).
   await expect(screen.getByTestId("storage-check-kept")).toHaveText(
-    /budget-lens\.orphan-\d+\.db SQLite file/,
+    /budget-lens\.orphan-\d+\.db not a SQLite file/,
   );
   await expect(screen.getByTestId("storage-check-database")).toHaveText("Database: SQLite file");
   await app.screenshot("storage-check-kept-file");

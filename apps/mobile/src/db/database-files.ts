@@ -14,6 +14,7 @@ import {
   isBudgetFile,
   RESTORE_NAME,
 } from "./database-names";
+import { runStorageCheck, type StorageCheckReport } from "./storage-check";
 
 // expo-sqlite reports its database directory as a plain path; expo-file-system addresses files by URI, and a
 // bare path is not one (#34 §7). Without the scheme, `exists` throws instead of answering.
@@ -120,7 +121,7 @@ export interface DatabaseFileInventory {
  * Look at the files of the app without opening or changing any of them (#242, #75 R6): the live database and the
  * copy beside it, and every file the app is keeping. A release build never calls this.
  */
-export function inspectDatabaseFiles(): DatabaseFileInventory {
+function inspectDatabaseFiles(): DatabaseFileInventory {
   return {
     database: fileFormat(DATABASE_NAME),
     copy: fileFormat(COPY_NAME),
@@ -247,4 +248,36 @@ export function damageDatabaseFile(stamp: number): boolean {
   damaged.create();
   damaged.writeSync("this is not a budget: written by a development build (#242)");
   return true;
+}
+
+/**
+ * Development only (#242, #75 R6): run the storage check of #75 R6 on the real files of the app. What it decides
+ * about a copy is `runStorageCheck`, unit-tested; this is the part that touches the filesystem, and it is the
+ * only place that knows which copy belongs to the check itself: an earlier launch's copy, or a restore under way,
+ * is never removed here (#75 R1). A release build never calls this.
+ */
+export function checkDatabaseFiles(): StorageCheckReport {
+  let takenByThisCheck = false;
+  return runStorageCheck({
+    inspect: inspectDatabaseFiles,
+    takeCopy() {
+      // Only reached when the live file really is a SQLite database: `openDatabaseSync` creates a file when the
+      // name holds none, and an empty database is not something a check should leave behind (#242). A second,
+      // plain connection: the live one belongs to `DatabaseGate` and this must not disturb it.
+      const client = openDatabaseSync(DATABASE_NAME);
+      const close = closeOnce(client);
+      // From here on a copy appears, this check made it, and it is this check's to remove again.
+      takenByThisCheck = true;
+      try {
+        createSafetyCopy({ client, closeConnection: close }).create();
+      } finally {
+        close();
+      }
+    },
+    discardOwnCopy() {
+      if (takenByThisCheck) {
+        remove(COPY_NAME);
+      }
+    },
+  });
 }

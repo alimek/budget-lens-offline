@@ -96,6 +96,11 @@
       "sqlite": "plik SQLite",
       "foreign": "nie jest plikiem SQLite",
       "missing": "brak",
+      "copyCheck": "Kontrola kopii",
+      "copyKept": "zachowana przez wcześniejsze uruchomienie",
+      "copyTaken": "wykonana i usunięta przez tę kontrolę",
+      "copyAbsent": "brak czego kopować",
+      "copyFailed": "plik odmówił wykonania kopii",
       "kept": "Zachowane pliki",
       "none": "brak"
     },
