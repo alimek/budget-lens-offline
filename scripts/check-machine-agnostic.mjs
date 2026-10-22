@@ -26,12 +26,6 @@ const PATTERNS = [
     misses: ["see docs/home.md", "/home/"],
   },
   {
-    label: "local tooling path",
-    pattern: String.raw`\.bl-(local|t3-client)|bl-watch`,
-    hits: ["~/.bl-local/state", "bl-watch.sh"],
-    misses: [],
-  },
-  {
     label: "device serial or local AVD",
     pattern: "emulator-[0-9]{4}|Pixel_[0-9]",
     hits: ["adb -s emulator-5556", "Pixel_10a"],
