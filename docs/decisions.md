@@ -4,6 +4,14 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-22 21:20 (Europe/Warsaw): #11, #12 and #13 move to the roadmap
+
+- **Question:** "Zamknąć te trzy zadania i przenieść je do roadmapy?"
+- **Answer:** "Tak, zamknij i przenieś" (owner answer in chat, 2026-10-22 21:20)
+- **Meaning:** target group research (#11), the one-time license pricing model (#12) and the website on the existing
+  domain (#13) are deferred to later stages; the issues are closed and tracked in [docs/roadmap.md](roadmap.md).
+- **Issues:** [#11](https://github.com/alimek/budget-lens-offline/issues/11), [#12](https://github.com/alimek/budget-lens-offline/issues/12), [#13](https://github.com/alimek/budget-lens-offline/issues/13), [docs/roadmap.md](roadmap.md)
+
 ## 2026-10-22 20:38 (Europe/Warsaw): end-of-month figure includes savings
 
 - **Question:** "Kwota „Zostanie na koniec miesiąca” = suma kont prywatnych + wpływy, które jeszcze przyjdą − koszty,

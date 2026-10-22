@@ -90,5 +90,6 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - [docs/github-automation.md](docs/github-automation.md) – label sync from `.github/labels.tsv` and the per-label
   issue queue export (`scripts/github/`), token scopes and scheduling rules
 - [docs/decisions.md](docs/decisions.md) – log of the owner's answers in issue/PR comments or chat, newest first
+- [docs/roadmap.md](docs/roadmap.md) – work deferred to later stages, one line per item with the original issue
 - [docs/decisions/](docs/decisions/) – ADRs; the 2026-10-18 decisions are summarized in the
   [#1 decisions comment](https://github.com/alimek/budget-lens-offline/issues/1#issuecomment-6253590427)
