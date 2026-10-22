@@ -109,8 +109,9 @@ no workflow runs E2E or smoke tests. This replaces the `macOS and iOS` workflow 
   [mobile development](mobile-development.md#development-builds)).
 - iOS release builds for internal TestFlight run on **EAS Build** and are uploaded with **EAS Submit**, both started
   manually (#178, [release/testflight.md](release/testflight.md)); no GitHub workflow triggers them.
-- The evidence on the PR is **screenshots** (iOS + Android, simulator/emulator named; a video is
-  also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
+- The evidence on the PR is **screenshots** (simulator/emulator named; a video is also fine; **iOS only** by
+  default, both iOS and Android only for platform-specific changes and before a release build, see
+  [testing.md](testing.md#platforms)) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
   **Screenshots** section of the [PR template](../.github/pull_request_template.md). A manual screenshot from a
   development build alone is not enough. It is required for every PR
   that changes UI; reviewers check it. `pr-body` does not check it (it only checks `Closes #N`), so non-UI PRs

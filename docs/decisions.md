@@ -4,12 +4,37 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-22 22:45 (Europe/Warsaw): six components move to universal Expo UI after the current stage
+
+- **Question:** "Przenieść sześć komponentów na uniwersalne Expo UI?"
+- **Answer:** "A: tak, przenieś sześć komponentów na universal po obecnym etapie" (owner answer in chat, 2026-10-22
+  22:45)
+- **Confirmation:** at 22:48 in the same chat: "Orkiestrator każe też wpisać do dziennika Twoją decyzję: sześć
+  komponentów przechodzi na uniwersalne Expo UI, ale dopiero po obecnym etapie. Potwierdzasz?" – "Tak, potwierdzam".
+- **Meaning:** the six components move to universal Expo UI, but only after the current stage (E3); until then the
+  per-platform wrappers stay as they are.
+- **Issues:** [#237](https://github.com/alimek/budget-lens-offline/issues/237)
+
+## 2026-10-22 22:41 (Europe/Warsaw): UI changes are tested on iOS by default
+
+- **Question:** "Na której platformie testujemy na co dzień?"
+- **Answer:** "iOS na co dzień" (owner answer in chat, 2026-10-22 22:41)
+- **Confirmation:** at 22:46 in the same chat: "Na co dzień testuję tylko na iOS, a Androida tylko przy zmianach
+  zależnych od platformy i przed buildem?" – "Tak, tak zrób".
+- **Context:** testing on two devices every time takes too long unless something is platform-specific.
+- **Meaning:** UI PRs carry local e2e evidence on iOS only. Both iOS and Android are tested only for platform-specific
+  changes (native modules or deps, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files
+  including the Expo UI wrappers in `apps/mobile/src/ui/native/`, permissions, fonts or assets that render per
+  platform) and before a release build. Screens that only use the wrappers are iOS-only
+  ([testing.md](testing.md#platforms)).
+- **Issues:** [#238](https://github.com/alimek/budget-lens-offline/issues/238)
+
 ## 2026-10-22 22:09 (Europe/Warsaw): the machine-agnostic check script is removed
 
 - **Question:** "Mam zamknąć zmianę z przeniesieniem nazw i otworzyć nową, która całkiem usuwa ten skrypt z repo i z
   CI?"
 - **Answer:** "Tak, usuń skrypt całkiem" (owner answer in chat, 2026-10-22 22:09)
-- **Context:** earlier in the same chat (22:06) the owner wrote: "moim zdaniem do wywalenia".
+- **Context:** earlier in the same chat (22:06) the owner wrote: "moimzdaniem do wywalnie".
 - **Meaning:** `scripts/check-machine-agnostic.mjs` and its call from `pnpm lint` (and so CI) are removed; the
   machine-agnostic rule (#171) stays in [AGENTS.md](../AGENTS.md) and is enforced in review. Supersedes
   [PR #235](https://github.com/alimek/budget-lens-offline/pull/235).

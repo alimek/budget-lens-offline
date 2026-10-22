@@ -57,12 +57,29 @@
     GitHub ([#15 e2e decisions
     comment](https://github.com/alimek/budget-lens-offline/issues/15#issuecomment-6253895252); see
     [conventions.md](conventions.md#secrets)).
-  - **UI PRs** include e2e evidence: **screenshots** (iOS + Android, simulator/emulator named; a video
-    is also fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the
-    Screenshots section of the PR template. A manual screenshot from a development build alone is not enough.
+  - **UI PRs** include e2e evidence: **screenshots** (simulator/emulator named; a video is also fine) from a
+    TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the Screenshots
+    section of the PR template. A manual screenshot from a development build alone is not enough. iOS only by
+    default; see [Platforms](#platforms).
   - Only **dedicated simulators/emulators** are used (`E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never personal or
     shared devices.
   - Metro runs on the repo's **fixed port 8073**; see [mobile development](mobile-development.md).
+
+### Platforms
+
+Owner decision (#238, 2026-10-22): UI PRs are tested on **iOS only** by default (local e2e on `E2E_IOS_SIMULATOR`),
+because testing on two devices every time takes too long. Run and attach **both iOS and Android** only when:
+
+- the PR touches something platform-specific: native modules or native dependencies, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files (including any change to the Expo UI wrappers `apps/mobile/src/ui/native/*.ios.tsx` / `*.android.tsx`), permissions, or fonts and assets that render per platform;
+- a release build is about to be made.
+
+Screens that only use the native wrappers (without changing them) are iOS-only. Non-UI PRs need no simulator.
+
+### One simulator
+
+There is only one simulator, so at most one issue or PR labeled `needs:simulator` is in progress at a time. Split
+mixed work into a UI part (needs the simulator, label `needs:simulator`) and a non-UI part (core, db, logic: unit
+tests only) that can run in parallel.
 
 ## Rules
 

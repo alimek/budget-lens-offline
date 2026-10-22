@@ -54,7 +54,7 @@ CI gates (all must pass): `lint`, `typecheck`, `test`, `fallow`, `audit`, `licen
 Commits), `pr-body` (`Closes #N`). Details: [docs/ci.md](docs/ci.md).
 CI runs only these fast checks, all on GitHub-hosted `ubuntu-latest`. Native builds and E2E tests are not in CI: they run
 locally on a dev machine (macOS with Xcode for iOS, Android SDK for Android) on dedicated simulators/emulators, and
-the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
+the evidence is screenshots attached to the PR (iOS by default, see below; [docs/ci.md](docs/ci.md#native-builds-and-e2e-local)).
 
 ## Workflow
 
@@ -63,9 +63,15 @@ the evidence is screenshots attached to the PR ([docs/ci.md](docs/ci.md#native-b
 - A reviewer squash-merges after approval and fully green CI.
 - Testing: e2e first; unit tests only for business logic, Arrange-Act-Assert; no coverage thresholds –
   [docs/testing.md](docs/testing.md).
-- UI PRs include e2e evidence: screenshots (iOS + Android, simulator/emulator named; a video is also
-  fine) from a TesterArmy `e2e` run or `e2e explore` on a local development build on a local dev machine, in the PR
-  template's Screenshots section. A manual screenshot from a development build alone is not enough.
+- UI PRs include e2e evidence: screenshots (simulator/emulator named; a video is also fine) from a TesterArmy `e2e`
+  run or `e2e explore` on a local development build on a local dev machine, in the PR template's Screenshots section.
+  A manual screenshot from a development build alone is not enough.
+- Platforms (#238): UI PRs are tested on **iOS only** by default. Test and attach **both iOS and Android** only when the
+  PR touches something platform-specific: native modules or native dependencies, app config or config plugins, `Platform.OS` branches, `.ios` / `.android` files (including any change to the Expo UI wrappers `apps/mobile/src/ui/native/*.ios.tsx` / `*.android.tsx`), permissions, or fonts and assets that render per platform; and before a release build. Screens that only use the wrappers
+  are iOS-only. Details: [docs/testing.md](docs/testing.md#platforms).
+- One simulator: at most one issue or PR labeled `needs:simulator` is in progress at a time. Split mixed work into a UI
+  part (needs the simulator, label `needs:simulator`) and a non-UI part (core, db, logic: unit tests only) that can run
+  in parallel ([docs/testing.md](docs/testing.md#one-simulator)).
 - Run the app only on dedicated simulators/emulators (names via `E2E_IOS_SIMULATOR` / `E2E_ANDROID_AVD`), never on
   personal or shared devices.
 - Metro runs on the repo's fixed port **8073** – [docs/mobile-development.md](docs/mobile-development.md).
