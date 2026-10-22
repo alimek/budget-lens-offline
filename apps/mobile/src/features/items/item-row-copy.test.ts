@@ -2,7 +2,7 @@
 // foreign-currency note and the accessible name, all built from i18n keys rather than concatenated.
 import { formatMoney, type MinorUnits, negateMinorUnits, toYearMonth } from "@budget-lens/core";
 import { describe, expect, it } from "vitest";
-import { itemRowActions, itemRowCopy } from "./item-row-copy";
+import { itemRowCopy } from "./item-row-copy";
 import type { ItemRow } from "./item-rows";
 
 /**
@@ -94,15 +94,5 @@ describe("itemRowCopy", () => {
     expect(copy.amount.text).toBe(`+${money(850_000 as MinorUnits, "PLN")}`);
     expect(copy.amount.tone).toBe("income");
     expect(copy.accessibilityLabel).toContain("kind=a11y.kindIncome");
-  });
-});
-
-describe("itemRowActions", () => {
-  it("offers archiving and nothing else, until #82 adds editing", () => {
-    // Arrange / Act
-    const actions = itemRowActions(t);
-
-    // Assert
-    expect(actions).toEqual([{ key: "archive", label: "actions.archive", destructive: true }]);
   });
 });

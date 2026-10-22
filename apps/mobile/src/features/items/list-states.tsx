@@ -29,7 +29,9 @@ export function ReadState({
 }) {
   // A live read is synchronous, so its pending state is gone within a frame: the spinner would only flash.
   const showLoading = useDelayedFlag(status === "loading");
-  if (status === "loading" && showLoading) return <LoadingItems testID={loadingTestID} />;
+  // Nothing at all while the read is pending: until the 300 ms are up the screen shows neither a spinner nor a
+  // list, and in particular not the empty state of a list nobody has read yet (#63 states).
+  if (status === "loading") return showLoading ? <LoadingItems testID={loadingTestID} /> : null;
   if (status === "error") return <LoadFailed onRetry={reload} testID={errorTestID} />;
   return <>{children}</>;
 }

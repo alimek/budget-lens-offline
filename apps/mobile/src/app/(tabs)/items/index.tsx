@@ -37,6 +37,10 @@ export default function ItemsScreen() {
             <NavigationRow
               testID="items-open-archived"
               label={t("list.archived")}
+              // The count of what the row opens, from the same read as the list itself (#63).
+              detail={String(items.archivedCount)}
+              detailTestId="items-archived-count"
+              accessibilityLabel={t("a11y.archived", { total: items.archivedCount })}
               onPress={() => router.push("/(tabs)/items/archived")}
             />
           </ListSection>

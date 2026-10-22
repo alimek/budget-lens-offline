@@ -1,8 +1,13 @@
 // The Items list model (#112): which version a row shows, what it is worth, and in which order the sections show it.
-import { type CurrencyCode, type MinorUnits, toYearMonth } from "@budget-lens/core";
+import {
+  type CurrencyCode,
+  DEFAULT_SETTINGS,
+  type MinorUnits,
+  toYearMonth,
+} from "@budget-lens/core";
 import type { StoredItem } from "@budget-lens/db";
 import { describe, expect, it } from "vitest";
-import { itemSections, listItems } from "./item-rows";
+import { itemSections, listFromReads, listItems, type Read } from "./item-rows";
 
 const activeMonth = toYearMonth("2026-10");
 const context = { activeMonth, lang: "en", baseCurrency: "PLN" } as const;
@@ -171,6 +176,8 @@ describe("listItems", () => {
     expect(listed.sections.income.map((row) => row.id)).toEqual(["salary"]);
     expect(listed.sections.expenses.map((row) => row.id)).toEqual(["rent"]);
     expect(listed.empty).toBe(false);
+    // The archived row of the list still counts what is behind it (#63).
+    expect(listed.archivedCount).toBe(1);
   });
 
   it("lists only the archived items when asked for them", () => {
@@ -197,12 +204,73 @@ describe("listItems", () => {
     expect(listed.hasInvalidItems).toBe(true);
   });
 
-  it("lists nothing before the first read has landed", () => {
-    // Arrange / Act
+  it("holds the empty state back until the first read has landed", () => {
+    // Arrange / Act: a screen that has not read anything yet is not an empty list.
     const listed = listItems(undefined, context);
 
     // Assert
-    expect(listed.empty).toBe(true);
+    expect(listed.empty).toBe(false);
+    expect(listed.sections).toEqual({ income: [], expenses: [] });
     expect(listed.hasInvalidItems).toBe(false);
+  });
+});
+
+describe("listFromReads", () => {
+  const items = {
+    items: [item({ id: "rent", name: "Rent", amount: 320_000 as MinorUnits })],
+    invalidItems: [],
+  };
+  const landed = <T>(value: T): Read<T> => ({ status: "ready", value });
+  const reads = {
+    items: landed(items),
+    settings: landed(DEFAULT_SETTINGS),
+    month: landed(activeMonth),
+    lang: "en",
+    archived: false,
+  } as const;
+
+  it("lists nothing and no empty state while a read is still running", () => {
+    // Arrange
+    const pending = { ...reads, items: { status: "loading", value: undefined } } as const;
+
+    // Act
+    const list = listFromReads(pending);
+
+    // Assert
+    expect(list.status).toBe("loading");
+    expect(list.sections.income).toEqual([]);
+    expect(list.empty).toBe(false);
+  });
+
+  it("asks for a retry when the month cannot be read, instead of anchoring to the device month", () => {
+    // Arrange: a failed `months` read, with the items and the settings in hand.
+    const failed = { ...reads, month: { status: "error", value: undefined } } as const;
+
+    // Act
+    const list = listFromReads(failed);
+
+    // Assert: the list of October is not shown anchored to some other month.
+    expect(list.status).toBe("error");
+    expect(list.sections.expenses).toEqual([]);
+  });
+
+  it("asks for a retry when the settings cannot be read, instead of assuming the default currency", () => {
+    // Arrange: with a guessed base currency a foreign item would be wrongly marked as one.
+    const failed = { ...reads, settings: { status: "error", value: undefined } } as const;
+
+    // Act / Assert
+    expect(listFromReads(failed).status).toBe("error");
+  });
+
+  it("uses the default currency for a settings read that found no row", () => {
+    // Arrange: a fresh database, where the settings read succeeded and found nothing.
+    const fresh = { ...reads, settings: { status: "ready", value: undefined } } as const;
+
+    // Act
+    const list = listFromReads(fresh);
+
+    // Assert: the list is shown, and a PLN item is not foreign against the core default.
+    expect(list.status).toBe("ready");
+    expect(list.sections.expenses[0]?.foreign).toBe(false);
   });
 });

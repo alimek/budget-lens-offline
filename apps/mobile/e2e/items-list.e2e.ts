@@ -1,6 +1,7 @@
 // The Items list (#112) on a development build: the empty state, the seeded list with its summaries, the foreign
-// row without a rate, the scheduled change, and archiving a row into the archived list. The rows come from the
-// development seeder through the real repository, so the list is read exactly as a user's would be.
+// row without a rate, the scheduled change, and archiving a row – by swipe and by long-press menu – into the
+// archived list, whose row counts what is behind it. The rows come from the development seeder through the real
+// repository, so the list is read exactly as a user's would be.
 import { test } from "@e2e-dev/mobile";
 import { expect } from "e2e";
 import {
@@ -24,6 +25,16 @@ async function seed(fixtures: Fixtures, button: string, result: RegExp) {
   await openDevScreen(fixtures, `items-seed?gen=${gen}`, "screen-dev-items-seed");
   await nativeButton(fixtures, button).tap();
   await expect(screen.getByTestId("dev-items-seed-result")).toHaveText(result);
+}
+
+/**
+ * The count the "Archived items" row shows, read from the row itself: the number is part of its accessible name
+ * ("Archived items, 2"), which is also how a screen reader reaches it.
+ */
+async function archivedCount({ screen }: Pick<Fixtures, "screen">): Promise<number> {
+  const text = (await screen.getByTestId("items-archived-count").textContent())?.trim() ?? "";
+  if (!/^\d+$/.test(text)) throw new Error(`the archived row shows no count: "${text}"`);
+  return Number(text);
 }
 
 /** The Items tab, over a cold start: what the seeder wrote is read back through the live read. */
@@ -88,7 +99,7 @@ test("lists the seeded items with their recurrence summaries", async (fixtures) 
   await device.setAppearance("light");
 });
 
-test("archives a row after its confirmation and lists it as archived", async (fixtures) => {
+test("archives a row after its confirmation, counts it and lists it as archived", async (fixtures) => {
   // Arrange
   const { app, screen } = fixtures;
   await seed(fixtures, "dev-items-seed-seed", /written/i);
@@ -96,6 +107,7 @@ test("archives a row after its confirmation and lists it as archived", async (fi
   const rent = screen.getByTestId(rowID("rent"));
   const archive = nativeButton(fixtures, `${rowID("rent")}-archive`);
   await swipeRowLeft(screen, rent, "items-list");
+  const listed = await archivedCount(fixtures);
 
   // Act
   const { alert, confirm } = appAlert(
@@ -108,10 +120,17 @@ test("archives a row after its confirmation and lists it as archived", async (fi
   await settle();
   await app.screenshot("items-archive-dialog");
   await confirm.tap();
+  // On Android the finished archive is confirmed by a Snackbar; on iOS the same notice is announced.
+  await app.screenshot("items-archived-notice");
 
   // Assert: the live read drops the row, and nothing else goes with it
   await expect(rent).toHaveCount(0);
   await expect(screen.getByTestId(rowID("salary"))).toBeVisible();
+  // The "Archived items" row counts what is behind it, and the count grew by this one row (#63).
+  await expect(screen.getByTestId("items-open-archived")).toHaveAccessibleName(
+    new RegExp(`Archived items, ${listed + 1}$`),
+  );
+  expect(await archivedCount(fixtures)).toBe(listed + 1);
 
   // Act: the archived list
   await tapUntilVisible(
@@ -125,4 +144,33 @@ test("archives a row after its confirmation and lists it as archived", async (fi
   await expect(archived).toBeVisible();
   await expect(archived).toHaveAccessibleName(/Rent/);
   await app.screenshot("items-archived");
+});
+
+test("archives a row through the long-press menu", async (fixtures) => {
+  // Arrange: the same list, and a row that has not been archived yet.
+  const { app, screen } = fixtures;
+  await seed(fixtures, "dev-items-seed-seed", /written/i);
+  await openItemsTab(fixtures);
+  const internet = screen.getByTestId(rowID("internet"));
+  await expect(internet).toBeVisible();
+
+  // Act: a long press opens the row's actions in a menu, as the swipe does (#63: on Android this is the
+  // discoverable path).
+  await internet.longPress({ duration: 900 });
+  const archive = nativeButton(fixtures, `${rowID("internet")}-menu-archive`);
+  await expect(archive).toBeVisible();
+  await settle();
+  await app.screenshot("items-row-menu");
+  const { alert, confirm } = appAlert(
+    fixtures,
+    "item-archive-dialog",
+    "Archive “Internet”?",
+    "Archive",
+  );
+  await tapUntilVisible(archive, alert);
+  await confirm.tap();
+
+  // Assert: the same archive as the swipe, and the row is gone from the list
+  await expect(internet).toHaveCount(0);
+  await expect(screen.getByTestId(rowID("rent"))).toHaveCount(0);
 });

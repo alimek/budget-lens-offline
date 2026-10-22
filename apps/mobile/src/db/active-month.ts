@@ -13,7 +13,26 @@ export function localCalendarMonth(now: Date): YearMonth {
   return toYearMonth(`${year}-${month}`);
 }
 
-/** The month to anchor a screen to: the stored active month, or the calendar month while no month is open. */
-export function resolveActiveMonth(stored: YearMonth | undefined, now: Date): YearMonth {
-  return stored ?? localCalendarMonth(now);
+/**
+ * The read of the stored active month, as the live read reports it: `loading` until it has run, and `error` when
+ * it failed. `value` is the `months` row with `status = 'active'`, absent when the table has none.
+ */
+export interface MonthRead {
+  readonly status: "loading" | "ready" | "error";
+  readonly value: YearMonth | undefined;
+}
+
+/**
+ * The month to anchor a screen to, or `undefined` when there is no month to anchor to yet.
+ *
+ * Only a *ready* read with no active row falls back to the calendar month: that is the documented state before
+ * onboarding (#111) opens the first month. A read that is still pending says nothing about the table, and a
+ * failed one is a problem the screen has to show, so neither invents a month (#38: the active month comes from
+ * the `months` table, never from the clock).
+ */
+export function resolveActiveMonth(read: MonthRead, now: Date): YearMonth | undefined {
+  if (read.status !== "ready") {
+    return undefined;
+  }
+  return read.value ?? localCalendarMonth(now);
 }

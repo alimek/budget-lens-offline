@@ -1,5 +1,6 @@
 import {
   Button,
+  ContextMenu,
   Host,
   HStack,
   Image,
@@ -95,9 +96,17 @@ export function ListSection({ title, testID, footer, children }: ListSectionProp
 
 /**
  * A plain list row that opens a pushed screen: label, spacer, `chevron.right`. One VoiceOver element named by
- * `label`; its test ID and press handler are the row's own.
+ * `label`, or by `accessibilityLabel` when the row gives one; its test ID and press handler are the row's own.
+ * An optional muted `detail` sits before the chevron, which is where the "Archived items" row shows its count.
  */
-export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
+export function NavigationRow({
+  label,
+  detail,
+  detailTestId,
+  accessibilityLabel: name,
+  onPress,
+  testID,
+}: NavigationRowProps) {
   const theme = useThemeColors();
   return (
     <HStack
@@ -109,13 +118,24 @@ export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
         contentShape(shapes.rectangle()),
         onTapGesture(onPress),
         accessibilityElement("combine"),
-        accessibilityLabel(label),
+        accessibilityLabel(name ?? label),
         accessibilityIdentifier(testID),
         accessibilityAddTraits(["isButton"]),
       ]}
     >
       <Text modifiers={[foregroundStyle(theme.foreground)]}>{label}</Text>
       <Spacer />
+      {detail === undefined ? null : (
+        <Text
+          modifiers={[
+            font({ textStyle: "footnote" }),
+            foregroundStyle(theme["muted-foreground"]),
+            accessibilityIdentifier(detailTestId ?? ""),
+          ]}
+        >
+          {detail}
+        </Text>
+      )}
       <Image systemName="chevron.right" size={13} color={theme["muted-foreground"]} />
     </HStack>
   );
@@ -126,26 +146,50 @@ export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
  *
  * With a status (the default) the row also carries the paid button (`checkmark.circle.fill` / `circle`, `primary`)
  * named "Paid: <title>", and that button carries the test ID. With `showStatus={false}` the row has no control of
- * its own and becomes one VoiceOver element named by `accessibilityLabel`, identified by the test ID. `actions`
- * become SwiftUI trailing swipe actions (`<testID>-<key>`) either way, which VoiceOver also offers as row actions.
+ * its own and becomes one VoiceOver element named by `accessibilityLabel`, identified by the test ID.
+ *
+ * `actions` are offered twice over, from the same list: as SwiftUI trailing swipe actions (`<testID>-<key>`), which
+ * VoiceOver also offers as row actions, and in a `ContextMenu` that a long press opens (`<testID>-menu-<key>`).
+ * A full swipe performs nothing: an action that asks for confirmation is chosen on purpose (#63).
  */
 export function TransactionRow({ actions, onAction, ...row }: TransactionRowProps) {
+  const { t } = useTranslation();
   if (!actions?.length) return <RowContent {...row} />;
+  const named = (action: MenuAction<string>) =>
+    t("transaction.actionLabel", { action: action.label, title: row.title });
   return (
-    <SwipeActions>
-      <RowContent {...row} />
-      <SwipeActions.Actions edge="trailing">
+    <ContextMenu>
+      <ContextMenu.Trigger>
+        <SwipeActions>
+          <RowContent {...row} />
+          <SwipeActions.Actions edge="trailing" allowsFullSwipe={false}>
+            {actions.map((action) => (
+              <SwipeButton
+                key={action.key}
+                action={action}
+                title={row.title}
+                testID={`${row.testID}-${action.key}`}
+                onPress={() => onAction?.(action.key)}
+              />
+            ))}
+          </SwipeActions.Actions>
+        </SwipeActions>
+      </ContextMenu.Trigger>
+      <ContextMenu.Items>
         {actions.map((action) => (
-          <SwipeButton
+          <Button
             key={action.key}
-            action={action}
-            title={row.title}
-            testID={`${row.testID}-${action.key}`}
+            label={action.label}
+            role={action.destructive ? "destructive" : "default"}
             onPress={() => onAction?.(action.key)}
+            modifiers={[
+              accessibilityIdentifier(`${row.testID}-menu-${action.key}`),
+              accessibilityLabel(named(action)),
+            ]}
           />
         ))}
-      </SwipeActions.Actions>
-    </SwipeActions>
+      </ContextMenu.Items>
+    </ContextMenu>
   );
 }
 

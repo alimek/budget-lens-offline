@@ -20,7 +20,9 @@
     "title": "Archive “{{name}}”?",
     "message": "It disappears from upcoming months. Closed months keep it. You can find it later in Archived items.",
     "confirm": "Archive",
-    "done": "Archived"
+    "done": "Archived",
+    "failedTitle": "Couldn’t archive the item",
+    "failedMessage": "Nothing changed. The item is still in your list."
   },
   "summary": {
     "separator": " · ",
@@ -45,6 +47,7 @@
     "rowChange": "{{name}}, {{kind}}, {{amount}}, {{summary}}, {{change}}",
     "amountNoRate": "{{amount}}, {{note}}",
     "kindExpense": "expense",
-    "kindIncome": "income"
+    "kindIncome": "income",
+    "archived": "Archived items, {{total}}"
   }
 }

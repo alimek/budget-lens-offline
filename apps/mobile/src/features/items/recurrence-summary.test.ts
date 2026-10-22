@@ -85,16 +85,27 @@ describe("summarizeVersion", () => {
     expect(lines).toEqual(["Every 3 months from Feb 2027", "Co 3 miesiące od lutego 2027"]);
   });
 
-  it("names the month of a one-time item, also after it has passed", () => {
+  it("names the month of a one-time item that has not passed", () => {
     // Arrange
-    const oneTime = version({ kind: "one-time", month: month("2026-11") });
+    const upcoming = version({ kind: "one-time", month: month("2026-11") });
+    const current = version({ kind: "one-time", month: month("2026-10") });
+
+    // Act
+    const lines = [summaryLine(upcoming, "en"), summaryLine(current, "pl")];
+
+    // Assert: the second one is the active month itself, which has not passed.
+    expect(lines).toEqual(["One-time · Nov 2026", "Jednorazowo · paź 2026"]);
+  });
+
+  it("ends a one-time item whose month is behind the active month", () => {
+    // Arrange: decision 6 of #63 – an item with no occurrence left stays listed as ended.
     const past = version({ kind: "one-time", month: month("2026-05") });
 
     // Act
-    const lines = [summaryLine(oneTime, "en"), summaryLine(past, "pl")];
+    const lines = [summaryLine(past, "en"), summaryLine(past, "pl")];
 
     // Assert
-    expect(lines).toEqual(["One-time · Nov 2026", "Jednorazowo · maj 2026"]);
+    expect(lines).toEqual(["Ended May 2026", "Zakończona w maju 2026"]);
   });
 
   it("says until when a recurring item still runs", () => {

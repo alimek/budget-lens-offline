@@ -6,12 +6,30 @@ import { MONTH_TABLES, readActiveMonth } from "@budget-lens/db";
 import { resolveActiveMonth } from "./active-month";
 import { useLiveRead } from "./use-live-read";
 
+/** The month screens anchor to, with the state of the read it comes from. */
+export interface ActiveMonth {
+  /**
+   * The active month, or `undefined` while the `months` read is pending or failed: until it lands the app has no
+   * month to anchor to, and a screen shows its loading or error state instead of rows anchored to a made-up month.
+   */
+  readonly month: YearMonth | undefined;
+  readonly status: "loading" | "ready" | "error";
+  /** Runs the read again – the retry of the error state. */
+  readonly reload: () => void;
+}
+
 /**
- * The month the app treats as active. `clock` is injected like `AppStoreProvider`'s; while `months` has no active
- * row – before onboarding (#111) exists, and while the first read is still pending – it is the calendar month of
- * that clock, never a value the repository invented.
+ * The month the app treats as active. `clock` is injected like `AppStoreProvider`'s; when the `months` table has
+ * no active row – the state before onboarding (#111) exists – it is the calendar month of that clock.
+ *
+ * That fallback is display-only: writes must plan against the stored active month, so #82 must not call
+ * `planRuleEdit` with a month derived from the clock.
  */
-export function useActiveMonth(clock: () => Date = () => new Date()): YearMonth {
+export function useActiveMonth(clock: () => Date = () => new Date()): ActiveMonth {
   const stored = useLiveRead(MONTH_TABLES, readActiveMonth);
-  return resolveActiveMonth(stored.status === "ready" ? stored.value : undefined, clock());
+  return {
+    month: resolveActiveMonth(stored, clock()),
+    status: stored.status,
+    reload: stored.reload,
+  };
 }

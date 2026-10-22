@@ -97,10 +97,11 @@ const dayPart = (dayOfMonth: number): SummaryPart => ({
  * The summary of one rule version as it looks from `activeMonth`: its rhythm, the day it falls on, the month it
  * starts from when that is still ahead, and the month it runs until.
  *
- * A recurring schedule whose last occurrence is behind the active month says only that it ended (#63: ended
- * items stay listed until they are archived). A one-time item keeps its month instead, because that month is
- * already the whole summary. A schedule core rejects – an archived item whose versions are history and were
- * never validated (#81) – has no summary rather than a wrong one.
+ * A schedule whose last occurrence is behind the active month says only that it ended, naming that month (#63,
+ * decision 6: ended items stay listed with the "Ended" summary until they are archived). A one-time item whose
+ * month is now or still ahead names its month, because that month is the whole summary. A schedule core rejects –
+ * an archived item whose versions are history and were never validated (#81) – has no summary rather than a
+ * wrong one.
  */
 export function summarizeVersion(
   version: RuleVersion,
@@ -111,7 +112,7 @@ export function summarizeVersion(
     return [];
   }
   const last = lastOccurrence(schedule);
-  if (schedule.kind === "recurring" && last !== undefined && monthsBetween(activeMonth, last) < 0) {
+  if (last !== undefined && monthsBetween(activeMonth, last) < 0) {
     return [{ key: "summary.ended", options: { month: last }, gap: "separator" }];
   }
   const parts: SummaryPart[] = [cadence(schedule)];

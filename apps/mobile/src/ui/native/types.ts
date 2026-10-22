@@ -95,12 +95,18 @@ export interface ListSectionProps {
   children: ReactNode;
 }
 
-/** A row that opens a pushed screen: label on the left, chevron on the right ("Archived items", #112). */
+/** A row that opens a pushed screen: label on the left, an optional count and a chevron on the right (#112). */
 export interface NavigationRowProps {
-  /** Visible label and accessible name of the row. */
+  /** Visible label of the row; the accessible name is `accessibilityLabel` when one is given. */
   label: string;
+  /** Muted count before the chevron, e.g. how many items are archived. Not part of the name unless asked for. */
+  detail?: string | undefined;
+  /** Accessible name of the row; `label` by default. Pass the label with its count to keep them read together. */
+  accessibilityLabel?: string | undefined;
   onPress: () => void;
   testID: string;
+  /** Test ID of the `detail` itself, for a test that reads the count back. */
+  detailTestId?: string | undefined;
 }
 
 /**
@@ -123,8 +129,13 @@ interface RowContentProps {
   /** Test ID of the row. */
   testID: string;
   /**
-   * Row actions revealed by swiping the row to the left (SwiftUI swipe actions on iOS, a gesture handler swipeable
-   * on Android). The first action is the trailing-most; a full swipe on iOS performs it.
+   * Row actions: revealed by swiping the row to the left (SwiftUI swipe actions on iOS, a gesture handler
+   * swipeable on Android) and, on a long press, by a menu (SwiftUI `ContextMenu` on iOS, an M3 `DropdownMenu`
+   * anchored to the row on Android). The same list drives both, so a row never offers an action twice over.
+   * The first action is the trailing-most; on iOS a full swipe does not perform one, because an action that
+   * confirms first must be tapped on purpose (#63).
+   *
+   * The swipe buttons carry `<testID>-<key>` and the menu items `<testID>-menu-<key>`.
    */
   actions?: readonly MenuAction<string>[] | undefined;
   onAction?: ((key: string) => void) | undefined;
@@ -171,6 +182,20 @@ export interface ContextMenuProps<K extends string> {
   testID: string;
 }
 
+/**
+ * A short confirmation of something that already happened ("Archived", #63). The component shows `message` once
+ * and calls `onShown` as soon as it has taken it over, so the owner clears it there; it renders nothing itself on
+ * iOS, where the same notice is an accessibility announcement.
+ */
+export interface SnackbarProps {
+  /** The message to show, or none while nothing is pending. */
+  message: string | undefined;
+  /** Called once the notice has been shown or announced: the place to forget the message. */
+  onShown: () => void;
+  /** Test ID of the notice, where the platform exposes one. */
+  testID: string;
+}
+
 export interface SheetProps {
   visible: boolean;
   /** Called when the sheet closes: swipe down, tap outside, back, or after `visible` turns false. */
@@ -188,7 +213,8 @@ export interface AlertProps {
   title: string;
   message?: string | undefined;
   confirmLabel: string;
-  cancelLabel: string;
+  /** Omit for a notice the user only acknowledges: one button, no cancel. */
+  cancelLabel?: string | undefined;
   /** Styles the confirm button as destructive (for example "Delete"). */
   destructive?: boolean;
   onConfirm: () => void;

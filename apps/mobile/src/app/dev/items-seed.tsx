@@ -17,6 +17,7 @@ import { randomUUID } from "expo-crypto";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { localCalendarMonth } from "@/db/active-month";
 import { useDatabase } from "@/db/database-provider";
 import { useActiveMonth } from "@/db/use-active-month";
 import { formatMonthName } from "@/i18n/format-month-name";
@@ -172,7 +173,10 @@ function versionsOf(spec: SeedSpec, month: YearMonth): RuleVersion[] {
 export default function DevItemsSeed() {
   const { t } = useTranslation();
   const db = useDatabase();
-  const month = useActiveMonth();
+  // Development-only, and it only ever writes rows anchored to roughly now, so the calendar month stands in
+  // while no month is open yet (the screen's own fallback is a display-only one; see `useActiveMonth`).
+  const { month: stored } = useActiveMonth();
+  const month = stored ?? localCalendarMonth(new Date());
   const { gen = "1" } = useLocalSearchParams<{ readonly gen?: string }>();
   const [result, setResult] = useState("");
 

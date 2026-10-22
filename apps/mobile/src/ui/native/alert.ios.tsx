@@ -4,7 +4,8 @@ import type { AlertProps } from "./types";
 
 /**
  * The iOS system alert (`UIAlertController`, the view SwiftUI's `alert` presents too): a cancel button and a confirm
- * button, `destructive` for actions such as "Delete". Shown when `visible` turns true. React Native's `Alert` is used
+ * button – the confirm button alone without `cancelLabel` – `destructive` for actions such as "Delete". Shown when
+ * `visible` turns true. React Native's `Alert` is used
  * because Expo UI's SwiftUI `Alert` is built around a visible `Alert.Trigger` and did not present from an invisible
  * anchor, while this wrapper is opened from anywhere (a swipe action, a button) and has no trigger of its own.
  */
@@ -37,7 +38,15 @@ export function AppAlert({
       props.title,
       props.message,
       [
-        { text: props.cancelLabel, style: "cancel", onPress: () => latest.current.onDismiss() },
+        ...(props.cancelLabel === undefined
+          ? []
+          : [
+              {
+                text: props.cancelLabel,
+                style: "cancel" as const,
+                onPress: () => latest.current.onDismiss(),
+              },
+            ]),
         {
           text: props.confirmLabel,
           style: props.destructive ? "destructive" : "default",

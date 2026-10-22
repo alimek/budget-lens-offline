@@ -3,9 +3,12 @@ import {
   Button,
   Checkbox,
   Column,
+  DropdownMenu,
+  DropdownMenuItem,
   Host,
   Icon,
   ListItem,
+  Row,
   Text,
 } from "@expo/ui/jetpack-compose";
 import {
@@ -17,7 +20,7 @@ import {
   semantics,
   testID as testIDModifier,
 } from "@expo/ui/jetpack-compose/modifiers";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, View } from "react-native";
 import Swipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -31,6 +34,8 @@ import type {
   ListSectionProps,
   MenuAction,
   NavigationRowProps,
+  PaidRowProps,
+  StatuslessRowProps,
   TransactionRowProps,
 } from "./types";
 
@@ -81,19 +86,28 @@ export function ListSection({ title, testID, footer, children }: ListSectionProp
 
 /**
  * A plain list row that opens a pushed screen: label, spacer, `chevron_right`. The row is one focusable element
- * named by `label`; the texts inside it are not focusable, and the chevron is decoration without a label of its
- * own. Compose is measured against the viewport (`useViewportSizeMeasurement`) because `matchContents` matches the
- * height only, and every child of a slot is a Compose view: putting a React Native view in a slot nests the two
- * interop trees, which leaves the row without a width and the icon unreported.
+ * named by `label`, or by `accessibilityLabel` when the row gives one; the texts inside it are not focusable, and
+ * the chevron is decoration without a label of its own. An optional muted `detail` sits before the chevron, which
+ * is where the "Archived items" row shows its count. Compose is measured against the viewport
+ * (`useViewportSizeMeasurement`) because `matchContents` matches the height only, and every child of a slot is a
+ * Compose view: putting a React Native view in a slot nests the two interop trees, which leaves the row without a
+ * width and the icon unreported.
  */
-export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
+export function NavigationRow({
+  label,
+  detail,
+  detailTestId,
+  accessibilityLabel: name,
+  onPress,
+  testID,
+}: NavigationRowProps) {
   const theme = useThemeColors();
   return (
     <Pressable
       testID={testID}
       accessible
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={name ?? label}
       onPress={onPress}
       android_ripple={{ color: theme["muted-foreground"], foreground: true }}
     >
@@ -110,7 +124,18 @@ export function NavigationRow({ label, onPress, testID }: NavigationRowProps) {
             <Text>{label}</Text>
           </ListItem.HeadlineContent>
           <ListItem.TrailingContent>
-            <Icon source={chevronIcon} tint={theme["muted-foreground"]} size={20} />
+            <Row verticalAlignment="center">
+              {detail === undefined ? null : (
+                <Text
+                  color={theme["muted-foreground"]}
+                  style={{ typography: "bodySmall" }}
+                  modifiers={[padding(0, 8, 0, 0), testIDModifier(detailTestId ?? "")]}
+                >
+                  {detail}
+                </Text>
+              )}
+              <Icon source={chevronIcon} tint={theme["muted-foreground"]} size={20} />
+            </Row>
           </ListItem.TrailingContent>
         </ListItem>
       </Host>
@@ -156,7 +181,7 @@ export function TransactionRow(props: TransactionRowProps) {
   );
 }
 
-/** The amount of a row as the list shows it: text and colour role, plus an optional note underneath. */
+/** The amount of a row as the list shows it: text and colour role, plus a muted note underneath. */
 function AmountColumn({
   amount,
   note,
@@ -168,7 +193,11 @@ function AmountColumn({
   return (
     <Column horizontalAlignment="end">
       <Text color={theme[toneColorToken(amount.tone)]}>{amount.text}</Text>
-      {note === undefined ? null : <Text>{note}</Text>}
+      {note === undefined ? null : (
+        <Text color={theme["muted-foreground"]} style={{ typography: "bodySmall" }}>
+          {note}
+        </Text>
+      )}
     </Column>
   );
 }
@@ -192,16 +221,38 @@ function SupportingTexts({
   );
 }
 
-/** The Material 3 `ListItem` of a row: optional paid checkbox, headline, supporting texts and amount. */
-function RowItem(props: TransactionRowProps) {
-  const theme = useThemeColors();
-  const { t } = useTranslation();
-  const amount = formatAmount(props.amount, {
-    lang: useLanguage(),
+/** The signed amount of a row, in its own currency and the UI language. */
+function useRowAmount(props: TransactionRowProps): FormattedAmount {
+  const lang = useLanguage();
+  return formatAmount(props.amount, {
+    lang,
     currency: props.currency,
     ...(props.sign === undefined ? {} : { sign: props.sign }),
   });
-  const content = (
+}
+
+/**
+ * The Material 3 `ListItem` of a row: the paid checkbox where the row has one, the headline, the supporting
+ * texts and the amount. Compose only – touch belongs to the React Native wrapper around it.
+ */
+function RowContent({
+  title,
+  meta,
+  badge,
+  amount,
+  amountNote,
+  checkbox,
+}: {
+  readonly title: string;
+  readonly meta: string | undefined;
+  readonly badge: string | undefined;
+  readonly amount: FormattedAmount;
+  readonly amountNote: string | undefined;
+  /** The paid checkbox of a month-view row; an item row (#112) has none and passes `undefined`. */
+  readonly checkbox: ReactNode;
+}) {
+  const theme = useThemeColors();
+  return (
     <ListItem
       colors={{
         containerColor: theme.background,
@@ -210,46 +261,134 @@ function RowItem(props: TransactionRowProps) {
       }}
       modifiers={[fillMaxWidth()]}
     >
-      {props.showStatus === false ? null : (
-        <ListItem.LeadingContent>
-          <Checkbox
-            value={props.paid}
-            colors={{
-              checkedColor: theme.primary,
-              checkmarkColor: theme["primary-foreground"],
-            }}
-          />
-        </ListItem.LeadingContent>
+      {checkbox === undefined ? null : (
+        <ListItem.LeadingContent>{checkbox}</ListItem.LeadingContent>
       )}
       <ListItem.HeadlineContent>
-        <Text>{props.title}</Text>
+        <Text>{title}</Text>
       </ListItem.HeadlineContent>
-      <SupportingTexts meta={props.meta} badge={props.badge} />
+      <SupportingTexts meta={meta} badge={badge} />
       <ListItem.TrailingContent>
-        <AmountColumn amount={amount} note={props.amountNote} />
+        <AmountColumn amount={amount} note={amountNote} />
       </ListItem.TrailingContent>
     </ListItem>
   );
-  // Keep touch handling outside Compose: its toggleable press indication survives swipe cancellation.
-  const composed = (
+}
+
+/**
+ * The actions of a row in an M3 `DropdownMenu` anchored to it (#63: on Android the long press is the
+ * discoverable path to them). Touch stays with React Native, so the Compose trigger never sees a press of its
+ * own and `open` is the only thing that opens the menu.
+ */
+function RowMenu({
+  actions,
+  testID,
+  open,
+  onOpenChange,
+  onAction,
+  children,
+}: {
+  readonly actions: readonly MenuAction<string>[];
+  readonly testID: string;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onAction: ((key: string) => void) | undefined;
+  readonly children: ReactNode;
+}) {
+  const theme = useThemeColors();
+  return (
+    <DropdownMenu
+      expanded={open}
+      onDismissRequest={() => onOpenChange(false)}
+      color={theme.popover}
+    >
+      <DropdownMenu.Trigger>{children}</DropdownMenu.Trigger>
+      <DropdownMenu.Items>
+        {actions.map((action) => (
+          <DropdownMenuItem
+            key={action.key}
+            elementColors={{
+              textColor: action.destructive ? theme.destructive : theme["popover-foreground"],
+            }}
+            modifiers={[testIDModifier(`${testID}-menu-${action.key}`)]}
+            onClick={() => {
+              onOpenChange(false);
+              onAction?.(action.key);
+            }}
+          >
+            <DropdownMenuItem.Text>
+              <Text>{action.label}</Text>
+            </DropdownMenuItem.Text>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenu.Items>
+    </DropdownMenu>
+  );
+}
+
+/** The row and its Compose host: React Native owns the touch, Compose the pixels (`RowItem`). */
+function RowSurface({ children }: { readonly children: ReactNode }) {
+  return (
+    // Keep touch handling outside Compose: its toggleable press indication survives swipe cancellation.
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants">
       <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
-        {content}
+        {children}
       </Host>
     </View>
   );
-  if (props.showStatus === false) {
-    return (
-      <Pressable
-        testID={props.testID}
-        accessible
-        accessibilityLabel={props.accessibilityLabel}
-        android_ripple={{ color: theme["muted-foreground"], foreground: true }}
-      >
-        {composed}
-      </Pressable>
-    );
-  }
+}
+
+/**
+ * The row without a paid status (#112): one accessibility element named by `accessibilityLabel`, and a long
+ * press that opens the row's actions in a `DropdownMenu` next to the swipe.
+ */
+function StatuslessRow(props: StatuslessRowProps) {
+  const theme = useThemeColors();
+  const [open, setOpen] = useState(false);
+  const amount = useRowAmount(props);
+  const actions = props.actions ?? [];
+  const content = (
+    <RowContent
+      title={props.title}
+      meta={props.meta}
+      badge={props.badge}
+      amount={amount}
+      amountNote={props.amountNote}
+      checkbox={undefined}
+    />
+  );
+  return (
+    <Pressable
+      testID={props.testID}
+      accessible
+      accessibilityLabel={props.accessibilityLabel}
+      onLongPress={actions.length === 0 ? undefined : () => setOpen(true)}
+      android_ripple={{ color: theme["muted-foreground"], foreground: true }}
+    >
+      <RowSurface>
+        {actions.length === 0 ? (
+          content
+        ) : (
+          <RowMenu
+            actions={actions}
+            testID={props.testID}
+            open={open}
+            onOpenChange={setOpen}
+            onAction={props.onAction}
+          >
+            {content}
+          </RowMenu>
+        )}
+      </RowSurface>
+    </Pressable>
+  );
+}
+
+/** The row with the paid status: the whole row is the paid checkbox, and the checkbox shows in the row. */
+function PaidRow(props: PaidRowProps) {
+  const theme = useThemeColors();
+  const { t } = useTranslation();
+  const amount = useRowAmount(props);
   return (
     <Pressable
       testID={props.testID}
@@ -261,9 +400,31 @@ function RowItem(props: TransactionRowProps) {
       onPress={() => props.onPaidChange(!props.paid)}
       android_ripple={{ color: theme["muted-foreground"], foreground: true }}
     >
-      {composed}
+      <RowSurface>
+        <RowContent
+          title={props.title}
+          meta={props.meta}
+          badge={props.badge}
+          amount={amount}
+          amountNote={props.amountNote}
+          checkbox={
+            <Checkbox
+              value={props.paid}
+              colors={{
+                checkedColor: theme.primary,
+                checkmarkColor: theme["primary-foreground"],
+              }}
+            />
+          }
+        />
+      </RowSurface>
     </Pressable>
   );
+}
+
+/** The Material 3 row of a list, with or without the paid status. */
+function RowItem(props: TransactionRowProps) {
+  return props.showStatus === false ? <StatuslessRow {...props} /> : <PaidRow {...props} />;
 }
 
 /** The tinted badge of the #58 spec: `primary` text on 12 % `primary`, `labelSmall`, 6 dp corners. */

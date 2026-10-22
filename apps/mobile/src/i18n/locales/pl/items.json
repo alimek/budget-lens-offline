@@ -20,7 +20,9 @@
     "title": "Zarchiwizować „{{name}}”?",
     "message": "Zniknie z nadchodzących miesięcy. Zamknięte miesiące ją zachowają. Znajdziesz ją później w zarchiwizowanych pozycjach.",
     "confirm": "Archiwizuj",
-    "done": "Zarchiwizowano"
+    "done": "Zarchiwizowano",
+    "failedTitle": "Nie udało się zarchiwizować pozycji",
+    "failedMessage": "Nic się nie zmieniło. Pozycja wciąż jest na liście."
   },
   "summary": {
     "separator": " · ",
@@ -44,6 +46,7 @@
     "rowChange": "{{name}}, {{kind}}, {{amount}}, {{summary}}, {{change}}",
     "amountNoRate": "{{amount}}, {{note}}",
     "kindExpense": "wydatek",
-    "kindIncome": "przychód"
+    "kindIncome": "przychód",
+    "archived": "Zarchiwizowane pozycje, {{total}}"
   }
 }
