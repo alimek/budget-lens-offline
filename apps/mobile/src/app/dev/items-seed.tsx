@@ -19,9 +19,25 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDatabase } from "@/db/database-provider";
 import { useActiveMonth } from "@/db/use-active-month";
+import { formatMonthName } from "@/i18n/format-month-name";
 import { Screen } from "@/ui/components/screen";
 import { Text } from "@/ui/components/text";
 import { PrimaryButton, SecondaryButton } from "@/ui/native/button";
+
+/**
+ * The Polish month cases, in the order the screen shows them (#63, decision 5). The nominative is the one form
+ * that comes from native `Intl` rather than from the table, and Hermes has its own `Intl` build: an e2e test
+ * reads this line back on both platforms, so a platform that declines the nominative ("lutego 2027" instead of
+ * "luty 2027") fails there instead of shipping the wrong month.
+ */
+const POLISH_MONTH_CASES = ["nominative", "genitive", "instrumental", "locative"] as const;
+
+/** February, the odd month out: *luty*, but *lutego* and twice *lutym*. */
+const PROBE_MONTH = "2027-02";
+
+const polishMonthCases = POLISH_MONTH_CASES.map((name) =>
+  formatMonthName(PROBE_MONTH, "pl", { case: name }),
+).join(" · ");
 
 /** Every seeded row id starts with this, which is also exactly what "clear" archives. */
 const SEED_PREFIX = "dev-seed-";
@@ -196,6 +212,8 @@ export default function DevItemsSeed() {
   return (
     <Screen testID="screen-dev-items-seed">
       <Text testID="dev-items-seed-result">{result}</Text>
+      <Text>{t("dev.itemsSeed.monthCases")}</Text>
+      <Text testID="dev-month-cases">{polishMonthCases}</Text>
       <PrimaryButton testID="dev-items-seed-seed" label={t("dev.itemsSeed.seed")} onPress={seed} />
       <SecondaryButton
         testID="dev-items-seed-clear"

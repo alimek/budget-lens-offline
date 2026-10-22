@@ -54,6 +54,11 @@ test("lists the seeded items with their recurrence summaries", async (fixtures) 
   // Arrange
   const { app, device, screen } = fixtures;
   await seed(fixtures, "dev-items-seed-seed", /written/i);
+  // The seeder screen also shows what this platform's Hermes makes of a month name (#63, decision 5): only the
+  // nominative comes from native `Intl`, and Hermes ships its own `Intl` build. February is the odd one out.
+  await expect(screen.getByTestId("dev-month-cases")).toHaveText(
+    "luty 2027 · lutego 2027 · lutym 2027 · lutym 2027",
+  );
   await openItemsTab(fixtures);
 
   // Assert

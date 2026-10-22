@@ -103,6 +103,7 @@
       "failed": "Pamięć zabezpieczona odmówiła odpowiedzi."
     },
     "itemsSeed": {
+      "monthCases": "Przypadki miesiąca (pol.)",
       "title": "Przykładowe pozycje",
       "seed": "Zapisz przykładowe pozycje",
       "clear": "Zarchiwizuj przykładowe pozycje",
