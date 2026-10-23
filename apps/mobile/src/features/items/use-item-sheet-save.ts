@@ -1,7 +1,8 @@
 // The save of the item sheet (#82): what a press of "Add" or "Save" writes, and what it refuses to write. The
 // decisions are the small pure functions here and in `item-sheet-model.ts`; the repositories do the rest. An edit
-// always goes through `applyRulePlan`, which checks everything and writes nothing when it refuses, so versions
-// and one-off overrides can never diverge (#83). A name is not versioned, so it is its own write afterwards.
+// that changes the rule goes through `applyRulePlan`, which checks everything and writes nothing when it refuses,
+// so versions and one-off overrides can never diverge (#83); an edit that leaves the rule alone writes the name
+// only. A name is not versioned, so it is always its own write afterwards.
 import type { ItemType, OccurrenceOverride, RuleEditPlan, YearMonth } from "@budget-lens/core";
 import {
   applyRulePlan,
@@ -147,9 +148,14 @@ function writePlan(
   return writeName(db, item, form);
 }
 
-/** The item's name is not versioned, so a changed one is its own write next to the plan (#63). */
+/**
+ * The item's name is not versioned, so a changed one is its own write next to the plan (#63). It sits outside
+ * the plan's transaction, so its own refusal is reported like any other failed save: a name that did not land is
+ * not a saved edit, even when the rule did (#248 round 1).
+ */
 function writeName(db: BudgetDatabase, item: StoredItem, form: ItemFormState): SaveOutcome {
   const name = form.name.trim();
-  if (name !== "" && name !== item.name) updateItem(db, item.id, { name }, deps);
+  if (name === "" || name === item.name) return { kind: "saved" };
+  if (updateItem(db, item.id, { name }, deps).ok === false) return saveFailed;
   return { kind: "saved" };
 }
