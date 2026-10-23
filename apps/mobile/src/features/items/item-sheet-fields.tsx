@@ -318,15 +318,15 @@ function Preview({ fields }: { readonly fields: SheetFields }) {
   const foreign = fields.form.currency !== fields.baseCurrency;
   if (preview === undefined) return null;
   return (
-    <View testID="item-preview" className="gap-1">
-      <Text variant="footnote" className="text-muted-foreground">
+    <View className="gap-1" testID="item-preview">
+      <Text testID="item-preview-summary" variant="footnote" className="text-muted-foreground">
         {preview.summary}
       </Text>
-      <Text variant="footnote" className="text-muted-foreground">
+      <Text testID="item-preview-next" variant="footnote" className="text-muted-foreground">
         {preview.next}
       </Text>
       {foreign ? (
-        <Text variant="footnote" className="text-muted-foreground">
+        <Text testID="item-preview-no-rate" variant="footnote" className="text-muted-foreground">
           {preview.noRate}
         </Text>
       ) : null}

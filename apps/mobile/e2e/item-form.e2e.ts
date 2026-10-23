@@ -356,8 +356,8 @@ test(
     await typeInto(fixtures, "item-amount", "1234.56");
 
     // Assert: the plain-language preview of #63, resolved by the engine the forecast uses.
-    await expect(screen.getByTestId("item-preview")).toContainText(/Monthly/);
-    await expect(screen.getByTestId("item-preview")).toContainText(/Next: /);
+    await expect(screen.getByTestId("item-preview-summary")).toHaveText(/Monthly/);
+    await expect(screen.getByTestId("item-preview-next")).toContainText(/Next: /);
 
     // Act
     await pressSheet(fixtures, "item-add", gone(screen.getByTestId(SHEET)));
