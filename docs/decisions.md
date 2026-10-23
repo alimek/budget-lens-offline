@@ -4,21 +4,35 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
-## 2026-10-23 14:20 (Europe/Warsaw): the new UI is built on React Native Reusables in the "Midnight Premium" style
+## 2026-10-23 14:26 (Europe/Warsaw): components are React Native Reusables, restyled to our own look and feel
 
-- **Question:** which of the three style directions of #245 (Aurora Glass, Bold Bento, Midnight Premium) becomes the
-  app's look, after a polished second round of Midnight Premium (asked 2026-10-23).
-- **Answer:** "C is the best, but I'd polish it more" (relayed from the owner's chat, 2026-10-23); after the polished
-  round: "C v2 becomes the new Budget Lens design system" (relayed from the owner's chat, 2026-10-23 14:20); then "the
-  new UI will be built in code on React Native Reusables" (relayed from the owner's chat, 2026-10-23 14:26)
-- **Meaning:** Midnight Premium replaces the previous Indigo visual style of #58: deep ink surfaces in dark mode,
-  soft layered surfaces in light mode, an indigo accent with a restrained glow, hairline borders, tabular amounts and a
-  frosted floating tab bar. The new UI is built on React Native Reusables (shadcn/ui for React Native), restyled to
-  these tokens; platform-native pickers and sheets may still be used where RNR has no equivalent. The tokens use the
-  shadcn names as plain CSS variables, so they work with NativeWind or Uniwind; the styling engine is for the
-  developer and the team lead to decide. Tokens and the component mapping are in
-  [design/tokens.md](design/tokens.md); the components are on the
-  [Figma Components page](https://www.figma.com/design/Yj9oxWdAq44BPKqTV9CRWF?node-id=21-2).
+- **Question:** whether the new components are built on React Native Reusables (RNR) restyled to the Budget Lens look
+  (A) or as a custom component library from scratch (B) (asked 2026-10-23 14:26).
+- **Answer:** "powiem A, natomiast  te komponenty trzeba ew przerobic na nasz look and feel"
+  (confirmed directly by the owner in chat, 2026-10-23 14:26)
+- **Meaning:** the new UI is built on React Native Reusables (shadcn/ui for React Native), and its components are
+  restyled to our own look and feel, i.e. the Midnight Premium tokens; they are not used in their stock shadcn look.
+  Tokens and the component mapping are in [design/tokens.md](design/tokens.md).
+- **Issues:** [#245](https://github.com/alimek/budget-lens-offline/issues/245)
+
+## 2026-10-23 14:20 (Europe/Warsaw): Midnight Premium (C v2) stays the only style; screens are designed one by one
+
+- **Question:** whether the polished second round of direction C (C v2) is kept as the style and the other directions
+  are deleted (asked 2026-10-23 14:20).
+- **Answer:** "A, tak, zostajemy, usun poprzednie strony zeby zostac przy 1 stylu, i zacznijmy projektowac strony od poczatku, ale screen po screenie, zebym mogl dac feedback"
+  (confirmed directly by the owner in chat, 2026-10-23 14:20)
+- **Meaning:** C v2 (Midnight Premium) is kept as the single style; the pages of the other directions are deleted so
+  only one style remains. The screens are then designed from the beginning, one screen at a time, so the owner can
+  give feedback on each screen before the next one.
+- **Issues:** [#245](https://github.com/alimek/budget-lens-offline/issues/245)
+
+## 2026-10-23 14:07 (Europe/Warsaw): the style is direction C, Midnight Premium, polished further
+
+- **Question:** which of the three style directions of #245 (A Aurora Glass, B Bold Bento, C Midnight Premium) becomes
+  the app's look (asked 2026-10-23 14:07).
+- **Answer:** "C jest nalepszy, ale dopiesciłbym to bardziej" (confirmed directly by the owner in chat, 2026-10-23 14:07)
+- **Meaning:** the style is direction C, **Midnight Premium**, and it gets a further polishing round (C v2, confirmed
+  at 14:20). It replaces the previous Indigo visual style of #58.
 - **Issues:** [#245](https://github.com/alimek/budget-lens-offline/issues/245)
 
 ## 2026-10-22 23:33 (Europe/Warsaw): no migration from the encrypted database; those installs start empty

@@ -3,6 +3,8 @@
 The component layer of `apps/mobile`: shared tokens and components, so every screen is built from the same
 building blocks. Source of truth for the visual decisions: the approved
 [#58 spec](https://github.com/alimek/budget-lens-offline/issues/58#issuecomment-6254174334) (direction C, Indigo).
+The new UI follows the Midnight Premium tokens of #245 instead: see [design/tokens.md](design/tokens.md); this page
+describes the current Indigo implementation until then.
 
 Order of preference for every UI element: a native Expo UI control (`@expo/ui/swift-ui` on iOS,
 `@expo/ui/jetpack-compose` on Android, Expo Router `NativeTabs`), then a React Native Reusables (RNR) component,
