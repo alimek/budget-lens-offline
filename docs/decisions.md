@@ -4,6 +4,24 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-23 15:47 (Europe/Warsaw): dark mode depth without indigo glow; the primary button keeps a small glow
+
+- **Input:** "tak, ta poswiata jest slaba na dark mode, na light tego az tak nie widac"
+  (feedback from the owner in chat, 2026-10-23 15:29)
+- **Input:** "zwlaszcza pod kartami" (feedback from the owner in chat, 2026-10-23 15:29)
+- **Question:** whether dark mode drops the indigo glow under cards, lists and sheets and gets its depth from a
+  lighter surface step and a thin border instead, keeping only a small glow under the primary button (asked
+  2026-10-23, after the feedback above).
+- **Answer:** "A: poświata pod głównym przyciskiem zostaje, poprawka OK"
+  (confirmed directly by the owner, 2026-10-23 15:47)
+- **Meaning:** in dark mode, cards, lists and sheets have no glow; depth comes from the surface steps (`card`
+  `#121428`, `popover` `#181B31` on `background` `#07080F`), the 1 pt `border` at 8 % white and small neutral
+  shadows. The primary button keeps a smaller glow (`glow-primary` at 28 %). The background glow (top of the
+  screen and summary card) is toned down. Only existing tokens are used; light mode is unchanged. Values are in
+  [design/tokens.md](design/tokens.md).
+- **Issues:** [#245](https://github.com/alimek/budget-lens-offline/issues/245),
+  [#246](https://github.com/alimek/budget-lens-offline/pull/246)
+
 ## 2026-10-23 14:26 (Europe/Warsaw): components are React Native Reusables, restyled to our own look and feel
 
 - **Question:** whether the new components are built on React Native Reusables (RNR) restyled to the Budget Lens look
