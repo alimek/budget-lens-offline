@@ -6,10 +6,10 @@ import {
   Host,
   OutlinedTextField,
   Text,
+  TextButton,
   useNativeState,
 } from "@expo/ui/jetpack-compose";
 import {
-  clickable,
   defaultMinSize,
   fillMaxWidth,
   menuAnchor,
@@ -27,6 +27,8 @@ import { useSyncedText } from "./use-synced-text";
 
 /** #61's decision 1 (variant A): the `PLN ▾` of the field, with a touch target of at least 48 dp. */
 const CURRENCY_TARGET = 48;
+/** How far the currency button reaches into the field, so the value keeps the room it needs. */
+const CURRENCY_PADDING = 10;
 
 /**
  * The amount field of #61 on Android: an M3 `OutlinedTextField` whose value is right-aligned with tabular
@@ -63,6 +65,7 @@ export function AmountInput(props: AmountInputProps) {
             onDone={done}
             onOpenCurrency={() => setExpanded(true)}
             colors={fieldColors(theme)}
+            currencyColor={theme.primary}
           />
           {change === undefined ? null : (
             <CurrencyMenu
@@ -88,6 +91,7 @@ interface AmountFieldProps {
   readonly onDone: () => void;
   readonly onOpenCurrency: () => void;
   readonly colors: NonNullable<Parameters<typeof OutlinedTextField>[0]["colors"]>;
+  readonly currencyColor: string;
 }
 
 /** The M3 field itself: the right-aligned value, the currency in its trailing slot, and the error line. */
@@ -98,7 +102,9 @@ function AmountField({
   onDone,
   onOpenCurrency,
   colors,
+  currencyColor,
 }: AmountFieldProps) {
+  const editable = props.onCurrencyChange !== undefined;
   return (
     <OutlinedTextField
       value={text}
@@ -119,6 +125,7 @@ function AmountField({
         fillMaxWidth(),
         semantics({ contentDescription: fieldDescription(props) }),
         testIDModifier(props.testID),
+        ...(editable ? [menuAnchor("primaryNotEditable", false)] : []),
       ]}
     >
       <OutlinedTextField.Label>
@@ -126,7 +133,7 @@ function AmountField({
       </OutlinedTextField.Label>
       <FieldPlaceholder text={props.placeholder} />
       <OutlinedTextField.Suffix>
-        <CurrencySuffix props={props} onOpen={onOpenCurrency} />
+        <CurrencySuffix props={props} onOpen={onOpenCurrency} color={currencyColor} />
       </OutlinedTextField.Suffix>
       <FieldError text={props.error} testID={`${props.testID}-error`} />
     </OutlinedTextField>
@@ -172,29 +179,50 @@ function FieldError({
 interface CurrencySuffixProps {
   readonly props: AmountInputProps;
   readonly onOpen: () => void;
+  readonly color: string;
+}
+
+/** What the currency of the field is announced as, when the caller gives no label of its own. */
+function currencyDescription(props: AmountInputProps): string {
+  return props.currencyAccessibilityLabel ?? `${props.currency} ${props.label}`;
 }
 
 /**
  * The field's trailing slot (#61, variant A): the code with its chevron, opening a dropdown anchored to the
  * field, or the code alone once the item's currency is locked. Either way its touch target is at least 48 dp.
+ * While the currency can still be chosen the slot holds a text button: at the end of a field Material puts a
+ * control there, and a button is announced as one and carries its own touch target. The menu it opens is
+ * anchored to the field with a non-interactive `menuAnchor`, since the only anchor type Compose exposes also
+ * makes whatever carries it clickable, which would take the tap away from the amount.
  */
-function CurrencySuffix({ props, onOpen }: CurrencySuffixProps) {
-  const change = props.onCurrencyChange;
-  const locked = change === undefined;
+function CurrencySuffix({ props, onOpen, color }: CurrencySuffixProps) {
+  const description = currencyDescription(props);
+  if (props.onCurrencyChange === undefined) {
+    return (
+      <Text
+        modifiers={[
+          defaultMinSize({ minWidth: CURRENCY_TARGET, minHeight: CURRENCY_TARGET }),
+          semantics({ contentDescription: description }),
+          testIDModifier(`${props.testID}-currency`),
+        ]}
+      >
+        {props.currency}
+      </Text>
+    );
+  }
   return (
-    <Text
+    <TextButton
+      onClick={onOpen}
+      contentPadding={{ start: CURRENCY_PADDING, end: CURRENCY_PADDING }}
+      colors={{ contentColor: color }}
       modifiers={[
         defaultMinSize({ minWidth: CURRENCY_TARGET, minHeight: CURRENCY_TARGET }),
-        semantics({
-          contentDescription:
-            props.currencyAccessibilityLabel ?? `${props.currency} ${props.label}`,
-        }),
+        semantics({ contentDescription: description }),
         testIDModifier(`${props.testID}-currency`),
-        ...(locked ? [] : [menuAnchor(), clickable(onOpen)]),
       ]}
     >
-      {locked ? props.currency : `${props.currency} ▾`}
-    </Text>
+      <Text>{`${props.currency} ▾`}</Text>
+    </TextButton>
   );
 }
 

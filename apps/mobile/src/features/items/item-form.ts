@@ -211,6 +211,14 @@ export function isFormSubmittable(state: ItemFormState): boolean {
   return isFormValid(itemFormErrors(state)) && formSchedule(state) !== undefined;
 }
 
+/**
+ * Whether a patch leaves the form as it was. A native field hands back its own text when it gains or loses
+ * focus, and that repeat is not something the user changed: only a different value counts (#82).
+ */
+export function formUnchanged(state: ItemFormState, patch: Partial<ItemFormState>): boolean {
+  return Object.entries(patch).every(([key, value]) => state[key as keyof ItemFormState] === value);
+}
+
 /** The amount of the form in minor units, or `undefined` while the field does not hold one. */
 export function formAmount(state: ItemFormState): MinorUnits | undefined {
   const amount = validateAmountInput(state.amountText, state.currency);

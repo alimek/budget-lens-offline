@@ -76,8 +76,11 @@ const TAP_MARGIN = 8;
 const SCROLL_TRIES = 3;
 /** One engine scroll is bounded: a control nothing scrolls to is a failure, not a stall of the suite. */
 const SCROLL_WAIT = 4_000;
-/** A drag this far up the container, this far in from its edge. */
-const DRAG_INSET = 0.1;
+/**
+ * A drag this far up the container, and this far across it. The middle of the column is the one place a vertical
+ * drag is never taken for a system edge gesture, whatever the container's width turns out to be.
+ */
+const DRAG_INSET = 0.5;
 const DRAG_FROM = 0.7;
 const DRAG_TO = 0.35;
 const DRAG_DURATION = 900;
@@ -209,11 +212,12 @@ async function satisfied(effect: Effect | undefined): Promise<boolean> {
 /** Brings one control into reach and presses it once; false while it is not on the screen to press. */
 async function pressOnce(
   fixtures: Fixtures,
-  control: Locator,
+  control: Control,
   container: string,
 ): Promise<boolean> {
-  if ((await scrollIntoReach(fixtures.screen, control, container)) === false) return false;
-  await control.tap().catch(() => {});
+  const node = await control();
+  if ((await scrollIntoReach(fixtures.screen, node, container)) === false) return false;
+  await node.tap().catch(() => {});
   return true;
 }
 
@@ -225,7 +229,7 @@ async function pressOnce(
  */
 async function press(
   fixtures: Fixtures,
-  control: Locator,
+  control: Control,
   container: string,
   effect?: Effect,
 ): Promise<void> {
@@ -236,14 +240,44 @@ async function press(
   await requireEffect(effect);
 }
 
+/** How long the look for a button inside a control is given before the control is pressed as it stands. */
+const TARGET_PROBE = 1_500;
+/** How long a control of a sheet that is still opening is given to arrive at all. */
+const ARRIVAL_WAIT = 10_000;
+
+/**
+ * What a press is aimed at, read again for every attempt: a control of a sheet that is still opening is not in
+ * the tree at the first look, and a frame measured once would be aimed at nothing.
+ */
+type Control = () => Promise<Locator>;
+
+/**
+ * What a press of a named control is aimed at. Most controls of the sheet are a node with a button inside it,
+ * which is what `nativeButton` finds; a Compose field that is a control of its own, like an exposed dropdown or
+ * the floating "Add item", carries its test ID on the button and has no button inside it (#82).
+ */
+async function pressTarget(fixtures: Fixtures, testID: string): Promise<Locator> {
+  const node = fixtures.screen.getByTestId(testID);
+  if (fixtures.platform !== "android") return node;
+  // A sheet hands its controls to accessibility as it lays them out, so the control is waited for first: looking
+  // for the button of a node that is not there yet says nothing about whether it has one.
+  await node.waitFor({ state: "attached", timeout: ARRIVAL_WAIT }).catch(() => {});
+  const inner = node.getByRole("button");
+  const found = await inner
+    .waitFor({ state: "attached", timeout: TARGET_PROBE })
+    .then(() => true)
+    .catch(() => false);
+  return found ? inner : node;
+}
+
 /** Presses a control of the item sheet, whose actions sit at the foot of one scrolling column. */
 async function pressSheet(fixtures: Fixtures, testID: string, effect?: Effect): Promise<void> {
-  await press(fixtures, nativeButton(fixtures, testID), SHEET, effect);
+  await press(fixtures, () => pressTarget(fixtures, testID), SHEET, effect);
 }
 
 /** Opens a row of the list, which the tab bar can cover the same way a sheet covers its own actions. */
 async function openRow(fixtures: Fixtures, row: Locator): Promise<void> {
-  await press(fixtures, row, LIST, shown(fixtures.screen.getByTestId(SHEET)));
+  await press(fixtures, async () => row, LIST, shown(fixtures.screen.getByTestId(SHEET)));
 }
 
 /** Brings a row of the list into the band a tap reaches, which reading its name needs just as much as tapping it. */
@@ -264,10 +298,11 @@ async function revealSheet(fixtures: Fixtures, testID: string): Promise<void> {
 async function chooseCurrency(fixtures: Fixtures, code: string): Promise<void> {
   const { screen } = fixtures;
   const menu = screen.getByTestId("item-amount-currency");
+  const opener = await pressTarget(fixtures, "item-amount-currency");
   const option = screen.getByTestId(`item-amount-currency-${code}`);
   const picked = shown(menu.filter({ hasText: code }));
   for (let attempt = 0; attempt < PRESS_TRIES; attempt += 1) {
-    await menu.tap().catch(() => {});
+    await opener.tap().catch(() => {});
     if (await happened(shown(option))) {
       await option.tap().catch(() => {});
       await option.waitFor({ state: "detached", timeout: PRESS_WAIT }).catch(() => {});
@@ -345,7 +380,7 @@ test(
 
     // Act: the empty state's call to action opens the sheet in create mode (#63).
     await tapUntilVisible(
-      nativeButton(fixtures, "items-empty-add"),
+      await pressTarget(fixtures, "items-empty-add"),
       screen.getByTestId("item-sheet"),
     );
 
@@ -361,12 +396,14 @@ test(
       await expect(screen.getByTestId(id)).toBeVisible();
     }
     await expect(screen.getByTestId("item-applies-from")).toHaveCount(0);
-    await chooseCurrency(fixtures, "PLN");
-    await app.screenshot("item-form-add");
 
-    // Act
+    // Act: the fields first, then the currency the amount is counted in. Compose hands the accessory at the end
+    // of a text field to accessibility only once the field has been through a change, so a field that has never
+    // been typed into reports no currency control to a screen reader either (#61, variant A).
     await typeInto(fixtures, "item-name", "E2E water");
     await typeInto(fixtures, "item-amount", "1234.56");
+    await chooseCurrency(fixtures, "PLN");
+    await app.screenshot("item-form-add");
 
     // Assert: the plain-language preview of #63, resolved by the engine the forecast uses.
     await expect(screen.getByTestId("item-preview-summary")).toHaveText(/Monthly/);
@@ -393,7 +430,7 @@ test("reports the fields the form is missing before it saves", FORM, async (fixt
   await seed(fixtures, "dev-items-seed-seed", /written/i);
   await openItemsTab(fixtures);
   // The way in when there is already something to list: the header's "+" on iOS, the floating one on Android.
-  await tapUntilVisible(nativeButton(fixtures, "items-add"), screen.getByTestId("item-sheet"));
+  await tapUntilVisible(await pressTarget(fixtures, "items-add"), screen.getByTestId("item-sheet"));
 
   // Act: nothing filled in.
   await pressSheet(fixtures, "item-add", shown(screen.getByTestId("item-errors-summary")));
@@ -517,19 +554,18 @@ test("keeps an amount whole in a currency without minor digits", FORM, async (fi
   // Seeded first, so a currency one of the rows already uses is offered right after the base one (#61, decision 4).
   await seed(fixtures, "dev-items-seed-seed", /written/i);
   await openItemsTab(fixtures);
-  await tapUntilVisible(nativeButton(fixtures, "items-add"), screen.getByTestId("item-sheet"));
+  await tapUntilVisible(await pressTarget(fixtures, "items-add"), screen.getByTestId("item-sheet"));
   await typeInto(fixtures, "item-name", "E2E manga");
+  await typeInto(fixtures, "item-amount", "1000");
 
-  // Act: the currency the field is counted in, from inside the field (#61, variant A).
+  // Act: the currency the field is counted in, from inside the field (#61, variant A). Yen has no minor units,
+  // so the whole amount the field already holds stays as it is.
   await chooseCurrency(fixtures, "JPY");
 
   // Assert: with no rate store yet (#92) the field says there is nothing to convert with, and offers no manual
   // rate either, because that screen (#144, #145) does not exist.
   await expect(screen.getByTestId("item-amount-hint")).toHaveText(/No exchange rate yet/);
   await expect(screen.getByText(/Enter rate manually/)).toHaveCount(0);
-
-  // Act
-  await typeInto(fixtures, "item-amount", "1000");
 
   // Assert: yen has no minor units, so the field holds a whole amount with no decimal separator at all (#61).
   await expect(screen.getByTestId("item-amount")).toHaveValue(/^1[ ,\u00a0.]?000$/);

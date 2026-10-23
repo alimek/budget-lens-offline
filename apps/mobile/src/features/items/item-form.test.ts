@@ -20,6 +20,7 @@ import {
   formSchedule,
   formToNewItem,
   formToRuleEdit,
+  formUnchanged,
   type ItemFormState,
   initialForm,
   isFormReadOnly,
@@ -304,6 +305,15 @@ describe("the form as it opens", () => {
     // Assert
     expect(showsDayClampHint(state({ dayOfMonth: 31 }))).toBe(true);
     expect(showsDayClampHint(state({ dayOfMonth: 28 }))).toBe(false);
+  });
+
+  it("treats a field repeating its own text as no change at all", () => {
+    // Assert: the value the user moved on from is a change; the text a field hands back is not.
+    expect(formUnchanged(state(), { amountText: "3500" })).toBe(false);
+    expect(formUnchanged(state(), { amountText: "3200" })).toBe(true);
+    expect(formUnchanged(state(), { dayOfMonth: 0 })).toBe(true);
+    // An empty patch changes nothing either, so it is no reason to confirm leaving the form.
+    expect(formUnchanged(state(), {})).toBe(true);
   });
 });
 

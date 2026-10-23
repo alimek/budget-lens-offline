@@ -21,6 +21,7 @@ import {
   appliesFromDefault,
   countFormErrors,
   formAmount,
+  formUnchanged,
   type ItemFormState,
   initialForm,
   itemFormErrors,
@@ -183,7 +184,9 @@ function SheetForm({ model, onClose }: SheetFormProps) {
     onResetKeptOverrides: setResetKeptOverrides,
   };
 
+  /** A field that repeats the text it already holds is not a change, and does not make the form dirty. */
   function changeForm(patch: Partial<ItemFormState>) {
+    if (formUnchanged(form, patch)) return;
     setDirty(true);
     setForm((current) => ({ ...current, ...patch }));
   }
