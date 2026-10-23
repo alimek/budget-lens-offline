@@ -159,7 +159,9 @@ to the active `months` row, falling back to the device's calendar month until on
 
 The root redirects to Overview. Variant A from #36 has five static native tabs in this order:
 Overview, Month, Forecast, Items, Settings. Each tab owns a Stack. Savings is pushed inside Overview,
-from the Overview card's native secondary button. Other screens are translated placeholders built from the
+from the Overview card's native secondary button. Screens shared by tabs are pushed inside the current tab's Stack, never by switching
+tabs: a Forecast month row pushes the shared month screen inside the Forecast Stack, and back returns to the forecast
+([#261](https://github.com/alimek/budget-lens-offline/issues/261)). Other screens are translated placeholders built from the
 design system components. Typed routes remain off. Tokens, typography and shared components are described in
 [design system](design-system.md) (#119). Expo UI imports are restricted by Biome to `src/ui/native/`.
 
