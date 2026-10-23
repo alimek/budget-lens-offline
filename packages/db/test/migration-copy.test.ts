@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   type MigrationBundle,
   MigrationIntegrityError,
-  MigrationRestoreError,
   type MigrationSafetyCopy,
   runMigrations,
   runMigrationsWithSafetyCopy,
@@ -12,7 +11,7 @@ import {
 import schemaMigrations from "../src/migrations.generated";
 import { item, openTestDatabaseFile, ruleVersion } from "./helpers";
 
-/** What a launch does: `file.connect()` opens the current file, `file.copy` is the encrypted pre-migration copy. */
+/** What a launch does: `file.connect()` opens the current file, `file.copy` is the pre-migration copy. */
 const databaseFile = openTestDatabaseFile;
 
 /** The shipped migrations plus one more entry, as a later app release would ship them. */
@@ -114,7 +113,7 @@ describe("runMigrationsWithSafetyCopy", () => {
     expect(bookkeeping(file)).toHaveLength(schemaMigrations.journal.entries.length);
   });
 
-  it("keeps the copy and says so when putting it back fails", () => {
+  it("keeps the copy and says so when putting it back fails (#75 R1)", () => {
     // Arrange
     const file = databaseFile();
     runMigrations(file.connect());
@@ -134,8 +133,8 @@ describe("runMigrationsWithSafetyCopy", () => {
     // Act
     const migrate = () => runMigrationsWithSafetyCopy(file.connect(), stuckCopy, failing);
 
-    // Assert
-    expect(migrate).toThrow(MigrationRestoreError);
+    // Assert: the failed restore is what the caller learns about, and it never claims a restore happened.
+    expect(migrate).toThrow(/could not be moved into place/);
     // The copy is the only state left worth keeping, so nothing here may discard it (#75 R1).
     expect(calls).toEqual({ created: 1, restored: 0, discarded: 0 });
   });

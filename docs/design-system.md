@@ -43,7 +43,7 @@ for totals), tabular figures and right alignment.
 | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` | RNR `card` | `bg-card rounded-lg p-4` |
 | `Badge` | RNR `badge` | default `tinted` (primary at 12%) for "Changed this month" |
 | `Separator` | RNR `separator` | custom views only; native lists keep their own |
-| `Screen` | `src/ui/components/screen.tsx` | scrollable screen root on `background`, `screen-<name>` test ID |
+| `Screen` | `src/ui/components/screen.tsx` | scrollable screen root on `background`, `screen-<name>` test ID; `topInset` pads a screen that renders without a header, so it does not draw under the Android status bar (iOS is padded by the system) |
 | `PrimaryButton`, `SecondaryButton` | `src/ui/native/button.*` | SwiftUI `borderedProminent` / `bordered`; M3 `Button` / `OutlinedButton` |
 | `AppToggle` | `src/ui/native/toggle.*` | SwiftUI `Toggle(label:)`; M3 `Switch` in a toggleable row. The required `label` is the accessible name: VoiceOver and TalkBack read one switch with its label and on/off state (on Android a React Native `switch` wrapper carries the semantics and the Compose row is hidden from accessibility) |
 | `SegmentedControl` | `src/ui/native/segmented-control.*` | SwiftUI segmented `Picker`; M3 `SegmentedButton` row |

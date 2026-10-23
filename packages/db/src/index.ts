@@ -47,7 +47,6 @@ export {
 } from "./occurrences-repository";
 export {
   MigrationIntegrityError,
-  MigrationRestoreError,
   type MigrationSafetyCopy,
   runMigrations,
   runMigrationsWithSafetyCopy,

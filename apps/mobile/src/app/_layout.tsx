@@ -69,11 +69,11 @@ function RootStack() {
           }}
         />
         <Stack.Screen
-          name="dev/forget-key"
+          name="dev/damage-database"
           options={{
             headerShown: true,
             headerBackButtonDisplayMode: "minimal",
-            title: t("dev.forgetKey.title"),
+            title: t("dev.damageDatabase.title"),
           }}
         />
         <Stack.Screen

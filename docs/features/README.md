@@ -9,7 +9,7 @@ the scope of its epic.
 the status line links. `proposed` means research questions for the epic are still open, so the PRD is a draft until
 they are answered. Numbers in the success criteria (times, item counts) are **proposed targets**, not recorded decisions.
 
-Product principles that every PRD follows: data stays on the device (encrypted SQLite), backup/restore only through
+Product principles that every PRD follows: data stays on the device (plain SQLite inside the app sandbox, #242), backup/restore only through
 the user's own iCloud / Google Drive, no Budget Lens server, no accounts, one-time license, MIT core, Polish and
 English.
 
@@ -42,7 +42,7 @@ Other owner decisions of 2026-10-19 reflected in the PRDs:
 
 | Epic | PRD |
 | --- | --- |
-| E1 [#23](https://github.com/alimek/budget-lens-offline/issues/23) App shell & encrypted local storage | [app-shell-storage.md](app-shell-storage.md) |
+| E1 [#23](https://github.com/alimek/budget-lens-offline/issues/23) App shell & local storage | [app-shell-storage.md](app-shell-storage.md) |
 | E2 [#24](https://github.com/alimek/budget-lens-offline/issues/24) Money, localization (PL/EN) & settings | [money-i18n-settings.md](money-i18n-settings.md) |
 | E3 [#25](https://github.com/alimek/budget-lens-offline/issues/25) Budget items & recurrence | [budget-items-recurrence.md](budget-items-recurrence.md) |
 | E4 [#26](https://github.com/alimek/budget-lens-offline/issues/26) Month view, payment status & overrides | [month-view-overrides.md](month-view-overrides.md) |

@@ -33,13 +33,16 @@ or attach to another project's server if 8073 is occupied. The iOS smoke target 
 as a launch argument; Android uses an explicit development-client VIEW intent to the same port after `adb -s <BudgetLens-emulator-serial> reverse
 tcp:8073 tcp:8073`. On first Android development launch, allow the local/nearby-device permission
 prompt required to connect the development client to Metro. All application data stays local; the app opens
-and migrates its local SQLite database, encrypted with SQLCipher, before rendering data screens (#74, #75). A
-development build can also show the boot screens and check that this build really encrypts, on deep links:
-`budget-lens:///dev/boot-screen?screen=recovery` (also `migration-failed`,
-`restore-failed`, `state-unrecognized`, `encryption-unavailable`, `storage-unreachable`) and
-`budget-lens:///dev/storage-check`, which reports the cipher pragmas, the encryption state of the database file and
-of the copy, and the files a "start over" kept. `budget-lens:///dev/forget-key` (#75 R6) forgets the stored key, so
-a cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.
+and migrates its plain local SQLite database (#242) before rendering data screens (#74, #75). A
+development build can also show the recovery screen and the files this app owns, on deep links:
+`budget-lens:///dev/boot-screen` (the one recovery screen, with its retry and start-over) and
+`budget-lens:///dev/storage-check`, which reports whether the database file and its pre-migration copy are SQLite
+files and says what it did about the copy — it takes one for real, through the same steps a migration takes, but
+only when there is a database to copy and nothing is being kept already, removes again only the copy it took
+itself, and reports a copy the file refused instead of failing — and it lists the files a failed update left behind
+or a "start over" kept. `budget-lens:///dev/damage-database`
+(#75 R6, #242) replaces the database file with bytes that are not a database and keeps the file that was there, so a
+cold start afterwards reaches the recovery screen through a real unreadable database instead of a preview.
 `budget-lens:///dev/chart-spike` (#218) draws the forecast-style chart spike: the twelve-month sample of
 `src/dev/forecast-chart.ts` through `react-native-chart-kit`, with the tapped month and its amounts below it.
 `budget-lens:///dev/items-seed?gen=N` (#112) writes and archives a small deterministic set of items through
@@ -49,14 +52,14 @@ Both presses also open the current month as the app's one `active` row when ther
 (#111) will do for real: a screen may only plan a change against a stored month (#82), and the screen shows that
 month so a test reads it back instead of guessing from its own clock.
 
-**The screens under `src/app/dev` never run in a release build (#75 R7).** Forgetting the key of a database that is
-still on the device makes that budget unreadable for good, so this is guarded in three places: those routes are
+**The screens under `src/app/dev` never run in a release build (#75 R7).** Overwriting the database file of a budget
+that is still on the device makes that budget unreadable, so this is guarded in three places: those routes are
 registered inside `<Stack.Protected guard={__DEV__}>`, so a release build does not mount them and a deep link to one
 redirects to Overview; their effects go through `useDevEffect` (`src/dev/use-dev-effect.ts`), which checks `__DEV__`
-inside the effect, where a `return` placed before a hook cannot be forgotten; and `forgetDatabaseKey` refuses
+inside the effect, where a `return` placed before a hook cannot be forgotten; and `damageDatabaseFile` refuses
 outside `__DEV__` itself. `pnpm lint` runs `scripts/check-dev-routes.mjs`, which fails if a development screen is
 registered outside the guard, reaches for `useEffect` instead of `useDevEffect`, renders without an `__DEV__`
-check, or deletes the key before one.
+check, or touches the database file before one.
 
 ## Checks and smoke evidence
 
@@ -92,9 +95,10 @@ for the #15 smoke contract; other roots are `screen-month`, `screen-forecast`, `
 `tab-forecast`, `tab-items`, `tab-settings`. The Overview action uses `overview-open-savings`. The Settings privacy card uses `settings-privacy` and its EAS Update disclosure text `settings-privacy-updates`. The dev-only
 design system showcase uses `screen-design-system`, opened by `settings-open-design-system`; its elements use the
 `ds-` prefix ([design system](design-system.md#showcase)). The boot screens (#75) use
-`screen-encryption-unavailable`, `screen-recovery` (with `recovery-start-over` and its
-`recovery-start-over-alert`) and `screen-storage-unreachable` (with `storage-unreachable-retry`). The dev-only
-storage check uses `screen-storage-check` and its `storage-check-*` rows.
+`screen-recovery` (with `recovery-retry`, `recovery-start-over` and its
+`recovery-start-over-alert`; #242 kept this one screen and dropped the others). The dev-only
+storage check uses `screen-storage-check` and its `storage-check-*` rows, and the dev-only trigger of the recovery
+screen uses `screen-damage-database`.
 
 ## Scope
 
@@ -102,8 +106,8 @@ The scaffold has bundled English/Polish strings, device-language initialization,
 navigation, Uniwind layout, and a provider-scoped Zustand selected month. All visible app copy comes
 from locale resources. Screens are built from the [design system](design-system.md) (#119): Expo UI
 wrappers in `src/ui/native`, tokens and React Native Reusables components in `src/ui`. Database boot and
-migrations are implemented in #74, and the SQLCipher key, cipher guard, encrypted pre-migration copies and boot
-screens in #75; the recovery screen is an interim UI until the #60 mockups land. Repositories, language preference
+migrations are implemented in #74, and the pre-migration copies and boot screens in #75; #242 removed SQLCipher, the
+database key and every boot screen but the recovery one, which stays an interim UI until the #60 mockups land. Repositories, language preference
 persistence ([i18n](i18n.md)) and onboarding are separate work.
 
 ## Release builds (TestFlight)

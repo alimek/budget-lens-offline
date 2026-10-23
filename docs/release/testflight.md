@@ -147,13 +147,14 @@ Owner decision (2026-10-20, [#177 comment](https://github.com/alimek/budget-lens
   1024×1024 without alpha as App Store Connect requires; `splash-icon.png` on `#0F766E`), to be replaced by the
   design work.
 - **Export compliance:** `ios.config.usesNonExemptEncryption: false` sets `ITSAppUsesNonExemptEncryption = NO`, so
-  App Store Connect does not ask the compliance question for every build. Approved by the owner, who treats the
-  on-device SQLCipher encryption as exempt. Reasoning:
-  the app has no encryption of its own except HTTPS through Apple's OS networking and, since #75, SQLCipher
-  (AES) that only protects the user's own data at rest on the device. The app's primary function is personal
+  App Store Connect does not ask the compliance question for every build. Approved by the owner. Reasoning:
+  since [#242](https://github.com/alimek/budget-lens-offline/issues/242) the app ships no encryption of its own at
+  all — the database is plain SQLite inside the app sandbox, and the only encryption left is HTTPS through Apple's OS
+  networking. The app's primary function is personal
   budgeting, not information security, communication or networking, so this falls under the exemptions Apple lists
-  for encryption that is not the primary function (EAR Category 5 Part 2, Note 4). If this assessment changes, set
-  it to `true` and answer the export compliance questions in App Store Connect.
+  for encryption that is not the primary function (EAR Category 5 Part 2, Note 4). If this assessment changes (for
+  example with the encrypted backup of E8), set it to `true` and answer the export compliance questions in App Store
+  Connect.
 - **Usage strings:** none are needed today. The app requests no protected resources (camera, photos, location,
   contacts, motion activity, Face ID, tracking). Expo and React Native link system frameworks such as CoreMotion and
   CryptoKit, but no code path calls an API that needs an `NS*UsageDescription` key; if App Store Connect reports a

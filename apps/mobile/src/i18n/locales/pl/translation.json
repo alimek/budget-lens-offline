@@ -80,27 +80,29 @@
       "editBody": "Tutaj otworzy się edytor pozycji."
     },
     "bootScreen": {
-      "title": "Ekrany startowe",
-      "unknown": "Nieznany ekran startowy „{{screen}}”."
+      "title": "Ekrany startowe"
+    },
+    "damageDatabase": {
+      "title": "Uszkódź bazę danych",
+      "waiting": "Uszkadzam plik bazy danych…",
+      "damaged": "Plik bazy danych nie jest już czytelny; poprzedni plik został zachowany.",
+      "absent": "Nie było pliku bazy danych do uszkodzenia.",
+      "failed": "System plików odmówił odpowiedzi."
     },
     "storageCheck": {
       "title": "Kontrola pamięci",
-      "cipherVersion": "Szyfrowanie",
-      "cipherStatus": "Zakluczona",
       "database": "Baza danych",
       "copy": "Kopia przed migracją",
-      "encrypted": "zaszyfrowany",
-      "plaintext": "jawny",
+      "sqlite": "plik SQLite",
+      "foreign": "nie jest plikiem SQLite",
       "missing": "brak",
+      "copyCheck": "Kontrola kopii",
+      "copyKept": "zachowana przez wcześniejsze uruchomienie",
+      "copyTaken": "wykonana i usunięta przez tę kontrolę",
+      "copyAbsent": "brak czego kopować",
+      "copyFailed": "plik odmówił wykonania kopii",
       "kept": "Zachowane pliki",
       "none": "brak"
-    },
-    "forgetKey": {
-      "title": "Zapomnij klucz",
-      "waiting": "Zapominam klucza…",
-      "forgotten": "Klucz zniknął; plik bazy danych został nietknięty.",
-      "absent": "Nie było klucza do zapomnienia.",
-      "failed": "Pamięć zabezpieczona odmówiła odpowiedzi."
     },
     "itemsSeed": {
       "monthCases": "Przypadki miesiąca (pol.)",
@@ -174,25 +176,14 @@
     }
   },
   "boot": {
-    "encryptionUnavailable": {
-      "title": "Ta wersja nie szyfruje",
-      "body": "Budget Lens przechowuje każdy budżet na tym urządzeniu i odmawia zapisu bez szyfrowania, więc ta wersja nie otworzy Twojego budżetu. Zainstaluj wersję zawierającą SQLCipher."
-    },
     "recovery": {
       "title": "Nie możemy otworzyć Twojego budżetu",
-      "keyMissing": "Klucz szyfrowania tego budżetu nie ma na tym urządzeniu albo plik, do którego należy, już tu nie jest. Klucz nigdy nie opuszcza telefonu, na którym powstał, więc przywrócenie kopii telefonu lub ponowna instalacja aplikacji może sprawić, że budżet będzie nieczytelny.",
-      "migrationFailed": "Nie udało się dokończyć aktualizacji budżetu. Został on przywrócony do wersji sprzed aktualizacji.",
-      "keepsFile": "Nic nie zostało usunięte: plik budżetu zostaje na tym urządzeniu, nadal zaszyfrowany.",
+      "body": "Pliku budżetu na tym urządzeniu nie udało się otworzyć ani zaktualizować, więc aplikacja niczego nie otworzyła i niczego nie zmieniła. Spróbuj ponownie albo zacznij od pustego budżetu.",
+      "keepsFile": "Nic nie zostało usunięte: plik budżetu zostaje na tym urządzeniu.",
       "startOver": "Zacznij od nowa",
       "confirmTitle": "Zacząć od nowa?",
       "confirmBody": "Aplikacja zacznie od pustego budżetu, a bieżący plik zostanie na tym urządzeniu. Przywracanie z własnej kopii pojawi się razem z funkcją kopii zapasowej.",
-      "confirmAction": "Zacznij od nowa",
-      "restoreFailed": "Nie udało się dokończyć aktualizacji budżetu i nie udało się też przywrócić wersji sprzed aktualizacji. Na urządzeniu nadal jest nieuszkodzona kopia, nadal zaszyfrowana, i nic nowego nie zostało na niej zapisane.",
-      "stateUnrecognized": "Część plików budżetu jest na tym urządzeniu w stanie, którego Budget Lens nie rozpoznaje, więc aplikacja niczego nie otworzyła i niczego nie zmieniła. Nowy budżet potrzebowałby klucza, którego te pliki mogą jeszcze używać, więc żaden klucz nie został zastąpiony."
-    },
-    "storageUnreachable": {
-      "title": "Pamięć zabezpieczona jest niedostępna",
-      "body": "Budget Lens nie mógł odczytać zabezpieczonej pamięci tego urządzenia, więc nie może otworzyć Twojego budżetu. Nic nie zostało zmienione ani usunięte."
+      "confirmAction": "Zacznij od nowa"
     }
   },
   "currency": {

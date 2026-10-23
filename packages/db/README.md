@@ -6,9 +6,10 @@ Drizzle ORM schema and migrations for the on-device SQLite database (#74). The d
 (`closed_occurrences`) and #124 (current rates only). Versions are drizzle-orm 0.45.4 and drizzle-kit 0.31.11,
 pinned exactly. Stay on 0.45.x until the Drizzle 1.0 upgrade gate in #35 §6 is met.
 
-The package is TypeScript source with no build step. It does not open, key or locate the database file: the app
-does that (`apps/mobile/src/db/encrypted-database.ts` opens `budget-lens.db` with `PRAGMA cipher_version`,
-`PRAGMA key` and the device key from expo-secure-store). The items and rule-version repository is here (#81,
+The package is TypeScript source with no build step. It does not open or locate the database file: the app does
+that (`apps/mobile/src/db/database.ts` opens `budget-lens.db` with expo-sqlite, plain SQLite with no key and no
+app-level encryption, [#242](https://github.com/alimek/budget-lens-offline/issues/242)). The items and rule-version
+repository is here (#81,
 below), with the occurrence override and payment status repository (#83); the month-close transaction (#85) is not
 here yet.
 
@@ -40,8 +41,8 @@ Conventions:
   column". The migration check rejects it.
 - No `WITHOUT ROWID` and no `INSERT OR REPLACE`: both bypass the SQLite update hook that live reads use. Use
   `onConflictDoUpdate`.
-- The SQL uses only features SQLCipher's SQLite has (CHECK, partial indexes, GLOB). Nothing depends on reading the
-  database file directly.
+- The SQL uses only features of the SQLite expo-sqlite ships (CHECK, partial indexes, GLOB). Nothing depends on
+  reading the database file directly.
 
 ## Migrations
 
@@ -56,8 +57,8 @@ reads. The app needs no Babel inline-import plugin and no `.sql` Metro extension
 generated files by hand. Drizzle has no down-migrations: roll forward only.
 
 `runMigrationsWithSafetyCopy(db, safetyCopy)` is what the app calls on every start. `safetyCopy` is the caller's
-encrypted copy of the database file (the app writes it with `sqlcipher_export` into a database attached with the
-same key, #35 §2); this package only decides when each step happens:
+copy of the database file (the app writes it with SQLite's own backup, `backupDatabaseSync`, so the copy is
+consistent even while the connection is open, #35 §2); this package only decides when each step happens:
 
 - nothing is pending: no copy is taken and a copy left by an earlier launch is discarded, so a copy never outlives
   the migration it protects (#35 Q3: copy whenever migrations are pending, not on every start);
@@ -65,9 +66,13 @@ same key, #35 §2); this package only decides when each step happens:
   older state is the more valuable one and is never replaced (#75 R1) – and any failure, including
   `MigrationIntegrityError` (raised after the transaction has committed and so cannot roll itself back), restores
   it and rethrows, so the app can put the file back and show the recovery screen (#75);
-- putting the copy back fails: the error is `MigrationRestoreError`, which carries both the migration error and the
-  error of the failed restore. The copy stays where it is: it is the only intact state left, the app must not
-  discard or replace it, and its screen may not claim the database was restored (#75 R1).
+- putting the copy back fails: that error is what the caller sees, in place of the migration error. The copy stays
+  where it is: it is the only intact state left, the app must not discard or replace it, and its recovery screen may
+  not claim the database was restored (#75 R1). A database this build cannot open at all — the file an older
+  encrypted install left behind (#242), a truncated file — does reach this wrapper and fails in the pending-migration
+  count, which is its first act and the only read that happens before a copy is taken or discarded. The caller sees
+  that error and shows its recovery screen; nothing before the count touched a file, and there the file is only ever
+  renamed, never deleted.
 
 `runMigrations(db)` applies pending migrations and returns how many it applied. Use it instead of Drizzle's
 `useMigrations`/`migrate`. Drizzle runs all pending migrations in one transaction, and inside a transaction
@@ -104,8 +109,8 @@ exactly one of an amount and a skip. The rebuild copies every row into the new t
 database can hold such a row. Schema v1 shipped in TestFlight build 6, but no build before #83 ever wrote
 `occurrence_overrides`; since #83 the only writer is this repository, behind core's shape validation and now the
 CHECK; and there is no backup restore yet. If a row like that ever appears, the user loses nothing they had: the
-transaction rolls back, `runMigrationsWithSafetyCopy` restores the encrypted pre-migration copy, and the boot shows
-the `migration_failed` screen (#75, #210). Anything that writes overrides from outside this repository later
+transaction rolls back, `runMigrationsWithSafetyCopy` restores the pre-migration copy, and the boot shows the
+recovery screen (#75, #210). Anything that writes overrides from outside this repository later
 (encrypted backup restore, #30; an import) must validate the shape with core before writing, or rely on the CHECK to
 reject it. `test/migrations.test.ts` pins both the rebuild of valid rows and this failure path.
 
@@ -279,17 +284,17 @@ is `invalid-month`.
 ## Tests
 
 `pnpm --filter @budget-lens/db test` runs Vitest on Node with sql.js (SQLite in WebAssembly) as the driver, used
-only in tests. sql.js has no SQLCipher, so the safety-copy tests inject a copy of the file bytes instead and cover
-only the decisions above. Covered:
+only in tests, and it has no files, so the safety-copy tests inject a copy of the file bytes instead and cover only
+the decisions above. Covered:
 
 - migrating from an empty database;
 - re-running migrations as a no-op;
 - a rebuild upgrade that keeps child rows;
 - the integrity error;
-- the encrypted pre-migration copy: no copy while the schema is current (a leftover one is discarded), a copy on
+- the pre-migration copy: no copy while the schema is current (a leftover one is discarded), a copy on
   the launch that has migrations, the data back in place after a failing statement or a committed migration that
-  leaves rows without their parent, and a failed restore reported as `MigrationRestoreError` with the copy left
-  alone (`test/migration-copy.test.ts`);
+  leaves rows without their parent, and a failed restore that keeps the copy where it is and reports its own error
+  instead of the migration's (`test/migration-copy.test.ts`);
 - the constraints that encode business rules.
 
 `test/items-repository.test.ts` covers the repository's business rules: the base-currency default and whole minor
@@ -317,5 +322,8 @@ and writes nothing; and `forecast()` reaches the totals it should from what thes
 through the 0001 rebuild, with `foreign_key_check` clean and the shape CHECK refusing an amount with a skip, and
 neither of them, afterwards.
 
-The SQLCipher-specific path (key, cipher guard, a copy that is really ciphertext) is covered on devices by e2e
-(#75).
+The file-level path (opening the plain database, a copy that is really a file, an unreadable database leading to the
+one recovery screen, and a "start over" that keeps the file) is covered on devices by e2e (#75, #242). There is
+deliberately no migration from the encrypted databases of older builds: an install updating from one starts with an
+empty budget after the recovery screen, with its encrypted file renamed aside and unreadable by this build
+([ADR 0007](../../docs/decisions/0007-local-database.md)).

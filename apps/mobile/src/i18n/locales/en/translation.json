@@ -80,27 +80,29 @@
       "editBody": "The item editor opens here."
     },
     "bootScreen": {
-      "title": "Boot screens",
-      "unknown": "Unknown boot screen “{{screen}}”."
+      "title": "Boot screens"
+    },
+    "damageDatabase": {
+      "title": "Damage the database",
+      "waiting": "Damaging the database file…",
+      "damaged": "The database file is no longer readable; the file that was there is kept.",
+      "absent": "There was no database file to damage.",
+      "failed": "The filesystem refused to answer."
     },
     "storageCheck": {
       "title": "Storage check",
-      "cipherVersion": "Cipher",
-      "cipherStatus": "Keyed",
       "database": "Database",
       "copy": "Pre-migration copy",
-      "encrypted": "encrypted",
-      "plaintext": "plaintext",
+      "sqlite": "SQLite file",
+      "foreign": "not a SQLite file",
       "missing": "missing",
+      "copyCheck": "Copy check",
+      "copyKept": "kept by an earlier launch",
+      "copyTaken": "taken and discarded by this check",
+      "copyAbsent": "nothing to copy",
+      "copyFailed": "the file refused the copy",
       "kept": "Kept files",
       "none": "none"
-    },
-    "forgetKey": {
-      "title": "Forget the key",
-      "waiting": "Forgetting the key…",
-      "forgotten": "The key is gone; the database file is untouched.",
-      "absent": "There was no key to forget.",
-      "failed": "Secure storage refused to answer."
     },
     "itemsSeed": {
       "monthCases": "Polish month cases",
@@ -172,25 +174,14 @@
     }
   },
   "boot": {
-    "encryptionUnavailable": {
-      "title": "This build cannot encrypt",
-      "body": "Budget Lens keeps every budget on this device and refuses to save one unencrypted, so this build will not open yours. Install a build that includes SQLCipher."
-    },
     "recovery": {
       "title": "We can’t open your budget",
-      "keyMissing": "The encryption key for this budget is not on this device, or the file it belongs to is no longer here. The key never leaves the phone that created it, so restoring a phone backup or reinstalling the app can leave a budget unreadable.",
-      "migrationFailed": "An update to your budget could not be finished. It was put back to the version from before the update.",
-      "keepsFile": "Nothing was deleted: the budget file stays on this device, still encrypted.",
+      "body": "The budget file on this device could not be opened or brought up to date, so the app opened nothing and changed nothing. Try again, or start over with an empty budget.",
+      "keepsFile": "Nothing was deleted: the budget file stays on this device.",
       "startOver": "Start over",
       "confirmTitle": "Start over?",
       "confirmBody": "The app begins with an empty budget and keeps the current file on this device. Restoring from your own backup arrives with the backup feature.",
-      "confirmAction": "Start over",
-      "restoreFailed": "An update to your budget could not be finished, and the version from before the update could not be put back either. An intact copy is still kept on this device, still encrypted, and nothing new was written over it.",
-      "stateUnrecognized": "Some files of a budget are on this device in a state Budget Lens does not recognise, so it opened nothing and changed nothing. A new budget would need the key these files may still use, so no key was replaced."
-    },
-    "storageUnreachable": {
-      "title": "Secure storage is unavailable",
-      "body": "Budget Lens could not read this device’s secure storage, so it cannot open your budget. Nothing has been changed or deleted."
+      "confirmAction": "Start over"
     }
   },
   "currency": {
