@@ -374,6 +374,24 @@ describe("saving an edit", () => {
     expect(planned.plan.notices).toEqual([]);
   });
 
+  it("plans nothing when the form still holds the rule that is in force", () => {
+    // Arrange: an item running since January at the amount and rhythm the form shows, edited in June under a
+    // new name — the reviewer's case of #248.
+    const item = storedItem([version(toYearMonth("2026-01"), amount)]);
+    const renamed = state({
+      name: "Flat rent",
+      firstMonth: toYearMonth("2026-01"),
+      appliesFrom: toYearMonth("2026-06"),
+    });
+
+    // Act
+    const planned = planFormEdit(item, [], renamed, { activeMonth: toYearMonth("2026-06") });
+
+    // Assert: a name is no part of a rule version, so nothing is planned: no `upsertVersions` at June, and no
+    // notice of #64 to show for a change that was never asked for.
+    expect(planned).toBeUndefined();
+  });
+
   it("changes every month when editing from the first month with no closed history and no later version", () => {
     // Arrange: the item starts in the active month, so correcting it there is the whole rule.
     const item = storedItem([version(activeMonth, amount)]);

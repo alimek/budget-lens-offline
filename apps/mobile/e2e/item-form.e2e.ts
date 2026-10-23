@@ -525,7 +525,28 @@ test("keeps a scheduled change and undoes the choice to replace it", FORM, async
   await openRow(fixtures, screen.getByTestId(rowID("internet")));
   await expect(screen.getByTestId("item-sheet")).toBeVisible();
 
-  // Assert: the live dry run of #64 says a change is scheduled, and offers to replace it.
+  // Assert: opening the form asks the rule for nothing, so it has nothing to report: the scheduled change is
+  // news only once the user actually changes the amount, and never for a form nobody has touched (#248 B1).
+  await expect(screen.getByTestId("item-notice-scheduled")).toHaveCount(0);
+
+  // Act: a rename alone, with the amount and the rhythm left exactly as they were.
+  await typeInto(fixtures, "item-name", "E2E broadband");
+
+  // Assert: still nothing to report, and saving the name closes the sheet at once (#63).
+  await expect(screen.getByTestId("item-notice-scheduled")).toHaveCount(0);
+  await pressSheet(fixtures, "item-save", gone(screen.getByTestId(SHEET)));
+
+  // Assert: the name is the only thing the row changed: the change scheduled two months ahead is still there.
+  const internet = screen.getByTestId(rowID("internet"));
+  await revealRow(fixtures, internet);
+  await expect(internet).toHaveAccessibleName(/E2E broadband.*Change from/);
+  await app.screenshot("items-after-name-only-edit");
+
+  // Act: the same item again, this time with a different amount.
+  await openRow(fixtures, internet);
+  await typeInto(fixtures, "item-amount", "1100.00");
+
+  // Assert: now the live dry run of #64 says a change is scheduled, and offers to replace it.
   const replace = screen.getByTestId("item-notice-scheduled-replace");
   const keep = screen.getByTestId("item-notice-scheduled-keep");
   await expect(screen.getByTestId("item-notice-scheduled")).toBeVisible();
@@ -540,12 +561,19 @@ test("keeps a scheduled change and undoes the choice to replace it", FORM, async
   await app.screenshot("item-form-scheduled-replaced");
   await pressSheet(fixtures, "item-notice-scheduled-keep", shown(replace));
 
-  // Assert: back to the choice. Nothing in the form was changed, so the sheet closes at once (#63) and the
-  // scheduled change the row shows is the one that was seeded.
-  await pressSheet(fixtures, "item-cancel", gone(screen.getByTestId(SHEET)));
-  const internet = screen.getByTestId(rowID("internet"));
+  // Assert: the new amount is never saved. Leaving a form that holds something is confirmed first (#63), and
+  // the row keeps the amount it was seeded with next to its scheduled change.
+  const { alert, confirm } = appAlert(
+    fixtures,
+    "item-discard-dialog",
+    "Discard changes?",
+    "Discard",
+  );
+  await pressSheet(fixtures, "item-cancel", shown(alert));
+  await confirm.tap();
+  await expect(screen.getByTestId(SHEET)).toHaveCount(0);
   await revealRow(fixtures, internet);
-  await expect(internet).toHaveAccessibleName(/Change from/);
+  await expect(internet).toHaveAccessibleName(/E2E broadband, expense, .*1,000\.00.*Change from/);
 });
 
 test("keeps an amount whole in a currency without minor digits", FORM, async (fixtures) => {

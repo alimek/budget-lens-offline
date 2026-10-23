@@ -276,7 +276,9 @@ export function formToRuleEdit(
 /**
  * The dry run behind the live notices and behind Save: the stored item plus the overrides of *that* item fed
  * into core's planner with the stored active month. `readOverrides` answers for every item, so the sheet keeps
- * only the rows of the one it is editing (#83); `rejectedOverrides` are reported, never planned.
+ * only the rows of the one it is editing (#83); `rejectedOverrides` are reported, never planned. A form that
+ * still holds the rule in force where the change would start from is planned as no edit at all
+ * ({@link formRuleUnchanged}), which is what keeps a plain rename free of versions and of notices.
  */
 export function planFormEdit(
   item: VersionedItem,
@@ -288,12 +290,43 @@ export function planFormEdit(
     readonly resetKeptOverrides?: boolean;
   } = {},
 ): RuleEditResult | undefined {
+  if (formRuleUnchanged(item, state)) return undefined;
   const edit = formToRuleEdit(state, {
     replaceScheduled: options.replaceScheduled === true,
     resetKeptOverrides: options.resetKeptOverrides === true,
   });
   if (edit === undefined) return undefined;
   return planRuleEdit({ item, overrides: overridesFor(item, overrides) }, edit, context);
+}
+
+/**
+ * Whether the form still holds the amount and schedule of the version in force where the change would start
+ * from: "Applies from" for a recurring item, its own month for a one-time one. Only the name can differ then,
+ * and a name is no part of a rule version, so there is nothing to plan: no version of its own, and no notice of
+ * #64 to show (#248 round 1).
+ */
+function formRuleUnchanged(item: VersionedItem, state: ItemFormState): boolean {
+  const inForce = formVersionInForce(item, ruleMonth(state));
+  const amount = formAmount(state);
+  const schedule = formSchedule(state);
+  if (inForce === undefined || amount === undefined || schedule === undefined) return false;
+  return inForce.amount === amount && scheduleKey(inForce.schedule) === scheduleKey(schedule);
+}
+
+/** The month whose version the form edits: "Applies from", or the single month of a one-time item. */
+function ruleMonth(state: ItemFormState): YearMonth {
+  return state.repeat === "one-time" ? state.firstMonth : state.appliesFrom;
+}
+
+/**
+ * The rule as one comparable line: an absent day and an absent end month read as "no fixed day" and "never
+ * ends", so a rule that leaves a field out equals one that spells the same thing out.
+ */
+function scheduleKey(schedule: Schedule): string {
+  const day = schedule.dayOfMonth ?? 0;
+  return schedule.kind === "one-time"
+    ? `once ${schedule.month} on ${day}`
+    : `every ${schedule.intervalMonths} from ${schedule.anchor} on ${day} until ${schedule.endMonth ?? ""}`;
 }
 
 /** Overrides are keyed by `(itemType, itemId, month)`; the read returns every item's, the form wants one's. */
@@ -366,7 +399,7 @@ export function occurrenceDay(occurrence: Occurrence): {
 }
 
 /** The rule version the form edits: core's version in force in the month the form shows. */
-function formVersionInForce(item: StoredItem, month: YearMonth): RuleVersion | undefined {
+function formVersionInForce(item: VersionedItem, month: YearMonth): RuleVersion | undefined {
   return versionInForce(item.versions, month);
 }
 
