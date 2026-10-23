@@ -12,6 +12,8 @@ export interface ItemRowViewProps {
   /** Row actions revealed by the swipe; absent on the read-only archived list. */
   readonly actions?: readonly MenuAction<string>[] | undefined;
   readonly onAction?: ((key: string) => void) | undefined;
+  /** Tapping the row opens the item sheet (#82); absent on the read-only archived list. */
+  readonly onPress?: (() => void) | undefined;
   /** Test ID prefix, so the pushed archived list keeps its rows distinguishable. */
   readonly testIdPrefix?: string;
 }
@@ -21,6 +23,7 @@ export function ItemRowView({
   row,
   actions,
   onAction,
+  onPress,
   testIdPrefix = "items-row",
 }: ItemRowViewProps) {
   const { t } = useTranslation("items");
@@ -39,6 +42,7 @@ export function ItemRowView({
       accessibilityLabel={copy.accessibilityLabel}
       actions={actions}
       onAction={onAction}
+      {...(onPress === undefined ? {} : { onPress })}
     />
   );
 }

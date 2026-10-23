@@ -1,5 +1,6 @@
 import {
   type CurrencyCode,
+  currencyExponent,
   formatMoney,
   type Language,
   type MinorUnits,
@@ -41,4 +42,31 @@ export function formatAmount(amount: MinorUnits, options: FormatAmountOptions): 
 /** The colour token of an amount tone, for native views that take a colour instead of a class. */
 export function toneColorToken(tone: AmountTone): "income" | "expense" | "foreground" {
   return tone === "neutral" ? "foreground" : tone;
+}
+
+/**
+ * The amount as a plain number for an amount *field* (#61): grouping and fraction digits of the app language and
+ * the currency's exponent, but no currency symbol, because the field shows the currency in its own control.
+ * `1234567` grosze is `12 345,67` in Polish and `12,345.67` in English; `12000` yen is `12 000` / `12,000`. The
+ * grouping is exactly what `Intl` gives each locale, and `pl-PL` groups only from five digits on: `123456`
+ * grosze is `1234,56` in Polish and `1,234.56` in English. This is what the field shows when it loses focus, and
+ * `parseMoney` reads the grouping back. Like `formatMoney`, the minor units reach `Intl` as a number only for
+ * display; a currency without minor digits is rounded to whole units first, so no fraction digits appear where
+ * the currency has none.
+ */
+export function formatAmountNumber(
+  amount: MinorUnits,
+  options: { readonly lang: Language; readonly currency: CurrencyCode },
+): string {
+  const exponent = currencyExponent(options.currency);
+  const scale = 10 ** exponent;
+  const major =
+    exponent === 0
+      ? Math.round((amount < 0 ? negateMinorUnits(amount) : amount) / scale) * (amount < 0 ? -1 : 1)
+      : amount / scale;
+  return new Intl.NumberFormat(options.lang === "pl" ? "pl-PL" : "en-GB", {
+    style: "decimal",
+    minimumFractionDigits: exponent,
+    maximumFractionDigits: exponent,
+  }).format(major === 0 ? 0 : major);
 }

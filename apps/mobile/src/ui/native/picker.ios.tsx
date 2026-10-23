@@ -17,13 +17,16 @@ export function AppPicker<T extends string>({
   value,
   onValueChange,
   testID,
+  hideLabel = false,
 }: PickerProps<T>) {
   const theme = useThemeColors();
   return (
     <View className="items-start gap-1 self-stretch">
-      <AppText variant="footnote" className="text-muted-foreground" accessibilityElementsHidden>
-        {label}
-      </AppText>
+      {hideLabel ? null : (
+        <AppText variant="footnote" className="text-muted-foreground" accessibilityElementsHidden>
+          {label}
+        </AppText>
+      )}
       <Host matchContents>
         <Picker<T>
           label={label}

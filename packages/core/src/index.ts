@@ -1,5 +1,5 @@
 export type { CurrencyCode } from "./currency";
-export { isCurrencyCode } from "./currency";
+export { CURRENCY_CODES, currencyExponent, isCurrencyCode } from "./currency";
 export type { RateError, RateQuote, RateResult, RateSource, StoredRate } from "./exchange-rates";
 export {
   businessDaysBetween,

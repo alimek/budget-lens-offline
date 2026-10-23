@@ -9,9 +9,12 @@ import { AppAlert } from "@/ui/native/alert";
 import { AppSnackbar } from "@/ui/native/snackbar";
 import type { ItemRow } from "./item-rows";
 
+/** What the confirmation needs to name: an item's id and its name, which the list row and the edit form both have. */
+export type ArchivableItem = Pick<ItemRow, "id" | "name">;
+
 export interface ArchiveDialogProps {
-  /** The row being confirmed, or none while the dialog is closed. */
-  readonly row: ItemRow | null;
+  /** The item being confirmed, or none while the dialog is closed. */
+  readonly row: ArchivableItem | null;
   readonly onClose: () => void;
 }
 

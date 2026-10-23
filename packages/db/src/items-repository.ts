@@ -57,9 +57,15 @@ export type StoredItemErrorCode =
   | RuleVersionErrorCode
   | ScheduleErrorCode;
 
-/** An item the repository left out, with the core error codes that say why (#88 reports these). */
+/**
+ * An item the repository left out, with the core error codes that say why (#88 reports these).
+ *
+ * `archivedAt` comes along because a list reads archived items too and reports them where they belong: an
+ * archived row that cannot be read must not make the active list say it is hiding something (#219 N1).
+ */
 export interface InvalidItem {
   readonly itemId: string;
+  readonly archivedAt: Date | null;
   readonly errors: readonly StoredItemErrorCode[];
 }
 
@@ -157,7 +163,7 @@ function toItem(row: ItemRow, versions: readonly RuleVersion[]): StoredItem | In
         errors.add(error);
       }
     }
-    return { itemId: row.id, errors: [...errors] };
+    return { itemId: row.id, archivedAt: row.archivedAt, errors: [...errors] };
   }
   return {
     id: row.id,

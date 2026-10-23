@@ -25,4 +25,14 @@ describe("validateAmountInput", () => {
     // Assert
     expect(result).toEqual({ ok: false, errorKey });
   });
+
+  it("names the exponent of the currency in the fraction error", () => {
+    // Assert: JPY has no minor digits, so the error says so instead of counting decimal places (#61).
+    expect(validateAmountInput("12,5", "JPY")).toEqual({
+      ok: false,
+      errorKey: "amountInput.noFractionDigits",
+    });
+    // A comma in front of three digits groups thousands in such a currency (#164).
+    expect(validateAmountInput("1,000", "JPY")).toEqual({ ok: true, value: 1000 });
+  });
 });

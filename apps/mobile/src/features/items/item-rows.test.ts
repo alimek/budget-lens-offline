@@ -193,7 +193,7 @@ describe("listItems", () => {
     // Arrange: a read with nothing usable in it, which is what a fresh database looks like.
     const nothing = {
       items: [],
-      invalidItems: [{ itemId: "x", errors: ["no-versions" as const] }],
+      invalidItems: [{ itemId: "x", archivedAt: null, errors: ["no-versions" as const] }],
     };
 
     // Act
@@ -202,6 +202,22 @@ describe("listItems", () => {
     // Assert
     expect(listed.empty).toBe(true);
     expect(listed.hasInvalidItems).toBe(true);
+  });
+
+  it("reports an unreadable item only to the list that shows its kind", () => {
+    // Arrange: one damaged item that is archived, which the hook reads along with the active ones (#219 N1).
+    const read = {
+      items: [item({ id: "rent", name: "Rent" })],
+      invalidItems: [{ itemId: "old", archivedAt: new Date(0), errors: ["no-versions" as const] }],
+    };
+
+    // Act
+    const active = listItems(read, context);
+    const archived = listItems(read, { ...context, onlyArchived: true });
+
+    // Assert: only the archived list says something is hidden.
+    expect(active.hasInvalidItems).toBe(false);
+    expect(archived.hasInvalidItems).toBe(true);
   });
 
   it("holds the empty state back until the first read has landed", () => {

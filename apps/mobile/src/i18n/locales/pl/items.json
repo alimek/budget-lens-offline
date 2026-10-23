@@ -11,9 +11,12 @@
   },
   "empty": {
     "title": "Nie masz jeszcze pozycji",
-    "body": "Dodaj raz stałe rachunki, subskrypcje i przychody. Budget Lens umieści je we właściwych miesiącach."
+    "body": "Dodaj raz stałe rachunki, subskrypcje i przychody. Budget Lens umieści je we właściwych miesiącach.",
+    "cta": "Dodaj pierwszą pozycję"
   },
   "actions": {
+    "add": "Dodaj pozycję",
+    "edit": "Edytuj",
     "archive": "Archiwizuj"
   },
   "archive": {
@@ -48,5 +51,107 @@
     "kindExpense": "wydatek",
     "kindIncome": "przychód",
     "archived": "Zarchiwizowane pozycje, {{total}}"
+  },
+  "form": {
+    "titleNew": "Nowa pozycja",
+    "titleEdit": "Edytuj pozycję",
+    "titleView": "Pozycja",
+    "add": "Dodaj",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "done": "Gotowe",
+    "type": "Rodzaj",
+    "expense": "Wydatek",
+    "income": "Przychód",
+    "name": "Nazwa",
+    "namePlaceholder": "np. Czynsz",
+    "amountHint": "Kwota dodatnia. Rodzaj decyduje, czy to wydatek, czy przychód.",
+    "currencyLocked": "Waluty nie można zmienić po utworzeniu pozycji.",
+    "repeats": "Powtarzanie",
+    "repeat": {
+      "oneTime": "Jednorazowo",
+      "monthly": "Co miesiąc",
+      "every2": "Co 2 miesiące",
+      "quarterly": "Co kwartał",
+      "every6": "Co 6 miesięcy",
+      "yearly": "Co roku",
+      "custom": "Niestandardowe…"
+    },
+    "everyN_one": "Co {{count}} miesiąc",
+    "everyN_few": "Co {{count}} miesiące",
+    "everyN_many": "Co {{count}} miesięcy",
+    "everyN_other": "Co {{count}} miesiąca",
+    "decrease": "O miesiąc mniej",
+    "increase": "O miesiąc więcej",
+    "firstMonth": "Pierwszy miesiąc",
+    "month": "Miesiąc",
+    "monthValue": "{{month, monthName}}",
+    "day": "Dzień miesiąca",
+    "dayNone": "Bez konkretnego dnia",
+    "dayClampHint": "W krótszych miesiącach będzie to ostatni dzień.",
+    "ends": "Kończy się",
+    "lastMonth": "Ostatni miesiąc",
+    "preview": {
+      "next": "Najbliższe: {{dates}}"
+    },
+    "appliesFrom": "Obowiązuje od",
+    "appliesFromHint": "Miesiące przed {{month, monthName(case: instrumental)}} zachowają obecną kwotę i harmonogram. Zamknięte miesiące nigdy się nie zmieniają.",
+    "thisMonth": "{{month, monthName}} (bieżący miesiąc)",
+    "oneTimeHint": "Pozycja jednorazowa. Zmiany dotyczą tylko {{month, monthName(case: genitive)}}.",
+    "oneTimeClosed": "Tej pozycji nie można zmienić, bo {{month, monthName}} jest już zamknięty. Zamknięte miesiące zachowują historię.",
+    "noActiveMonth": "Budget Lens potrzebuje otwartego miesiąca, żeby móc zapisać. Nic nie zostało zmienione."
+  },
+  "notice": {
+    "scheduledKept": {
+      "title": "Od {{month, monthName(case: genitive)}} jest już zaplanowana zmiana",
+      "body": "Obowiązuje od {{month, monthName(case: genitive)}}. Ta zmiana działa do tego czasu.",
+      "replace": "Zastąp ją tą zmianą"
+    },
+    "scheduledReplaced": {
+      "title": "Zmiana zaplanowana od {{month, monthName(case: genitive)}} zostanie zastąpiona.",
+      "body": "Od {{month, monthName(case: genitive)}} obowiązują nowa kwota i harmonogram, bez późniejszej zmiany.",
+      "keep": "Zachowaj zaplanowaną zmianę"
+    },
+    "keptOverrides": {
+      "title_one": "1 miesiąc ma własną kwotę",
+      "title_few": "{{count}} miesiące mają własną kwotę",
+      "title_many": "{{count}} miesięcy ma własną kwotę",
+      "title_other": "{{count}} miesiąca ma własną kwotę",
+      "body": "Zachowają ją po tej zmianie:",
+      "skipped": "Pominięty",
+      "reset": "Przywróć w tych miesiącach nową kwotę",
+      "resetHint": "Jeśli to włączysz, ich jednorazowe kwoty i pominięcia zostaną usunięte."
+    },
+    "noVersionsLeft": "Po tej zmianie pozycja nie będzie miała żadnych miesięcy, więc zostanie zarchiwizowana."
+  },
+  "orphans": {
+    "title_one": "Usunąć {{count}} jednorazową zmianę?",
+    "title_few": "Usunąć {{count}} jednorazowe zmiany?",
+    "title_many": "Usunąć {{count}} jednorazowych zmian?",
+    "title_other": "Usunąć {{count}} jednorazowej zmiany?",
+    "message": "Te miesiące nie są już w harmonogramie: {{months}}. Ich jednorazowe zmiany zostaną usunięte.",
+    "confirm": "Usuń i zapisz"
+  },
+  "discard": {
+    "title": "Odrzucić zmiany?",
+    "confirm": "Odrzuć",
+    "keep": "Edytuj dalej"
+  },
+  "errors": {
+    "summary_one": "Popraw 1 pole",
+    "summary_few": "Popraw pola: {{count}}",
+    "summary_many": "Popraw pola: {{count}}",
+    "summary_other": "Popraw pola: {{count}}",
+    "nameRequired": "Wpisz nazwę",
+    "amountZero": "Wpisz kwotę większą od 0",
+    "endBeforeStart": "Ostatni miesiąc nie może być przed pierwszym",
+    "interval": "Wpisz liczbę od 1 do 120",
+    "saveFailed": "Nie udało się zapisać pozycji. Twoje dane nie zostały zmienione.",
+    "monthClosed": {
+      "title": "{{month, monthName(capitalize: true)}} został zamknięty",
+      "body": "Zmiany mogą zaczynać się tylko w otwartym miesiącu. Wybierz późniejszy miesiąc w polu „Obowiązuje od”. Twoje zmiany są nadal w formularzu.",
+      "action": "Wybierz miesiąc"
+    },
+    "oneTimeClosedNow": "Tej jednorazowej pozycji nie można już zmienić. Twoje zmiany nie zostały zapisane."
   }
 }

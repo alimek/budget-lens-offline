@@ -10,7 +10,9 @@ import { joinSummary, type SummaryTextKey } from "./recurrence-summary";
 
 /** The keys of this file; the screen hands `itemRowCopy` a lookup over exactly these. */
 type ItemTextKey =
+  | "actions.add"
   | "actions.archive"
+  | "actions.edit"
   | "list.changeFrom"
   | "list.noRate"
   | "a11y.row"
@@ -65,7 +67,10 @@ export function itemRowCopy(row: ItemRow, lang: Language, t: ItemTranslate): Ite
   return { amount, meta: summary, badge: change, amountNote: note, accessibilityLabel: label };
 }
 
-/** The row actions of the Items list: archive only. #82 adds "edit" to this list; nothing else changes. */
+/** The row actions of the Items list: edit the item, or archive it (#63, #82). */
 export function itemRowActions(t: ItemTranslate): readonly MenuAction<string>[] {
-  return [{ key: "archive", label: t("actions.archive"), destructive: true }];
+  return [
+    { key: "edit", label: t("actions.edit") },
+    { key: "archive", label: t("actions.archive"), destructive: true },
+  ];
 }

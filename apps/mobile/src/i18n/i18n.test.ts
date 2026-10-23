@@ -130,6 +130,75 @@ describe("the monthName formatter", () => {
     ]);
   });
 
+  it("declines the month keys of the item form by the case each one asks for", () => {
+    // Arrange: the four cases the sheet needs – a standalone month, one after "przed" (instrumental), one
+    // after "od/odnośnik" (genitive), and one that starts a sentence (capitalised nominative).
+    const months = ["2027-01", "2027-02", "2027-10"] as const;
+    const keys = [
+      "form.thisMonth",
+      "form.appliesFromHint",
+      "notice.scheduledKept.title",
+      "form.oneTimeHint",
+      "errors.monthClosed.title",
+    ] as const;
+
+    // Act
+    const lines = months.flatMap((month) => keys.map((key) => render("pl", key, month)));
+
+    // Assert
+    expect(lines).toEqual([
+      "styczeń 2027 (bieżący miesiąc)",
+      "Miesiące przed styczniem 2027 zachowają obecną kwotę i harmonogram. Zamknięte miesiące nigdy się nie zmieniają.",
+      "Od stycznia 2027 jest już zaplanowana zmiana",
+      "Pozycja jednorazowa. Zmiany dotyczą tylko stycznia 2027.",
+      "Styczeń 2027 został zamknięty",
+      "luty 2027 (bieżący miesiąc)",
+      "Miesiące przed lutym 2027 zachowają obecną kwotę i harmonogram. Zamknięte miesiące nigdy się nie zmieniają.",
+      "Od lutego 2027 jest już zaplanowana zmiana",
+      "Pozycja jednorazowa. Zmiany dotyczą tylko lutego 2027.",
+      "Luty 2027 został zamknięty",
+      "październik 2027 (bieżący miesiąc)",
+      "Miesiące przed październikiem 2027 zachowają obecną kwotę i harmonogram. Zamknięte miesiące nigdy się nie zmieniają.",
+      "Od października 2027 jest już zaplanowana zmiana",
+      "Pozycja jednorazowa. Zmiany dotyczą tylko października 2027.",
+      "Październik 2027 został zamknięty",
+    ]);
+  });
+
+  it("names the month in the item form keys in English", () => {
+    // Arrange
+    const months = ["2027-01", "2027-02", "2027-10"] as const;
+    const keys = [
+      "form.thisMonth",
+      "form.appliesFromHint",
+      "notice.scheduledReplaced.title",
+      "form.oneTimeClosed",
+      "errors.monthClosed.title",
+    ] as const;
+
+    // Act
+    const lines = months.flatMap((month) => keys.map((key) => render("en", key, month)));
+
+    // Assert
+    expect(lines).toEqual([
+      "January 2027 (this month)",
+      "Months before January 2027 keep their current amount and schedule. Closed months never change.",
+      "The change scheduled from January 2027 will be replaced.",
+      "January 2027 is closed, so this item can't be changed. Closed months keep their history.",
+      "January 2027 has been closed",
+      "February 2027 (this month)",
+      "Months before February 2027 keep their current amount and schedule. Closed months never change.",
+      "The change scheduled from February 2027 will be replaced.",
+      "February 2027 is closed, so this item can't be changed. Closed months keep their history.",
+      "February 2027 has been closed",
+      "October 2027 (this month)",
+      "Months before October 2027 keep their current amount and schedule. Closed months never change.",
+      "The change scheduled from October 2027 will be replaced.",
+      "October 2027 is closed, so this item can't be changed. Closed months keep their history.",
+      "October 2027 has been closed",
+    ]);
+  });
+
   it("capitalises a month that starts a sentence", () => {
     // Arrange: a fixture key – the copy that needs it belongs to #82.
     const renderCapitalised = (language: "en" | "pl"): string =>

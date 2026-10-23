@@ -11,9 +11,12 @@
   },
   "empty": {
     "title": "No items yet",
-    "body": "Add your regular bills, subscriptions and income once. Budget Lens puts them in the right months."
+    "body": "Add your regular bills, subscriptions and income once. Budget Lens puts them in the right months.",
+    "cta": "Add first item"
   },
   "actions": {
+    "add": "Add item",
+    "edit": "Edit",
     "archive": "Archive"
   },
   "archive": {
@@ -49,5 +52,99 @@
     "kindExpense": "expense",
     "kindIncome": "income",
     "archived": "Archived items, {{total}}"
+  },
+  "form": {
+    "titleNew": "New item",
+    "titleEdit": "Edit item",
+    "titleView": "Item",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "done": "Done",
+    "type": "Type",
+    "expense": "Expense",
+    "income": "Income",
+    "name": "Name",
+    "namePlaceholder": "e.g. Rent",
+    "amountHint": "Positive amount. The type decides whether it is spent or received.",
+    "currencyLocked": "The currency can't be changed after the item is created.",
+    "repeats": "Repeats",
+    "repeat": {
+      "oneTime": "One-time",
+      "monthly": "Monthly",
+      "every2": "Every 2 months",
+      "quarterly": "Quarterly",
+      "every6": "Every 6 months",
+      "yearly": "Yearly",
+      "custom": "Custom…"
+    },
+    "everyN_one": "Every {{count}} month",
+    "everyN_other": "Every {{count}} months",
+    "decrease": "One month less",
+    "increase": "One month more",
+    "firstMonth": "First month",
+    "month": "Month",
+    "monthValue": "{{month, monthName}}",
+    "day": "Day of month",
+    "dayNone": "No specific day",
+    "dayClampHint": "Shorter months use their last day.",
+    "ends": "Ends",
+    "lastMonth": "Last month",
+    "preview": {
+      "next": "Next: {{dates}}"
+    },
+    "appliesFrom": "Applies from",
+    "appliesFromHint": "Months before {{month, monthName}} keep their current amount and schedule. Closed months never change.",
+    "thisMonth": "{{month, monthName}} (this month)",
+    "oneTimeHint": "One-time item. Changes apply to {{month, monthName}} only.",
+    "oneTimeClosed": "{{month, monthName}} is closed, so this item can't be changed. Closed months keep their history.",
+    "noActiveMonth": "Budget Lens needs an open month before it can save. Nothing has been changed."
+  },
+  "notice": {
+    "scheduledKept": {
+      "title": "A change is already scheduled from {{month, monthName}}",
+      "body": "It stays in force from {{month, monthName}}. This edit applies until then.",
+      "replace": "Replace it with this change"
+    },
+    "scheduledReplaced": {
+      "title": "The change scheduled from {{month, monthName}} will be replaced.",
+      "body": "From {{month, monthName}} on, the new amount and schedule apply with no later change.",
+      "keep": "Keep the scheduled change"
+    },
+    "keptOverrides": {
+      "title_one": "1 month has its own amount",
+      "title_other": "{{count}} months have their own amount",
+      "body": "They keep it after this change:",
+      "skipped": "Skipped",
+      "reset": "Reset these months to the new amount",
+      "resetHint": "If you turn this on, their one-off amounts and skips are removed."
+    },
+    "noVersionsLeft": "After this change the item has no months left, so it will be archived."
+  },
+  "orphans": {
+    "title_one": "Remove {{count}} one-off change?",
+    "title_other": "Remove {{count}} one-off changes?",
+    "message": "These months are no longer scheduled: {{months}}. Their one-off changes will be removed.",
+    "confirm": "Remove and save"
+  },
+  "discard": {
+    "title": "Discard changes?",
+    "confirm": "Discard",
+    "keep": "Keep editing"
+  },
+  "errors": {
+    "summary_one": "{{count}} field needs attention",
+    "summary_other": "{{count}} fields need attention",
+    "nameRequired": "Enter a name",
+    "amountZero": "Enter an amount greater than 0",
+    "endBeforeStart": "The last month can't be before the first month",
+    "interval": "Enter a number from 1 to 120",
+    "saveFailed": "Couldn't save the item. Your data hasn't changed.",
+    "monthClosed": {
+      "title": "{{month, monthName}} has been closed",
+      "body": "Changes can only start in an open month. Pick a later month in “Applies from”. Your changes are still in the form.",
+      "action": "Pick a month"
+    },
+    "oneTimeClosedNow": "This one-time item can no longer be changed. Your changes weren't saved."
   }
 }

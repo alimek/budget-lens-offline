@@ -239,6 +239,7 @@ function RowContent(props: TransactionRowProps) {
  */
 function StatuslessRowContent(props: StatuslessRowProps) {
   const stacked = useStackedRows();
+  const onPress = props.onPress;
   return (
     <HStack
       spacing={12}
@@ -246,6 +247,14 @@ function StatuslessRowContent(props: StatuslessRowProps) {
         accessibilityElement("combine"),
         accessibilityLabel(props.accessibilityLabel),
         accessibilityIdentifier(props.testID),
+        // The row opens the item sheet, so it is one button whose name is the whole row (#82).
+        ...(onPress === undefined
+          ? []
+          : [
+              contentShape(shapes.rectangle()),
+              accessibilityAddTraits(["isButton"]),
+              onTapGesture(onPress),
+            ]),
       ]}
     >
       <RowTexts

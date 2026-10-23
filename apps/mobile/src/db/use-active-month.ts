@@ -13,6 +13,11 @@ export interface ActiveMonth {
    * month to anchor to, and a screen shows its loading or error state instead of rows anchored to a made-up month.
    */
   readonly month: YearMonth | undefined;
+  /**
+   * The `months` row with `status = 'active'` alone, with no calendar fallback: what a write may be planned
+   * against. A screen shows `month` and plans against `stored` (#82), so the fallback above stays display-only.
+   */
+  readonly stored: YearMonth | undefined;
   readonly status: "loading" | "ready" | "error";
   /** Runs the read again – the retry of the error state. */
   readonly reload: () => void;
@@ -29,6 +34,7 @@ export function useActiveMonth(clock: () => Date = () => new Date()): ActiveMont
   const stored = useLiveRead(MONTH_TABLES, readActiveMonth);
   return {
     month: resolveActiveMonth(stored, clock()),
+    stored: stored.value,
     status: stored.status,
     reload: stored.reload,
   };
