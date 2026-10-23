@@ -37,9 +37,12 @@ first launch guides the user through a short onboarding.
   (`expo-router/native-tabs`), editors as `formSheet` routes, Expo UI for settings/pickers/switches, a
   non-secret `bl.lang` mirror, explicit Android backup rules without `allowBackup=false`, typed routes after beta
   ([owner review #36](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263678079)).
-- Onboarding (language, **base currency step + lock confirmation**, starting balance, privacy explanation). On
-  Android it has one **"Enable backup to Google Drive"** step (Google Sign-In consent for `appDataFolder`); iOS needs no
-  prompt ([owner review #48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263841345)). It looks up an existing backup in the user's own iCloud / Google Drive
+- Onboarding steps: 1. welcome, 2. **base currency**, 3. **confirmation** (summary + base currency lock), so three
+  steps on iOS. There is no opening-balance ("Saldo początkowe") step
+  ([owner decision, 2026-10-23 16:05](../decisions.md)): the balance comes from the private (spendable) accounts and
+  their current amounts that the user sets later in the app ([#66](https://github.com/alimek/budget-lens-offline/issues/66)).
+  On Android onboarding additionally has one **"Enable backup to Google Drive"** step (Google Sign-In consent for
+  `appDataFolder`); iOS needs no prompt ([owner review #48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263841345)). It looks up an existing backup in the user's own iCloud / Google Drive
   ([#116](https://github.com/alimek/budget-lens-offline/issues/116)).
 - Main navigation: five Expo Router `NativeTabs`: **Overview** (the Dashboard, first and default), Month, Forecast,
   Items, Settings ([#36 Q1](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263044426); [Variant A, chosen by @alimek](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)). **Savings** is not a tab: it is a
@@ -48,8 +51,9 @@ first launch guides the user through a short onboarding.
 - Minimum OS: **Android 8.0 (minSdk 26)**, set with `expo-build-properties`, and **iOS 16.4** (the SDK 58 default).
   Android 7 is not supported ([#44 decision](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340036713), [minimums decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575), 2026-10-22; applied in the
   [#218](https://github.com/alimek/budget-lens-offline/issues/218) spike).
-- For the first month, the user is asked which items added for it are already paid, so the starting balance isn't
-  double-counted by the forecast; #59 / #111 place the step ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), row 12).
+- For the first month, the user is asked which items added for it are already paid, so the balance from the
+  accounts isn't double-counted by the forecast; this happens after onboarding, which has no balance step, and
+  #59 / #111 place it ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), row 12).
 
 **Out:**
 - Accounts and any Budget Lens server.
@@ -61,6 +65,8 @@ first launch guides the user through a short onboarding.
 
 - As a new user, I can start budgeting without creating an account.
 - As a new user, I choose my base currency once during onboarding and confirm that it cannot be changed later.
+- As a new user, I am not asked for an opening balance during onboarding; I enter my private accounts and their
+  amounts later in the app.
 - As a user, I can trust that my data stays on my phone, inside the app's own sandbox, and never leaves it unless I
   back it up myself.
 - As a user who reinstalls the app or gets a new phone of the same platform, onboarding finds my backup on its
