@@ -43,12 +43,17 @@ async function openItemsTab({ app, device, screen }: Fixtures) {
   await app.open();
   await expect(screen.getByTestId("screen-home")).toBeVisible();
   await tapUntilVisible(screen.getByTestId("tab-items"), screen.getByTestId("screen-items"));
-  // The one line the rest of the run is measured against: a hosted sheet keeps the tab bar out of its own tree,
-  // so it has to be read here, over the list, where it is.
-  if (tabTop === null) {
-    const tabs = await boxOf(screen.getByTestId("tab-items"));
-    if (tabs !== null) tabTop = tabs.y - TAP_MARGIN;
-  }
+  await measureTabBar(screen);
+}
+
+/**
+ * Reads the one line the rest of the run is measured against. A hosted sheet keeps the tab bar out of its own
+ * tree, so it is read here, over the list, where it is on screen, and kept: the bar keeps its line for the run.
+ */
+async function measureTabBar(screen: Fixtures["screen"]) {
+  if (tabTop !== null) return;
+  const tabs = await boxOf(screen.getByTestId("tab-items"));
+  if (tabs !== null) tabTop = tabs.y - TAP_MARGIN;
 }
 
 /** `after` months behind `month`, as the month pickers' test IDs spell it. */
@@ -105,15 +110,11 @@ async function containerBox(screen: Fixtures["screen"], container: string): Prom
 
 /**
  * The lowest line a tap may aim at: what the container has room for, less the strip the floating tab bar covers.
- * `null` while neither has been measured, which is taken as nothing being known to be under the bar yet.
+ * `null` while the container itself has not been measured.
  */
 async function reachLine(screen: Fixtures["screen"], container: string): Promise<number | null> {
   const box = await containerBox(screen, container);
   if (box === null) return null;
-  if (tabTop === null) {
-    const tabs = await boxOf(screen.getByTestId("tab-items"));
-    if (tabs !== null) tabTop = tabs.y - TAP_MARGIN;
-  }
   return tabTop === null ? box.y + box.height : Math.min(box.y + box.height, tabTop);
 }
 
