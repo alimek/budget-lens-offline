@@ -194,10 +194,27 @@ async function happened(effect: Effect): Promise<boolean> {
     .catch(() => false);
 }
 
-/** Reports an effect that never came, with the assertion the run shows. */
-async function requireEffect(effect: Effect): Promise<void> {
+/** Reports an effect that never came, with the assertion the run shows; nothing when nothing was asked for. */
+async function requireEffect(effect: Effect | undefined): Promise<void> {
+  if (effect === undefined) return;
   if (effect.state === "visible") await expect(effect.node).toBeVisible();
   else await expect(effect.node).toHaveCount(0);
+}
+
+/** Whether the press is done: the effect it was asked for has happened, or none was asked for. */
+async function satisfied(effect: Effect | undefined): Promise<boolean> {
+  return effect === undefined || (await happened(effect));
+}
+
+/** Brings one control into reach and presses it once; false while it is not on the screen to press. */
+async function pressOnce(
+  fixtures: Fixtures,
+  control: Locator,
+  container: string,
+): Promise<boolean> {
+  if ((await scrollIntoReach(fixtures.screen, control, container)) === false) return false;
+  await control.tap().catch(() => {});
+  return true;
 }
 
 /**
@@ -213,14 +230,10 @@ async function press(
   effect?: Effect,
 ): Promise<void> {
   for (let attempt = 0; attempt < PRESS_TRIES; attempt += 1) {
-    if (await scrollIntoReach(fixtures.screen, control, container)) {
-      await control.tap().catch(() => {});
-      if (effect === undefined) return;
-      if (await happened(effect)) return;
-    }
+    if ((await pressOnce(fixtures, control, container)) && (await satisfied(effect))) return;
     await settle(500);
   }
-  if (effect !== undefined) await requireEffect(effect);
+  await requireEffect(effect);
 }
 
 /** Presses a control of the item sheet, whose actions sit at the foot of one scrolling column. */
