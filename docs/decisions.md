@@ -8,7 +8,7 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 - **Question:** where does the first month's opening balance come from, now that onboarding doesn't ask for it?
   (asked 2026-10-23, after the 16:05 decision below).
-- **Answer:** "No co, początkowo jest zero. Do momentu, gdy użytkownik nie doda jakiegoś swojego konta i ile ma pieniędzy na tym koncie, to jest zero. Do momentu gdy o gdy doda jakieś damy, to zaczynamy wszystko liczy."
+- **Answer:** "No co, początkowo jest zero. Do momentu, gdy użytkownik nie doda jakiegoś swojego konta i ile ma pieniędzy na tym koncie, to jest zero. Do momentu gdy o gdy doda jakiś damy, to zaczynamy wszystko liczy."
   (owner in chat, 2026-10-23 16:15)
 - **Meaning:** onboarding creates the first month with an opening balance of 0. It stays 0 until the user adds at
   least one private account with its current amount ([#66](https://github.com/alimek/budget-lens-offline/issues/66) account model); from then on the balance is
