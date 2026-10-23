@@ -54,7 +54,7 @@ first launch guides the user through a short onboarding.
   screen pushed from the Savings card on Overview. "Add item" is a toolbar `+` (iOS) / FAB (Android), never a tab.
   A tab never sends the user into another tab's stack: a screen shared by two tabs is pushed inside the current tab's
   stack. A Forecast month row pushes the shared month screen (the Month tab content for that month, with back to
-  Forecast), and back returns to the forecast ([owner input, 2026-10-23 19:14](../decisions.md), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
+  Forecast), and back returns to the forecast ([owner approval, 2026-10-23 19:23](../decisions.md), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
 
 - Minimum OS: **Android 8.0 (minSdk 26)**, set with `expo-build-properties`, and **iOS 16.4** (the SDK 58 default).
   Android 7 is not supported ([#44 decision](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340036713), [minimums decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575), 2026-10-22; applied in the
