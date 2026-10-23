@@ -35,7 +35,7 @@ surfaces they are used on.
 | `ring` | `#3F4BA8` | `#A9B0FF` | focus ring (3 pt at 30 %) |
 | `chart-1` … `chart-5` | `#3F4BA8` `#0B7A68` `#A15C07` `#0369A1` `#BE185D` | `#A9B0FF` `#5FD8BE` `#F5C26B` `#7CC4F5` `#F59AC0` | charts |
 | `income` | `#0B7A68` | `#5FD8BE` | income amounts (with `+`) |
-| `expense` | `#0E1022` | `#F3F4FA` | expense amounts: same as `foreground`, marked by the `−` sign, not by red |
+| `expense` | `#B03A48` | `#EE8796` | expense amounts (with `−`): a calm red, kept apart from `destructive` (on `card` 5.92:1 light / 7.39:1 dark, on `popover` 5.92:1 / 6.89:1, on `background` 5.44:1 / 8.13:1) |
 | `subtle-foreground` | `#686D86` | `#8A8FA8` | placeholders; only on `card` / `background` (light 5.10:1 / 4.68:1, dark 5.69:1 / 6.26:1) |
 | `surface-raised` | `#FFFFFF` | `#1E2140` | active tab trigger, switch thumb |
 | `surface-inset` | `#F6F7FA` | `rgba(255,255,255,0.03)` | stat tiles inside a card |
@@ -90,7 +90,7 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
       --color-chart-5: #be185d;
       /* Budget Lens extras */
       --color-income: #0b7a68;
-      --color-expense: #0e1022;
+      --color-expense: #b03a48;
       --color-subtle-foreground: #686d86;
       --color-surface-raised: #ffffff;
       --color-surface-inset: #f6f7fa;
@@ -143,7 +143,7 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
       --color-chart-5: #f59ac0;
       /* Budget Lens extras */
       --color-income: #5fd8be;
-      --color-expense: #f3f4fa;
+      --color-expense: #ee8796;
       --color-subtle-foreground: #8a8fa8;
       --color-surface-raised: #1e2140;
       --color-surface-inset: rgba(255, 255, 255, 0.03);
