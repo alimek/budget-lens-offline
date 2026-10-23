@@ -51,66 +51,128 @@ function monthAfter(month: string, after: number): string {
   return `${String(Math.floor(index / 12))}-${String((index % 12) + 1).padStart(2, "0")}`;
 }
 
-/** The sheet's own rectangle, which the fallback drag is measured against. */
-type SheetBox = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>;
+/** A rectangle as the engine reports it, or none while the node is not in the tree. */
+type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>;
 
 /**
- * Brings a control into the sheet's visible area. The form is one scrolling column (#63), so what sits below
- * the fold – the actions, "Applies from", a notice – has to be scrolled to before it can be read or tapped.
+ * Scrolls a control of a scrolling container into the band where a tap reaches it. A sheet and a list both hand
+ * accessibility the children they have scrolled out of view as well, with frames lying under the fold, and the
+ * tab bar floats over the bottom of the screen: a node down there is in the tree, reads as visible, and is drawn
+ * somewhere else entirely, so its rectangle is measured rather than trusted (#63's one scrolling column).
  */
-async function reveal({ screen }: Fixtures, testID: string) {
-  const control = screen.getByTestId(testID);
-  if (await control.isVisible()) return;
-  try {
-    await screen.scrollUntilVisible(control);
-  } catch (error) {
-    await dragIntoView(screen, control, error);
+async function scrollIntoReach(fixtures: Fixtures, node: Locator, container: Locator) {
+  const { screen } = fixtures;
+  for (let attempt = 0; attempt < SCROLL_TRIES; attempt += 1) {
+    // The scroll comes first and the box only confirms where it landed: a control below the fold of a hosted
+    // sheet is not in the tree to be measured until something has scrolled to it.
+    await screen.scrollUntilVisible(node).catch(() => {});
+    if (await isReachable(screen, node, container)) return node;
+    await dragUp(screen, container);
+    if (await isReachable(screen, node, container)) return node;
   }
+  await expect(node).toBeVisible();
+  return node;
+}
+
+/** Brings a control of the item sheet into reach: the form is one scrolling column, so much of it starts below. */
+async function reveal(fixtures: Fixtures, testID: string) {
+  const { screen } = fixtures;
+  return await scrollIntoReach(fixtures, screen.getByTestId(testID), screen.getByTestId(SHEET));
+}
+
+/** Opens a row of the list, which the tab bar can cover the same way a sheet covers its own actions. */
+async function openRow(fixtures: Fixtures, row: Locator) {
+  await revealRow(fixtures, row);
+  await row.tap();
+}
+
+/** Brings a row of the list into the band a tap reaches, which reading its name needs just as much as tapping it. */
+async function revealRow(fixtures: Fixtures, row: Locator) {
+  const { screen } = fixtures;
+  await scrollIntoReach(fixtures, row, screen.getByTestId("items-list"));
 }
 
 /**
- * The fallback of a scroll that moved nothing: inside the hosted sheet the engine's scroll can start on a native
- * control, so the sheet is dragged instead, slowly, along its own left edge where only its scroll view is.
+ * Chooses a currency in the field's menu and waits for the menu to close: while its popover is up, it owns the
+ * screen and swallows the next touch, so a field filled straight after a pick would stay empty.
  */
-async function dragIntoView(screen: Fixtures["screen"], control: Locator, cause: unknown) {
-  const sheet = await screen.getByTestId(/^item-sheet/).boundingBox();
-  if (sheet === null) throw cause;
-  if (await dragSheet(screen, control, sheet)) return;
-  throw cause;
+async function chooseCurrency(fixtures: Fixtures, code: string) {
+  const { screen } = fixtures;
+  await screen.getByTestId("item-amount-currency").tap();
+  await expect(screen.getByTestId(`item-amount-currency-${code}`)).toBeVisible();
+  await screen.getByTestId(`item-amount-currency-${code}`).tap();
+  await expect(screen.getByTestId(`item-amount-currency-${code}`)).toHaveCount(0);
 }
 
-/** Repeats one drag until the control is on screen, and says whether it ever got there. */
-async function dragSheet(screen: Fixtures["screen"], control: Locator, sheet: SheetBox) {
-  for (let attempt = 0; attempt < DRAG_ATTEMPTS; attempt += 1) {
-    if (await control.isVisible()) return true;
-    await screen.swipe({
-      from: { x: sheet.x + SHEET_EDGE, y: sheet.y + sheet.height * DRAG_FROM },
-      to: { x: sheet.x + SHEET_EDGE, y: sheet.y + sheet.height * DRAG_TO },
-      duration: DRAG_DURATION,
-    });
-    await settle();
-  }
-  return control.isVisible();
+/** Whether a node lies inside the band a tap can reach, given what its container has room for. */
+async function isReachable(screen: Fixtures["screen"], node: Locator, container: Locator) {
+  if (!(await node.isVisible())) return false;
+  const [box, bottom] = await Promise.all([boxOf(node), reachableBottom(screen, container)]);
+  return box !== null && box.y + box.height <= bottom;
 }
 
-/** A drag this far up the sheet, this many times, at the sheet's left edge. */
-const DRAG_ATTEMPTS = 8;
-const SHEET_EDGE = 8;
+/**
+ * The lowest line a tap may aim at: the bottom of the container, less the strip the floating tab bar covers –
+ * a sheet is hosted behind it, and its own scroll view reaches to the same line.
+ */
+async function reachableBottom(screen: Fixtures["screen"], container: Locator): Promise<number> {
+  const box = await boxOf(container);
+  if (box === null) return 0;
+  const tabs = await boxOf(screen.getByTestId("tab-items"));
+  const bar = tabs === null ? Number.POSITIVE_INFINITY : tabs.y - TAP_MARGIN;
+  return Math.min(box.y + box.height, bar);
+}
+
+/**
+ * One drag up the container's own scroll view, a hand's width in from its edge: at the very edge the system
+ * takes the gesture for itself, and nothing moves.
+ */
+async function dragUp(screen: Fixtures["screen"], container: Locator) {
+  const box = await boxOf(container);
+  if (box === null) return;
+  const x = box.x + box.width * DRAG_INSET;
+  await screen.swipe({
+    from: { x, y: box.y + box.height * DRAG_FROM },
+    to: { x, y: box.y + box.height * DRAG_TO },
+    duration: DRAG_DURATION,
+  });
+  await settle();
+}
+
+/** Reads a node's rectangle once, saying nothing about whether it is where a tap would land. */
+async function boxOf(node: Locator): Promise<Box | null> {
+  return await node.boundingBox().catch(() => null);
+}
+
+/** The sheet itself, and nothing of the controls inside it that share its prefix. */
+const SHEET = /^item-sheet$/;
+/** Keeps a tap off the very last line of the reachable band. */
+const TAP_MARGIN = 8;
+/** Scrolls this many times, dragging between the attempts. */
+const SCROLL_TRIES = 3;
+/** A drag this far up the container, this far in from its edge. */
+const DRAG_INSET = 0.1;
 const DRAG_FROM = 0.7;
 const DRAG_TO = 0.35;
 const DRAG_DURATION = 900;
 
-/** Types into a field and lets go of the keyboard, which on both platforms covers what sits below the field. */
+/**
+ * Types into a field of the sheet and ends the entry the way the app does: an amount commits with the Done of its
+ * own keyboard bar (#61), which is also what puts the keyboard away. Dragging the keyboard away instead would
+ * drag the hosted sheet with it, leaving its controls in the tree and their pixels elsewhere.
+ */
 async function typeInto(fixtures: Fixtures, testID: string, text: string) {
-  const { device, screen } = fixtures;
+  const { screen } = fixtures;
   await screen.getByTestId(testID).fill(text);
-  await device.dismissKeyboard();
+  const done = screen.getByTestId(`${testID}-done`);
+  if (await done.isVisible()) await done.tap();
+  await settle();
 }
 
 /** Archives an item from inside its own sheet (#63, decision 1: archive, never delete). */
 async function archiveFromSheet(fixtures: Fixtures, name: string, row: ReturnType<typeof created>) {
   const { screen } = fixtures;
-  await row.tap();
+  await openRow(fixtures, row);
   await expect(screen.getByTestId("item-sheet")).toBeVisible();
   await reveal(fixtures, "item-archive");
   const { alert, confirm } = appAlert(
@@ -143,10 +205,7 @@ test("adds the first item from the empty list and lists it with its summary", as
     await expect(screen.getByTestId(id)).toBeVisible();
   }
   await expect(screen.getByTestId("item-applies-from")).toHaveCount(0);
-  await screen.getByTestId("item-amount-currency").tap();
-  await expect(screen.getByTestId("item-amount-currency-PLN")).toBeVisible();
-  await screen.getByTestId("item-amount-currency-PLN").tap();
-  await settle();
+  await chooseCurrency(fixtures, "PLN");
   await app.screenshot("item-form-add");
 
   // Act
@@ -164,6 +223,7 @@ test("adds the first item from the empty list and lists it with its summary", as
 
   // Assert: the row is listed, named as one sentence with its amount and its summary (#63 accessibility).
   const row = created(screen);
+  await revealRow(fixtures, row);
   await expect(row).toHaveAccessibleName(/E2E water, expense, .*1,234\.56.*Monthly/);
   await app.screenshot("items-after-add");
 
@@ -228,7 +288,7 @@ test("edits a recurring item from a later month, leaving earlier months alone", 
   await expect(rent).toHaveAccessibleName(/Rent, expense, .*3,200\.00.*Monthly/);
 
   // Act: the row itself opens the sheet in edit mode (#82).
-  await rent.tap();
+  await openRow(fixtures, rent);
   await expect(screen.getByTestId("item-sheet")).toBeVisible();
 
   // Assert: the type is fixed after creation and the currency is locked, with the reason said (#63, #82).
@@ -269,12 +329,13 @@ test("keeps a scheduled change and undoes the choice to replace it", async (fixt
   const { app, screen } = fixtures;
   await seed(fixtures, "dev-items-seed-seed", /written/i);
   await openItemsTab(fixtures);
-  await screen.getByTestId(rowID("internet")).tap();
+  await openRow(fixtures, screen.getByTestId(rowID("internet")));
   await expect(screen.getByTestId("item-sheet")).toBeVisible();
 
   // Assert: the live dry run of #64 says a change is scheduled, and offers to replace it.
   await reveal(fixtures, "item-notice-scheduled");
   await expect(screen.getByTestId("item-notice-scheduled")).toBeVisible();
+  await reveal(fixtures, "item-notice-scheduled-replace");
   await expect(screen.getByTestId("item-notice-scheduled-replace")).toBeVisible();
   await app.screenshot("item-form-scheduled-notice");
 
@@ -283,6 +344,7 @@ test("keeps a scheduled change and undoes the choice to replace it", async (fixt
   await nativeButton(fixtures, "item-notice-scheduled-replace").tap();
 
   // Assert: replacing is undone by "Keep the scheduled change" (#64, decision 3).
+  await reveal(fixtures, "item-notice-scheduled-keep");
   await expect(screen.getByTestId("item-notice-scheduled-keep")).toBeVisible();
   await app.screenshot("item-form-scheduled-replaced");
 
@@ -292,11 +354,14 @@ test("keeps a scheduled change and undoes the choice to replace it", async (fixt
 
   // Assert: back to the choice. Nothing in the form was changed, so the sheet closes at once (#63) and the
   // scheduled change the row shows is the one that was seeded.
+  await reveal(fixtures, "item-notice-scheduled-replace");
   await expect(screen.getByTestId("item-notice-scheduled-replace")).toBeVisible();
   await reveal(fixtures, "item-cancel");
   await nativeButton(fixtures, "item-cancel").tap();
   await expect(screen.getByTestId("item-sheet")).toHaveCount(0);
-  await expect(screen.getByTestId(rowID("internet"))).toHaveAccessibleName(/Change from/);
+  const internet = screen.getByTestId(rowID("internet"));
+  await revealRow(fixtures, internet);
+  await expect(internet).toHaveAccessibleName(/Change from/);
 });
 
 test("keeps an amount whole in a currency without minor digits", async (fixtures) => {
@@ -309,9 +374,7 @@ test("keeps an amount whole in a currency without minor digits", async (fixtures
   await typeInto(fixtures, "item-name", "E2E manga");
 
   // Act: the currency the field is counted in, from inside the field (#61, variant A).
-  await screen.getByTestId("item-amount-currency").tap();
-  await expect(screen.getByTestId("item-amount-currency-JPY")).toBeVisible();
-  await screen.getByTestId("item-amount-currency-JPY").tap();
+  await chooseCurrency(fixtures, "JPY");
 
   // Assert: with no rate store yet (#92) the field says there is nothing to convert with, and offers no manual
   // rate either, because that screen (#144, #145) does not exist.
@@ -333,6 +396,7 @@ test("keeps an amount whole in a currency without minor digits", async (fixtures
 
   // Assert: the listed amount is whole too, and the row still says there is no rate for it.
   const row = created(screen);
+  await revealRow(fixtures, row);
   await expect(row).toHaveAccessibleName(/E2E manga, expense, [^,]*1,000,.*No rate yet/);
   await app.screenshot("items-after-jpy-add");
 
