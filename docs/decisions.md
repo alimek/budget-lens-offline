@@ -6,8 +6,9 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 ## 2026-10-23 15:47 (Europe/Warsaw): dark mode depth without indigo glow; the primary button keeps a small glow
 
-- **Input:** "ta poświata jest słaba na dark mode, na light tego aż tak nie widać… zwłaszcza pod kartami"
+- **Input:** "tak, ta poswiata jest slaba na dark mode, na light tego az tak nie widac"
   (feedback from the owner in chat, 2026-10-23 15:29)
+- **Input:** "zwlaszcza pod kartami" (feedback from the owner in chat, 2026-10-23 15:29)
 - **Question:** whether dark mode drops the indigo glow under cards, lists and sheets and gets its depth from a
   lighter surface step and a thin border instead, keeping only a small glow under the primary button (asked
   2026-10-23, after the feedback above).
@@ -15,8 +16,9 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
   (confirmed directly by the owner, 2026-10-23 15:47)
 - **Meaning:** in dark mode, cards, lists and sheets have no glow; depth comes from the surface steps (`card`
   `#121428`, `popover` `#181B31` on `background` `#07080F`), the 1 pt `border` at 8 % white and small neutral
-  shadows. The primary button keeps a smaller glow (`glow-primary` at 28 %). The background, summary card and
-  empty-state glows are toned down. Light mode is unchanged. Values are in [design/tokens.md](design/tokens.md).
+  shadows. The primary button keeps a smaller glow (`glow-primary` at 28 %). The background glow (top of the
+  screen and summary card) is toned down. Only existing tokens are used; light mode is unchanged. Values are in
+  [design/tokens.md](design/tokens.md).
 - **Issues:** [#245](https://github.com/alimek/budget-lens-offline/issues/245),
   [#246](https://github.com/alimek/budget-lens-offline/pull/246)
 

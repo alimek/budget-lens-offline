@@ -43,14 +43,10 @@ surfaces they are used on.
 | `card-gradient-from` → `card-gradient-to` | `#FFFFFF` → `#FBFBFD` | `#171A30` → `#121428` | card surface, top → bottom |
 | `primary-gradient-from` → `primary-gradient-to` | `#5461C8` → `#3F4BA8` | `#B4BAFF` → `#8E97F5` | primary button and add button |
 | `glass-surface` / `glass-border` | `rgba(255,255,255,0.78)` / `rgba(14,16,34,0.07)` | `rgba(18,20,38,0.72)` / `rgba(255,255,255,0.09)` | floating tab bar |
-| `background-glow` | transparent | `rgba(88,101,242,0.06)` | faint radial glow at the top of dark screens |
-| `summary-glow` | `rgba(63,75,168,0.07)` | `rgba(124,134,247,0.08)` | radial accent inside the summary card |
-| `empty-state-glow` | `rgba(63,75,168,0.16)` | `rgba(169,176,255,0.14)` | halo behind the empty-state illustration |
-| `glow` | `rgba(14,16,34,0.12)` | transparent | card elevation: soft shadow in light, none in dark |
+| `background-glow` | transparent | `rgba(88,101,242,0.06)` | faint radial glow at the top of dark screens and in the summary card |
+| `glow` | `rgba(14,16,34,0.12)` | transparent | card elevation: shadow in light, none in dark |
 | `glow-primary` | `rgba(63,75,168,0.55)` | `rgba(142,151,245,0.28)` | primary button elevation (the only glow in dark) |
-| `highlight-primary` | `rgba(255,255,255,0.30)` | `rgba(255,255,255,0.30)` | 1 pt inner top highlight on the primary button |
 | `shadow-ambient` / `shadow-floating` | `rgba(14,16,34,0.04)` / `rgba(14,16,34,0.18)` | `rgba(0,0,0,0.40)` / `rgba(0,0,0,0.45)` | contact shadow / floating surfaces |
-| `shadow-sm` | `rgba(14,16,34,0.08)` | `rgba(14,16,34,0.08)` | second layer of `elevation/sm` |
 | `highlight` | `#FFFFFF` | `rgba(255,255,255,0.07)` | 1 pt inner top highlight on cards and glass |
 | `scrim` | `rgba(14,16,34,0.40)` | `rgba(0,0,0,0.60)` | behind dialogs and sheets |
 | `category-salary` · `-housing` · `-energy` · `-internet` · `-health` · `-transport` · `-ended` | `#0B7A68` `#3F4BA8` `#A15C07` `#0369A1` `#BE185D` `#6D28D9` `#5A5F78` | `#5FD8BE` `#A9B0FF` `#F5C26B` `#7CC4F5` `#F59AC0` `#C3A6FF` `#9A9FB8` | category icon; its container is the same colour at 14 % |
@@ -106,14 +102,10 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
       --color-glass-surface: rgba(255, 255, 255, 0.78);
       --color-glass-border: rgba(14, 16, 34, 0.07);
       --color-background-glow: rgba(88, 101, 242, 0);
-      --color-summary-glow: rgba(63, 75, 168, 0.07);
-      --color-empty-state-glow: rgba(63, 75, 168, 0.16);
       --color-glow: rgba(14, 16, 34, 0.12);
       --color-glow-primary: rgba(63, 75, 168, 0.55);
-      --color-highlight-primary: rgba(255, 255, 255, 0.3);
       --color-shadow-ambient: rgba(14, 16, 34, 0.04);
       --color-shadow-floating: rgba(14, 16, 34, 0.18);
-      --color-shadow-sm: rgba(14, 16, 34, 0.08);
       --color-highlight: #ffffff;
       --color-scrim: rgba(14, 16, 34, 0.4);
       --color-category-salary: #0b7a68;
@@ -163,14 +155,10 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
       --color-glass-surface: rgba(18, 20, 38, 0.72);
       --color-glass-border: rgba(255, 255, 255, 0.09);
       --color-background-glow: rgba(88, 101, 242, 0.06);
-      --color-summary-glow: rgba(124, 134, 247, 0.08);
-      --color-empty-state-glow: rgba(169, 176, 255, 0.14);
       --color-glow: rgba(88, 101, 242, 0);
       --color-glow-primary: rgba(142, 151, 245, 0.28);
-      --color-highlight-primary: rgba(255, 255, 255, 0.3);
       --color-shadow-ambient: rgba(0, 0, 0, 0.4);
       --color-shadow-floating: rgba(0, 0, 0, 0.45);
-      --color-shadow-sm: rgba(14, 16, 34, 0.08);
       --color-highlight: rgba(255, 255, 255, 0.07);
       --color-scrim: rgba(0, 0, 0, 0.6);
       --color-category-salary: #5fd8be;
@@ -238,10 +226,9 @@ Effect styles in Figma, with colours and offsets bound to Theme variables so the
 | Effect style | Light | Dark |
 | --- | --- | --- |
 | `elevation/card` | `0 1 2 shadow-ambient` + `0 8 24 −10 glow` + 1 pt inner `highlight` | `0 1 2 shadow-ambient` + inner `highlight`, no glow |
-| `elevation/primary` | `0 6 16 −6 glow-primary` + 1 pt inner `highlight-primary` | `0 4 12 −6 glow-primary` + inner `highlight-primary` |
+| `elevation/primary` | `0 6 16 −6 glow-primary` | `0 4 12 −6 glow-primary` |
 | `elevation/floating` | `0 10 30 −8 shadow-floating` + inner `highlight` | `0 8 24 −8 shadow-floating` + inner `highlight` |
-| `elevation/floating-glass` | `elevation/floating` + 24 pt background blur | same, with the dark values |
-| `elevation/sm` | `0 1 2 shadow-ambient` + `0 2 6 −2 shadow-sm` | same, with the dark values |
+| `elevation/sm` | `0 1 2` + `0 2 6 −2` soft shadow | same, nearly invisible |
 | `focus-ring` | 3 pt spread in `ring` at 30 % | same |
 | `glass-blur` | 24 pt background blur | same |
 
