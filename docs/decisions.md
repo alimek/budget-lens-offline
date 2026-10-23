@@ -4,6 +4,28 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-23 19:14 (Europe/Warsaw): owner input, not a decision: shared month screen inside the Forecast stack
+
+- **Input:** "hmm, jezeli mamy stack, to nie powinnismy z jednego stack isc do drugiego, ale moze jakis wspolny screen, to wtedy tak."
+  (owner in chat about tapping a Forecast month row, 2026-10-23 19:14)
+- **Implementation:** a Forecast month row (or warning row) pushes the shared month screen for that month inside the
+  Forecast stack: the Month tab content with the same editing, back to Forecast in the top bar and the month as the
+  title. Back returns to the forecast; there is no jump to the Month tab. Spec in
+  [features/forecast-warnings.md](features/forecast-warnings.md) and
+  [features/app-shell-storage.md](features/app-shell-storage.md); the design was approved on #261 (2026-10-23 19:23).
+- **Issues:** [#261](https://github.com/alimek/budget-lens-offline/issues/261), [#262](https://github.com/alimek/budget-lens-offline/issues/262)
+
+## 2026-10-23 19:09 (Europe/Warsaw): owner input, not a decision: no warnings means no box
+
+- **Input:** "mysle ze jak nie mamy errorw/ostrzezen to nie pokazujemy tego alertu, natomiasto gdy sa trzeba takie cos zamockowac. Pytanie czy to jest screen gdzie mozna wejsc w przyszly miesiac i cos zmienic ?"
+  (owner in chat about the Forecast tab, 2026-10-23 19:09)
+- **Implementation:** with no warnings, Overview shows no warning card and the Forecast tab shows no warnings section
+  and no "No warnings in the next 13 months" line; the layout closes the gap. The warnings state was mocked (Overview
+  card with the earliest warning plus "+N more", Forecast list, chart markers and month-row icons). The question about
+  changing a future month led to the 19:14 input above. Spec in
+  [features/forecast-warnings.md](features/forecast-warnings.md); the design was approved on #261 (2026-10-23 19:23).
+- **Issues:** [#261](https://github.com/alimek/budget-lens-offline/issues/261), [#262](https://github.com/alimek/budget-lens-offline/issues/262)
+
 ## 2026-10-23 18:40 (Europe/Warsaw): owner input, not a decision: red expense amounts
 
 - **Input:** "a czy kwoty na minusie moga byc czerwone?" (question from the owner in chat about the Month tab,

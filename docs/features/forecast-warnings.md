@@ -72,9 +72,16 @@ opens the savings screen (E7); Savings is not a tab.
 - Warnings are derived, never stored: recomputed by `forecast()` on app open, on item/override/payment/settings/rate
   changes and after a month close, fully offline. Identity and dedup key `(code, month)`; ordered by month, balance
   warning before outflow. No dismiss or snooze in the MVP.
-- Overview shows the earliest warning plus "+N more" (or "No warnings in the next 13 months", i.e. the active month
-  plus 12); the Forecast tab shows
-  the list, chart markers and month-row icons. Severity is always icon + text + spoken prefix, never colour alone.
+- Overview shows the earliest warning plus "+N more"; the Forecast tab shows the list, chart markers and month-row
+  icons. Severity is always icon + text + spoken prefix, never colour alone.
+- **No warnings:** when the horizon (the active month plus 12) has no warnings, nothing is shown. Overview has no
+  warning card and the Forecast tab has no warnings section and no "No warnings in the next 13 months" line; the
+  layout closes the gap ([owner input, 2026-10-23 19:09](../decisions.md), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
+- **Month rows on the Forecast tab:** tapping a month row (or a warning row) pushes the shared month screen for that
+  month inside the Forecast stack. It is the same screen as the Month tab content, with the same editing; the top bar
+  shows back to Forecast and the month as the title instead of the previous/next month toolbar. Back returns to the
+  forecast, the Forecast tab stays selected, and there is no jump to the Month tab
+  ([owner input, 2026-10-23 19:14](../decisions.md), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
 - A missing or invalid rate is a **blocking forecast state** (#67, [#45 research](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340343141), "Other conditions
   considered"): Overview and the Forecast tab show it instead of a projection.
 - Older (stale) rate, unclosed past month and backup overdue are status indicators on their own screens, not
