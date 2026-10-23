@@ -13,6 +13,9 @@ change of a closed month with `month-closed`.
 - `createInitialMonth(month, openingBalance)` requires an explicit calendar month and starting balance. Opening
   and closing balances start equal, totals and net change at zero. Negative balances are valid. Core reads no
   clock and creates no timestamps; the app chooses its calendar month and persistence supplies timestamps.
+  **Open question (pending owner answer):** onboarding no longer has an opening-balance step
+  ([decision 2026-10-23 16:05](../decisions.md)), so the `openingBalance` that onboarding ([#111](https://github.com/alimek/budget-lens-offline/issues/111)) passes
+  here is undefined. Proposal, not decided: `0`, with the amounts of the private accounts ([#66](https://github.com/alimek/budget-lens-offline/issues/66)) added later.
 - `updateBalance(month, balance)` returns a new frozen active month with the actual closing balance and
   `netChange = closingBalance - openingBalance`. Opening balance and planned totals stay unchanged.
 - `closeMonth(months, input)` takes the **complete** month collection and an input containing

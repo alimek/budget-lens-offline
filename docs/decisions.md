@@ -6,14 +6,20 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 ## 2026-10-23 16:05 (Europe/Warsaw): onboarding has no opening-balance step
 
-- **Question:** whether onboarding keeps the opening-balance ("Saldo początkowe") step (asked 2026-10-23).
-- **Answer:** "ja bym wywalil ten krok w sumie" (confirmed directly by the owner in chat, 2026-10-23 16:05)
-- **Meaning:** the opening-balance step is removed from onboarding. Onboarding is welcome, base currency and
-  confirmation: three steps on iOS, plus the "Enable backup to Google Drive" step on Android. The balance comes from
-  the private accounts and their amounts that the user sets later in the app, not from onboarding. Spec in
+- **Question:** whether to approve the onboarding confirmation screen and design the missing opening-balance step
+  next (asked 2026-10-23, [#252](https://github.com/alimek/budget-lens-offline/issues/252)).
+- **Answer:** "a skad te saldo poczatkowe?" (owner in chat, 2026-10-23 16:05)
+- **Answer:** "ja bym wywalil ten krok w sumie," (owner in chat, 2026-10-23 16:05)
+- **Meaning:** the opening-balance step is removed from onboarding. Together with the earlier removal of the language
+  picker ([#247](https://github.com/alimek/budget-lens-offline/issues/247#issuecomment-6365609875)) and of the privacy step ([#249](https://github.com/alimek/budget-lens-offline/issues/249#issuecomment-6365919948)), onboarding is welcome, base currency and
+  confirmation: three steps on iOS, plus the "Enable backup to Google Drive" step on Android. Spec in
   [features/app-shell-storage.md](features/app-shell-storage.md).
-- **Issues:** [#59](https://github.com/alimek/budget-lens-offline/issues/59),
-  [#252](https://github.com/alimek/budget-lens-offline/issues/252)
+- **Open question (pending owner answer):** where the first month's balance comes from now that onboarding does not
+  ask for it, i.e. which `openingBalance` onboarding ([#111](https://github.com/alimek/budget-lens-offline/issues/111)) passes to
+  `createInitialMonth(month, openingBalance)` ([domain/month-closing.md](domain/month-closing.md)). Proposal, not
+  decided: `0`, with the amounts of the private accounts ([#66](https://github.com/alimek/budget-lens-offline/issues/66)) added later in the app.
+- **Issues:** [#59](https://github.com/alimek/budget-lens-offline/issues/59), [#111](https://github.com/alimek/budget-lens-offline/issues/111),
+  [#252](https://github.com/alimek/budget-lens-offline/issues/252), [#254](https://github.com/alimek/budget-lens-offline/issues/254)
 
 ## 2026-10-23 15:47 (Europe/Warsaw): dark mode depth without indigo glow; the primary button keeps a small glow
 

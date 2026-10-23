@@ -38,12 +38,18 @@ first launch guides the user through a short onboarding.
   non-secret `bl.lang` mirror, explicit Android backup rules without `allowBackup=false`, typed routes after beta
   ([owner review #36](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263678079)).
 - Onboarding steps: 1. welcome, 2. **base currency**, 3. **confirmation** (summary + base currency lock), so three
-  steps on iOS. There is no opening-balance ("Saldo początkowe") step
-  ([owner decision, 2026-10-23 16:05](../decisions.md)): the balance comes from the private (spendable) accounts and
-  their current amounts that the user sets later in the app ([#66](https://github.com/alimek/budget-lens-offline/issues/66)).
+  steps on iOS. There is no language step: the app uses the system language by default, and it can be changed in
+  Settings ([#247](https://github.com/alimek/budget-lens-offline/issues/247#issuecomment-6365609875)). There is no privacy step: its facts move to a Settings > Privacy section, to be designed
+  with Settings ([#249](https://github.com/alimek/budget-lens-offline/issues/249#issuecomment-6365919948)). There is no opening-balance ("Saldo początkowe") step
+  ([owner decision, 2026-10-23 16:05](../decisions.md)).
   On Android onboarding additionally has one **"Enable backup to Google Drive"** step (Google Sign-In consent for
   `appDataFolder`); iOS needs no prompt ([owner review #48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263841345)). It looks up an existing backup in the user's own iCloud / Google Drive
   ([#116](https://github.com/alimek/budget-lens-offline/issues/116)).
+- **Open question (pending owner answer):** where the first month's balance comes from. Onboarding
+  ([#111](https://github.com/alimek/budget-lens-offline/issues/111)) creates the first month with `createInitialMonth(month, openingBalance)`
+  ([month-closing](../domain/month-closing.md)), and the source of that `openingBalance` is undefined now that
+  onboarding does not ask for it. Proposal, not decided: `0`, with the amounts of the private accounts
+  ([#66](https://github.com/alimek/budget-lens-offline/issues/66)) added later in the app.
 - Main navigation: five Expo Router `NativeTabs`: **Overview** (the Dashboard, first and default), Month, Forecast,
   Items, Settings ([#36 Q1](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263044426); [Variant A, chosen by @alimek](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)). **Savings** is not a tab: it is a
   screen pushed from the Savings card on Overview. "Add item" is a toolbar `+` (iOS) / FAB (Android), never a tab.
@@ -51,8 +57,8 @@ first launch guides the user through a short onboarding.
 - Minimum OS: **Android 8.0 (minSdk 26)**, set with `expo-build-properties`, and **iOS 16.4** (the SDK 58 default).
   Android 7 is not supported ([#44 decision](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340036713), [minimums decided on #44](https://github.com/alimek/budget-lens-offline/issues/44#issuecomment-6340102575), 2026-10-22; applied in the
   [#218](https://github.com/alimek/budget-lens-offline/issues/218) spike).
-- For the first month, the user is asked which items added for it are already paid, so the balance from the
-  accounts isn't double-counted by the forecast; this happens after onboarding, which has no balance step, and
+- For the first month, the user is asked which items added for it are already paid, so the balance isn't
+  double-counted by the forecast; this happens after onboarding, which has no balance step, and
   #59 / #111 place it ([#43](https://github.com/alimek/budget-lens-offline/issues/43#issuecomment-6340492002), row 12).
 
 **Out:**
@@ -65,8 +71,7 @@ first launch guides the user through a short onboarding.
 
 - As a new user, I can start budgeting without creating an account.
 - As a new user, I choose my base currency once during onboarding and confirm that it cannot be changed later.
-- As a new user, I am not asked for an opening balance during onboarding; I enter my private accounts and their
-  amounts later in the app.
+- As a new user, I am not asked for an opening balance during onboarding.
 - As a user, I can trust that my data stays on my phone, inside the app's own sandbox, and never leaves it unless I
   back it up myself.
 - As a user who reinstalls the app or gets a new phone of the same platform, onboarding finds my backup on its
@@ -80,7 +85,7 @@ first launch guides the user through a short onboarding.
 - The app opens a plain SQLite database: no SQLCipher in the build, no key in secure storage, no cipher pragma
   anywhere (#242).
 - Onboarding makes no network requests except the optional lookup of an existing backup in the user's own iCloud /
-  Google Drive ([E8](cloud-backup.md), [#116](https://github.com/alimek/budget-lens-offline/issues/116)), on Android the Google Drive consent step, and the background EAS Update check of release builds ([ADR 0013](../decisions/0013-eas-update-network-exception.md)); the onboarding privacy explanation must mention that check, reusing the `privacy.updates` text already shown in Settings → *Privacy* (#191). Confirming it locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
+  Google Drive ([E8](cloud-backup.md), [#116](https://github.com/alimek/budget-lens-offline/issues/116)), on Android the Google Drive consent step, and the background EAS Update check of release builds ([ADR 0013](../decisions/0013-eas-update-network-exception.md)); the privacy facts, which move from onboarding to the future Settings > Privacy section ([#249](https://github.com/alimek/budget-lens-offline/issues/249#issuecomment-6365919948)), must mention that check, reusing the `privacy.updates` text already shown in Settings → *Privacy* (#191). Confirming onboarding locks the base currency ([#139](https://github.com/alimek/budget-lens-offline/issues/139)).
 - The DB file is excluded from Android Auto Backup. A database that cannot be opened or migrated leads to the one
   recovery screen, which offers "Try again" and "Start over" behind a confirmation and deletes nothing itself. The EAS Update
   installation ID (`dev.expo.EASSharedPreferences`) stays in Android backups (#75): the privacy text in Settings,
