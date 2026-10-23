@@ -52,3 +52,7 @@ update servers and needed an explicit owner decision first.
 **Rejected alternatives.** A new EAS build and TestFlight submit for every change (slow, uses free-plan build
 quota). A self-hosted update server (contradicts "no Budget Lens server"). The native launch-time check
 (`checkAutomatically: "ON_LOAD"`) runs before JavaScript and cannot be gated or skipped by app logic.
+
+**Update (2026-10-23, [#249](https://github.com/alimek/budget-lens-offline/issues/249#issuecomment-6365919948)).** Onboarding no longer has a privacy step. The privacy facts, including this
+request, move to a short Settings > Privacy section, to be designed with Settings. The "planned onboarding privacy
+explanation" under Consequences now means that section.

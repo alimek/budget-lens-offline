@@ -4,6 +4,35 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-23 16:15 (Europe/Warsaw): the first month's opening balance is 0 until the first private account
+
+- **Question:** where does the first month's opening balance come from, now that onboarding doesn't ask for it?
+  (asked 2026-10-23, after the 16:05 decision below).
+- **Answer:** "No co, początkowo jest zero. Do momentu, gdy użytkownik nie doda jakiegoś swojego konta i ile ma pieniędzy na tym koncie, to jest zero. Do momentu gdy o gdy doda jakiś damy, to zaczynamy wszystko liczy."
+  (owner in chat, 2026-10-23 16:15)
+- **Meaning:** onboarding creates the first month with an opening balance of 0. It stays 0 until the user adds at
+  least one private account with its current amount ([#66](https://github.com/alimek/budget-lens-offline/issues/66) account model); from then on the balance is
+  calculated from the sum of the account amounts. How that fits the month model (`openingBalance` is fixed once a
+  month is created, closed months are immutable) is an implementation detail to settle in the #66 work. Spec in
+  [features/app-shell-storage.md](features/app-shell-storage.md) and
+  [domain/month-closing.md](domain/month-closing.md).
+- **Issues:** [#66](https://github.com/alimek/budget-lens-offline/issues/66), [#111](https://github.com/alimek/budget-lens-offline/issues/111),
+  [#254](https://github.com/alimek/budget-lens-offline/issues/254)
+
+## 2026-10-23 16:05 (Europe/Warsaw): onboarding has no opening-balance step
+
+- **Question:** whether to approve the onboarding confirmation screen and design the missing opening-balance step
+  next (asked 2026-10-23, [#252](https://github.com/alimek/budget-lens-offline/issues/252)).
+- **Answer:** "a skad te saldo poczatkowe?" (owner in chat, 2026-10-23 16:05)
+- **Answer:** "ja bym wywalil ten krok w sumie," (owner in chat, 2026-10-23 16:05)
+- **Meaning:** the opening-balance step is removed from onboarding. Together with the earlier removal of the language
+  picker ([#247](https://github.com/alimek/budget-lens-offline/issues/247#issuecomment-6365609875)) and of the privacy step ([#249](https://github.com/alimek/budget-lens-offline/issues/249#issuecomment-6365919948)), onboarding is welcome, base currency and
+  confirmation: three steps on iOS, plus the "Enable backup to Google Drive" step on Android. Spec in
+  [features/app-shell-storage.md](features/app-shell-storage.md).
+- **Follow-up:** the source of the first month's opening balance was decided at 16:15 (entry above).
+- **Issues:** [#59](https://github.com/alimek/budget-lens-offline/issues/59), [#111](https://github.com/alimek/budget-lens-offline/issues/111),
+  [#252](https://github.com/alimek/budget-lens-offline/issues/252), [#254](https://github.com/alimek/budget-lens-offline/issues/254)
+
 ## 2026-10-23 15:47 (Europe/Warsaw): dark mode depth without indigo glow; the primary button keeps a small glow
 
 - **Input:** "tak, ta poswiata jest slaba na dark mode, na light tego az tak nie widac"
