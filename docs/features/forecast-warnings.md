@@ -51,7 +51,7 @@ opens the savings screen (E7); Savings is not a tab.
   reminder to close the previous month.
 - As a user with a USD subscription, I see it included in base-currency terms, with the rate date and a stale badge
   when the quote is older than the Settings threshold (2 business days by default).
-- As a user, I open the app on Overview (the Dashboard, first tab) and see my balance, the next warning, a mini
+- As a user, I open the app on Overview (the Dashboard, first tab) and see my balance, the next warning (if any), a mini
   forecast and a Savings card.
 
 ## Acceptance criteria (high level)
@@ -76,12 +76,12 @@ opens the savings screen (E7); Savings is not a tab.
   icons. Severity is always icon + text + spoken prefix, never colour alone.
 - **No warnings:** when the horizon (the active month plus 12) has no warnings, nothing is shown. Overview has no
   warning card and the Forecast tab has no warnings section and no "No warnings in the next 13 months" line; the
-  layout closes the gap ([owner approval, 2026-10-23 19:23](../decisions.md), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
+  layout closes the gap ([owner approval, 2026-10-23 19:23](../decisions.md#2026-10-23-1923-europewarsaw-forecast-tab-with-warnings-and-the-shared-month-screen-approved), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
 - **Month rows on the Forecast tab:** tapping a month row (or a warning row) pushes the shared month screen for that
-  month inside the Forecast stack. It is the same screen as the Month tab content, with the same editing; the top bar
-  shows back to Forecast and the month as the title instead of the previous/next month toolbar. Back returns to the
+  month inside the Forecast stack. It is the same screen as the Month tab content, with the same editing; its top bar
+  has a back button to Forecast and shows the month (e.g. "Listopad 2026") as the title. Back returns to the
   forecast, the Forecast tab stays selected, and there is no jump to the Month tab
-  ([owner approval, 2026-10-23 19:23](../decisions.md), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
+  ([owner approval, 2026-10-23 19:23](../decisions.md#2026-10-23-1923-europewarsaw-forecast-tab-with-warnings-and-the-shared-month-screen-approved), [#261](https://github.com/alimek/budget-lens-offline/issues/261)).
 - A missing or invalid rate is a **blocking forecast state** (#67, [#45 research](https://github.com/alimek/budget-lens-offline/issues/45#issuecomment-6340343141), "Other conditions
   considered"): Overview and the Forecast tab show it instead of a projection.
 - Older (stale) rate, unclosed past month and backup overdue are status indicators on their own screens, not

@@ -6,12 +6,12 @@ is marked as input. Stack decisions with a longer rationale live in the [ADRs](d
 
 ## 2026-10-23 19:23 (Europe/Warsaw): Forecast tab with warnings and the shared month screen approved
 
-- **Answer:** "A: Prognoza z ostrzeżeniami i ekranem miesiąca zatwierdzona" (the owner's answer on the review card,
-  2026-10-23 19:23)
-- **What was approved:** the design as presented to the owner at 19:22. It included these two lines, which are the
-  wording of the presented design, not the owner's words:
+- **Question:** the review message presented to the owner at 2026-10-23 19:22, asking him to approve the Forecast
+  design. It included these two lines (the wording of the presented design, not the owner's words):
   - "Gdy ostrzeżeń nie ma, ramka znika."
   - "Po stuknięciu w listopad otwiera się w Prognozie ten sam ekran co w zakładce Miesiąc, ze strzałką wstecz."
+- **Answer:** "A: Prognoza z ostrzeżeniami i ekranem miesiąca zatwierdzona" (the owner's answer on the review card,
+  2026-10-23 19:23, recorded on [#261](https://github.com/alimek/budget-lens-offline/issues/261#issuecomment-6370738056))
 - **Implementation (no warnings):** with no warnings, Overview shows no warning card and the Forecast tab shows no
   warnings section and no "No warnings in the next 13 months" line; the layout closes the gap. The warnings state was
   mocked (Overview card with the earliest warning plus "+N more", Forecast list, chart markers and month-row icons).
