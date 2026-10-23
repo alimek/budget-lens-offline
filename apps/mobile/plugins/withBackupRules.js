@@ -3,10 +3,12 @@ const path = require("node:path");
 const { AndroidConfig, withAndroidManifest, withDangerousMod } = require("expo/config-plugins");
 
 // Explicit Android Auto Backup rules (#34 §3, #36 §5 – owner decision: rules, not `allowBackup=false`).
-// The encrypted database and the SecureStore entry holding its key must never reach Google's cloud backup or a
-// device-to-device transfer: a budget without its key is only noise, and shipping the key next to it would undo
-// the encryption. Excluding instead of listing keeps any future non-sensitive preference backed up.
-// `SQLite/` is a directory, so the rule also covers the `-wal` and `-shm` files.
+// The database must never reach Google's cloud backup or a device-to-device transfer: Budget Lens is offline and
+// keeps its data in the app sandbox, with the user's own iCloud or Google Drive backup as the only copy elsewhere
+// (#242). Excluding instead of listing keeps any future non-sensitive preference backed up.
+// `SQLite/` is a directory, so the rule also covers the `-wal` and `-shm` files. The SecureStore line is what a
+// build from before #242 left there: a device upgrading from it still has that entry, and it must not start
+// syncing either.
 const EXCLUDES = `    <exclude domain="file" path="SQLite/" />
     <exclude domain="sharedpref" path="SecureStore" />`;
 
@@ -34,9 +36,8 @@ ${EXCLUDES}
 `;
 
 /**
- * Write our own backup rules and point the manifest at them. Because the app now owns the rules, `app.json` also
- * sets `configureAndroidBackup: false` for expo-secure-store, as its documentation requires. iOS is untouched:
- * #34 keeps the (ciphertext-only) database in the device backup there.
+ * Write our own backup rules and point the manifest at them. iOS is untouched: #34 keeps the database in the
+ * device backup there, inside the app sandbox.
  */
 module.exports = function withBackupRules(config) {
   const withRuleFiles = withDangerousMod(config, [

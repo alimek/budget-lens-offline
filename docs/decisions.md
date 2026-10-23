@@ -4,6 +4,39 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-22 23:33 (Europe/Warsaw): no migration from the encrypted database; those installs start empty
+
+- **Question:** whether an install that already has an encrypted database gets a migration path when the encryption
+  is removed (asked 2026-10-22 23:33).
+- **Answer:** "A: zaczynamy od pustej bazy, bez migracji" (confirmed directly by the owner in chat, 2026-10-22 23:33)
+- **Meaning:** an install updating from a build of #75 cannot open its own file, because the key it needs is no
+  longer stored, and rewriting the file would mean keeping exactly the key handling #242 removes. Such an install
+  therefore gets the single recovery screen; accepting "Start over" renames its encrypted file aside and continues
+  with an **empty budget**. **The budget that was on that device is lost**: the file stays on disk for support and
+  for E8, but this build cannot read it, and there is no restore path until E8 ([#97](https://github.com/alimek/budget-lens-offline/issues/97)).
+  A fresh install is unaffected. Stated in
+  [ADR 0007](decisions/0007-local-database.md), [architecture](architecture.md),
+  [app-shell-storage](features/app-shell-storage.md) and [packages/db](../packages/db/README.md).
+- **Issues:** [#242](https://github.com/alimek/budget-lens-offline/issues/242)
+
+## 2026-10-22 23:24 (Europe/Warsaw): the database is plain SQLite; the recovery screens are simplified
+
+- **Question:** whether the database encryption (SQLCipher) is dropped in favour of a plain local SQLite file, with
+  the failure and recovery screens simplified (asked 2026-10-22 23:24).
+- **Answer:** "Tak, usuń szyfrowanie" (confirmed directly by the owner in chat, 2026-10-22 23:24). Asked when to
+  do it: "Teraz, przed formularzem" (2026-10-22 23:26).
+- **Original (another chat, relayed, 23:20):** asked how the data is stored, answered "A: zwykły SQLite bez
+  własnego szyfrowania, uprościć ekrany awaryjne".
+- **Meaning:** the data lives in a plain expo-sqlite database: no SQLCipher (`useSQLCipher`), no database key in
+  secure storage, no cipher checks, no key pairing or orphan keys, and no app-level encryption at all; privacy rests
+  on the app sandbox and the OS's own data protection. The pre-migration copy stays. There is exactly one recovery
+  screen, shown when the database cannot be opened or migrated, with "Try again" and "Start over" behind a
+  confirmation; the other boot and recovery states, their copy and their tests are gone. Android Auto Backup still
+  excludes the database. This is a native change: a new local build, nothing published. It supersedes the SQLCipher
+  part of [ADR 0007](decisions/0007-local-database.md); expo-sqlite + Drizzle stand
+  ([architecture](architecture.md), [app-shell-storage](features/app-shell-storage.md)).
+- **Issues:** [#242](https://github.com/alimek/budget-lens-offline/issues/242)
+
 ## 2026-10-22 23:18 (Europe/Warsaw): test evidence leaves the repo; PRs carry only key screenshots
 
 - **Question:** asked to confirm logging that test evidence leaves the repo and PRs carry only key screenshots

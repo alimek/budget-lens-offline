@@ -29,18 +29,7 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-sqlite",
-        {
-          "useSQLCipher": true
-        }
-      ],
-      [
-        "expo-secure-store",
-        {
-          "configureAndroidBackup": false
-        }
-      ],
+      "expo-sqlite",
       "./plugins/withBackupRules",
       [
         "expo-localization",
