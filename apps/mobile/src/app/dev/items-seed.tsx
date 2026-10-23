@@ -200,9 +200,10 @@ function versionsOf(spec: SeedSpec, month: YearMonth): RuleVersion[] {
 
 /**
  * Development-only seeder behind `Stack.Protected guard={__DEV__}` (#75 R7). Open it with
- * `budget-lens:///dev/items-seed?gen=7`: "Seed" writes the set with ids `dev-seed-7-<slug>` and "Clear" archives
- * every `dev-seed-*` item, leaving the list empty. A release build cannot reach the route, so it can run none of
- * this. The seeded item names are user data, written through i18n like every other text in the app.
+ * `budget-lens:///dev/items-seed?gen=7`: "Seed" writes the set with ids `dev-seed-7-<slug>`, and "Clear" archives
+ * every item the database holds, leaving an empty list whatever an earlier run left behind. A release build
+ * cannot reach the route, so it can run none of this. The seeded item names are user data, written through i18n
+ * like every other text in the app.
  */
 export default function DevItemsSeed() {
   const { t } = useTranslation();
@@ -237,12 +238,13 @@ export default function DevItemsSeed() {
     setResult(t("dev.itemsSeed.seeded"));
   };
 
+  // Every item, not only the seeded ones: a run that failed halfway left its own rows in the list, and the
+  // screen that starts from an empty list has to mean it.
   const clear = () => {
     ensureActiveMonth(db, month);
-    const seeded = readItems(db, { includeArchived: true }).items.filter((item) =>
-      item.id.startsWith(SEED_PREFIX),
-    );
-    for (const item of seeded) archiveItem(db, item.id, deps);
+    for (const item of readItems(db, { includeArchived: true }).items) {
+      archiveItem(db, item.id, deps);
+    }
     setResult(t("dev.itemsSeed.cleared"));
   };
 
