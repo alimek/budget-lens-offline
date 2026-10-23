@@ -81,7 +81,7 @@ export interface ItemFormState {
   /** Fixed after creation (#82): editable only while creating. */
   readonly currency: CurrencyCode;
   readonly repeat: RepeatPreset;
-  /** Only used by `repeat === "custom"`; 2–{@link MAX_INTERVAL_MONTHS}. */
+  /** Only used by `repeat === "custom"`; 1–{@link MAX_INTERVAL_MONTHS}, the range the picker enforces. */
   readonly intervalMonths: number;
   /** The recurring anchor, or the single month of a one-time item. */
   readonly firstMonth: YearMonth;
@@ -364,8 +364,9 @@ export const LAST_MONTHS = 121;
 
 /**
  * The first-month options of an edit: the stored anchor when the item started before the active month (its
- * rhythm stays visible and selectable), and otherwise the active month onwards. Closed months are never added
- * on their own; only the value the item already has can reach behind the active month.
+ * rhythm stays visible and selectable), and otherwise the active month onwards. The list does reach behind the
+ * active month when the item started behind it: picking one of those months only re-anchors the rhythm from
+ * "Applies from" on, because a change-from never rewrites an earlier version (#40).
  */
 export function firstMonthOptions(
   activeMonth: YearMonth,
