@@ -38,24 +38,24 @@ function StepButton({
   readonly onPress: () => void;
 }) {
   const theme = useThemeColors();
+  // Rendered inside the one `Host` of the stepper: a Compose view has to be a direct child of a host, and the row
+  // of the stepper is that host's child, not a host of its own.
   return (
-    <Host matchContents>
-      <IconButton
-        enabled={!disabled}
-        onClick={onPress}
-        colors={{
-          contentColor: theme.foreground,
-          disabledContentColor: theme["muted-foreground"],
-        }}
-        modifiers={[size(48, 48), semantics({ contentDescription: name }), testIDModifier(testID)]}
-      >
-        <Icon
-          source={icon}
-          tint={disabled ? theme["muted-foreground"] : theme.foreground}
-          size={24}
-        />
-      </IconButton>
-    </Host>
+    <IconButton
+      enabled={!disabled}
+      onClick={onPress}
+      colors={{
+        contentColor: theme.foreground,
+        disabledContentColor: theme["muted-foreground"],
+      }}
+      modifiers={[size(48, 48), semantics({ contentDescription: name }), testIDModifier(testID)]}
+    >
+      <Icon
+        source={icon}
+        tint={disabled ? theme["muted-foreground"] : theme.foreground}
+        size={24}
+      />
+    </IconButton>
   );
 }
 
@@ -82,15 +82,15 @@ export function AppStepper({
     text.set(String(value));
   }, [text, value]);
   return (
-    <Row verticalAlignment="center">
-      <StepButton
-        icon={decreaseIcon}
-        name={decreaseLabel}
-        testID={`${testID}-decrease`}
-        disabled={value <= min}
-        onPress={() => onValueChange(Math.max(min, value - 1))}
-      />
-      <Host matchContents={{ vertical: true }} style={{ width: FIELD_WIDTH }}>
+    <Host matchContents>
+      <Row verticalAlignment="center">
+        <StepButton
+          icon={decreaseIcon}
+          name={decreaseLabel}
+          testID={`${testID}-decrease`}
+          disabled={value <= min}
+          onPress={() => onValueChange(Math.max(min, value - 1))}
+        />
         <OutlinedTextField
           value={text}
           readOnly
@@ -110,14 +110,14 @@ export function AppStepper({
             <Text>{label}</Text>
           </OutlinedTextField.Label>
         </OutlinedTextField>
-      </Host>
-      <StepButton
-        icon={increaseIcon}
-        name={increaseLabel}
-        testID={`${testID}-increase`}
-        disabled={value >= max}
-        onPress={() => onValueChange(Math.min(max, value + 1))}
-      />
-    </Row>
+        <StepButton
+          icon={increaseIcon}
+          name={increaseLabel}
+          testID={`${testID}-increase`}
+          disabled={value >= max}
+          onPress={() => onValueChange(Math.min(max, value + 1))}
+        />
+      </Row>
+    </Host>
   );
 }
