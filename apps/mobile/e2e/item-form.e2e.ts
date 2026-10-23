@@ -529,10 +529,13 @@ test("keeps a scheduled change and undoes the choice to replace it", FORM, async
   // news only once the user actually changes the amount, and never for a form nobody has touched (#248 B1).
   await expect(screen.getByTestId("item-notice-scheduled")).toHaveCount(0);
 
-  // Act: a rename alone, with the amount and the rhythm left exactly as they were.
+  // Act: a rename alone. The amount is committed again with the value it already holds, which is also how the
+  // keyboard of the name field gets put away: only the amount field has a Done of its own (#61).
   await typeInto(fixtures, "item-name", "E2E broadband");
+  await typeInto(fixtures, "item-amount", "1000.00");
 
-  // Assert: still nothing to report, and saving the name closes the sheet at once (#63).
+  // Assert: the same amount under a new name is still no change to the rule, so there is nothing to report, and
+  // saving closes the sheet at once (#63).
   await expect(screen.getByTestId("item-notice-scheduled")).toHaveCount(0);
   await pressSheet(fixtures, "item-save", gone(screen.getByTestId(SHEET)));
 
