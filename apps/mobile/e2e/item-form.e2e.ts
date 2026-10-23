@@ -558,14 +558,18 @@ test("keeps an amount whole in a currency without minor digits", FORM, async (fi
   await typeInto(fixtures, "item-name", "E2E manga");
   await typeInto(fixtures, "item-amount", "1000");
 
-  // Act: the currency the field is counted in, from inside the field (#61, variant A). Yen has no minor units,
-  // so the whole amount the field already holds stays as it is.
+  // Act: the currency the field is counted in, from inside the field (#61, variant A). Choosing it leaves the
+  // text of the field alone: an amount is never rewritten behind the user's back, only read against the new
+  // currency, and the yen cents that a zloty amount carries are wrong from then on.
   await chooseCurrency(fixtures, "JPY");
 
   // Assert: with no rate store yet (#92) the field says there is nothing to convert with, and offers no manual
   // rate either, because that screen (#144, #145) does not exist.
   await expect(screen.getByTestId("item-amount-hint")).toHaveText(/No exchange rate yet/);
   await expect(screen.getByText(/Enter rate manually/)).toHaveCount(0);
+
+  // Act: the amount entered again, now that it is yen that decides what the field may hold (#61).
+  await typeInto(fixtures, "item-amount", "1000");
 
   // Assert: yen has no minor units, so the field holds a whole amount with no decimal separator at all (#61).
   await expect(screen.getByTestId("item-amount")).toHaveValue(/^1[ ,\u00a0.]?000$/);
