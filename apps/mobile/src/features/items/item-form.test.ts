@@ -376,7 +376,7 @@ describe("saving an edit", () => {
 
   it("plans nothing when the form still holds the rule that is in force", () => {
     // Arrange: an item running since January at the amount and rhythm the form shows, edited in June under a
-    // new name — the reviewer's case of #248.
+    // new name: a rename with an unchanged rule.
     const item = storedItem([version(toYearMonth("2026-01"), amount)]);
     const renamed = state({
       name: "Flat rent",
