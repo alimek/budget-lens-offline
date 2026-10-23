@@ -23,9 +23,9 @@ surfaces they are used on.
 | --- | --- | --- | --- |
 | `background` | `#F4F5F9` | `#07080F` | screen background |
 | `foreground` | `#0E1022` | `#F3F4FA` | titles, item names, amounts |
-| `card` / `card-foreground` | `#FFFFFF` / `#0E1022` | `#0E1020` / `#F3F4FA` | cards and grouped lists (solid form) |
-| `popover` / `popover-foreground` | `#FFFFFF` / `#0E1022` | `#13152A` / `#F3F4FA` | select content, menus, dialogs, sheets |
-| `primary` / `primary-foreground` | `#3F4BA8` / `#FFFFFF` | `#A9B0FF` / `#0B0C1A` | accent: active tab, links, icons, sparkline (on `card`: 7.55:1 light / 9.29:1 dark) |
+| `card` / `card-foreground` | `#FFFFFF` / `#0E1022` | `#121428` / `#F3F4FA` | cards and grouped lists (solid form) |
+| `popover` / `popover-foreground` | `#FFFFFF` / `#0E1022` | `#181B31` / `#F3F4FA` | select content, menus, dialogs, sheets |
+| `primary` / `primary-foreground` | `#3F4BA8` / `#FFFFFF` | `#A9B0FF` / `#0B0C1A` | accent: active tab, links, icons, sparkline (on `card`: 7.55:1 light / 8.94:1 dark) |
 | `secondary` / `secondary-foreground` | `#ECEDF3` / `#0E1022` | `#1A1D33` / `#F3F4FA` | secondary buttons, chips, sign toggle |
 | `muted` / `muted-foreground` | `#ECEDF3` / `#5A5F78` | `#0E1020` / `#9A9FB8` | tab track, skeleton / meta text, captions (on `muted`: 5.38:1 light / 7.21:1 dark) |
 | `accent` / `accent-foreground` | `#ECEDF6` / `#3F4BA8` | `#202136` / `#A9B0FF` | pressed ghost/outline, selected item, active tab pill |
@@ -36,17 +36,21 @@ surfaces they are used on.
 | `chart-1` … `chart-5` | `#3F4BA8` `#0B7A68` `#A15C07` `#0369A1` `#BE185D` | `#A9B0FF` `#5FD8BE` `#F5C26B` `#7CC4F5` `#F59AC0` | charts |
 | `income` | `#0B7A68` | `#5FD8BE` | income amounts (with `+`) |
 | `expense` | `#0E1022` | `#F3F4FA` | expense amounts: same as `foreground`, marked by the `−` sign, not by red |
-| `subtle-foreground` | `#686D86` | `#8A8FA8` | placeholders; only on `card` / `background` (light 5.10:1 / 4.68:1, dark 5.90:1 / 6.26:1) |
+| `subtle-foreground` | `#686D86` | `#8A8FA8` | placeholders; only on `card` / `background` (light 5.10:1 / 4.68:1, dark 5.69:1 / 6.26:1) |
 | `surface-raised` | `#FFFFFF` | `#1E2140` | active tab trigger, switch thumb |
 | `surface-inset` | `#F6F7FA` | `rgba(255,255,255,0.03)` | stat tiles inside a card |
 | `surface-ended` | `#EEF0F5` | `#0B0C17` | ended / archived rows (dashed `border`) |
-| `card-gradient-from` → `card-gradient-to` | `#FFFFFF` → `#FBFBFD` | `#13152A` → `#0D0E1B` | card surface, top → bottom |
+| `card-gradient-from` → `card-gradient-to` | `#FFFFFF` → `#FBFBFD` | `#171A30` → `#121428` | card surface, top → bottom |
 | `primary-gradient-from` → `primary-gradient-to` | `#5461C8` → `#3F4BA8` | `#B4BAFF` → `#8E97F5` | primary button and add button |
 | `glass-surface` / `glass-border` | `rgba(255,255,255,0.78)` / `rgba(14,16,34,0.07)` | `rgba(18,20,38,0.72)` / `rgba(255,255,255,0.09)` | floating tab bar |
-| `background-glow` | transparent | `rgba(88,101,242,0.20)` | radial glow at the top of dark screens and in the summary card |
-| `glow` | `rgba(14,16,34,0.12)` | `rgba(88,101,242,0.35)` | card elevation: shadow in light, indigo glow in dark |
-| `glow-primary` | `rgba(63,75,168,0.55)` | `rgba(142,151,245,0.65)` | primary button elevation |
-| `shadow-ambient` / `shadow-floating` | `rgba(14,16,34,0.04)` / `rgba(14,16,34,0.18)` | transparent / `rgba(0,0,0,0.80)` | contact shadow / floating surfaces |
+| `background-glow` | transparent | `rgba(88,101,242,0.06)` | faint radial glow at the top of dark screens |
+| `summary-glow` | `rgba(63,75,168,0.07)` | `rgba(124,134,247,0.08)` | radial accent inside the summary card |
+| `empty-state-glow` | `rgba(63,75,168,0.16)` | `rgba(169,176,255,0.14)` | halo behind the empty-state illustration |
+| `glow` | `rgba(14,16,34,0.12)` | transparent | card elevation: soft shadow in light, none in dark |
+| `glow-primary` | `rgba(63,75,168,0.55)` | `rgba(142,151,245,0.28)` | primary button elevation (the only glow in dark) |
+| `highlight-primary` | `rgba(255,255,255,0.30)` | `rgba(255,255,255,0.30)` | 1 pt inner top highlight on the primary button |
+| `shadow-ambient` / `shadow-floating` | `rgba(14,16,34,0.04)` / `rgba(14,16,34,0.18)` | `rgba(0,0,0,0.40)` / `rgba(0,0,0,0.45)` | contact shadow / floating surfaces |
+| `shadow-sm` | `rgba(14,16,34,0.08)` | `rgba(14,16,34,0.08)` | second layer of `elevation/sm` |
 | `highlight` | `#FFFFFF` | `rgba(255,255,255,0.07)` | 1 pt inner top highlight on cards and glass |
 | `scrim` | `rgba(14,16,34,0.40)` | `rgba(0,0,0,0.60)` | behind dialogs and sheets |
 | `category-salary` · `-housing` · `-energy` · `-internet` · `-health` · `-transport` · `-ended` | `#0B7A68` `#3F4BA8` `#A15C07` `#0369A1` `#BE185D` `#6D28D9` `#5A5F78` | `#5FD8BE` `#A9B0FF` `#F5C26B` `#7CC4F5` `#F59AC0` `#C3A6FF` `#9A9FB8` | category icon; its container is the same colour at 14 % |
@@ -102,10 +106,14 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
       --color-glass-surface: rgba(255, 255, 255, 0.78);
       --color-glass-border: rgba(14, 16, 34, 0.07);
       --color-background-glow: rgba(88, 101, 242, 0);
+      --color-summary-glow: rgba(63, 75, 168, 0.07);
+      --color-empty-state-glow: rgba(63, 75, 168, 0.16);
       --color-glow: rgba(14, 16, 34, 0.12);
       --color-glow-primary: rgba(63, 75, 168, 0.55);
+      --color-highlight-primary: rgba(255, 255, 255, 0.3);
       --color-shadow-ambient: rgba(14, 16, 34, 0.04);
       --color-shadow-floating: rgba(14, 16, 34, 0.18);
+      --color-shadow-sm: rgba(14, 16, 34, 0.08);
       --color-highlight: #ffffff;
       --color-scrim: rgba(14, 16, 34, 0.4);
       --color-category-salary: #0b7a68;
@@ -119,9 +127,9 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
     @variant dark {
       --color-background: #07080f;
       --color-foreground: #f3f4fa;
-      --color-card: #0e1020;
+      --color-card: #121428;
       --color-card-foreground: #f3f4fa;
-      --color-popover: #13152a;
+      --color-popover: #181b31;
       --color-popover-foreground: #f3f4fa;
       --color-primary: #a9b0ff;
       --color-primary-foreground: #0b0c1a;
@@ -148,17 +156,21 @@ tokens in the same order. When the new UI lands, this block replaces the Indigo 
       --color-surface-raised: #1e2140;
       --color-surface-inset: rgba(255, 255, 255, 0.03);
       --color-surface-ended: #0b0c17;
-      --color-card-gradient-from: #13152a;
-      --color-card-gradient-to: #0d0e1b;
+      --color-card-gradient-from: #171a30;
+      --color-card-gradient-to: #121428;
       --color-primary-gradient-from: #b4baff;
       --color-primary-gradient-to: #8e97f5;
       --color-glass-surface: rgba(18, 20, 38, 0.72);
       --color-glass-border: rgba(255, 255, 255, 0.09);
-      --color-background-glow: rgba(88, 101, 242, 0.2);
-      --color-glow: rgba(88, 101, 242, 0.35);
-      --color-glow-primary: rgba(142, 151, 245, 0.65);
-      --color-shadow-ambient: rgba(0, 0, 0, 0);
-      --color-shadow-floating: rgba(0, 0, 0, 0.8);
+      --color-background-glow: rgba(88, 101, 242, 0.06);
+      --color-summary-glow: rgba(124, 134, 247, 0.08);
+      --color-empty-state-glow: rgba(169, 176, 255, 0.14);
+      --color-glow: rgba(88, 101, 242, 0);
+      --color-glow-primary: rgba(142, 151, 245, 0.28);
+      --color-highlight-primary: rgba(255, 255, 255, 0.3);
+      --color-shadow-ambient: rgba(0, 0, 0, 0.4);
+      --color-shadow-floating: rgba(0, 0, 0, 0.45);
+      --color-shadow-sm: rgba(14, 16, 34, 0.08);
       --color-highlight: rgba(255, 255, 255, 0.07);
       --color-scrim: rgba(0, 0, 0, 0.6);
       --color-category-salary: #5fd8be;
@@ -225,15 +237,18 @@ Effect styles in Figma, with colours and offsets bound to Theme variables so the
 
 | Effect style | Light | Dark |
 | --- | --- | --- |
-| `elevation/card` | `0 1 2 shadow-ambient` + `0 8 24 −10 glow` + 1 pt inner `highlight` | `0 24 48 −24 glow` (indigo glow) + inner `highlight` |
-| `elevation/primary` | `0 6 16 −6 glow-primary` | `0 8 24 −8 glow-primary` |
-| `elevation/floating` | `0 10 30 −8 shadow-floating` + inner `highlight` | `0 16 40 −12 shadow-floating` + inner `highlight` |
-| `elevation/sm` | `0 1 2` + `0 2 6 −2` soft shadow | same, nearly invisible |
+| `elevation/card` | `0 1 2 shadow-ambient` + `0 8 24 −10 glow` + 1 pt inner `highlight` | `0 1 2 shadow-ambient` + inner `highlight`, no glow |
+| `elevation/primary` | `0 6 16 −6 glow-primary` + 1 pt inner `highlight-primary` | `0 4 12 −6 glow-primary` + inner `highlight-primary` |
+| `elevation/floating` | `0 10 30 −8 shadow-floating` + inner `highlight` | `0 8 24 −8 shadow-floating` + inner `highlight` |
+| `elevation/floating-glass` | `elevation/floating` + 24 pt background blur | same, with the dark values |
+| `elevation/sm` | `0 1 2 shadow-ambient` + `0 2 6 −2 shadow-sm` | same, with the dark values |
 | `focus-ring` | 3 pt spread in `ring` at 30 % | same |
 | `glass-blur` | 24 pt background blur | same |
 
-In React Native, `boxShadow` takes these CSS-style values on iOS and Android. Keep the glow tasteful: one glowing
-element per area, never on list rows.
+In dark mode, depth comes from the surface steps (`background` < `card` < `popover` / `surface-raised`), the 1 pt
+`border` (white at 8 %) and the inner `highlight`, plus small neutral shadows. Cards, lists and sheets have no glow;
+the primary button is the only element with a (small) glow. In React Native, `boxShadow` takes these CSS-style values
+on iOS and Android.
 
 ## Glass tab bar
 
