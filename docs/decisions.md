@@ -4,6 +4,13 @@ One log of the owner's answers given in issue/PR comments or chat. **Newest firs
 in summer, UTC+1 in winter). Only verbatim owner answers count as confirmation; owner input that is not yet a decision
 is marked as input. Stack decisions with a longer rationale live in the [ADRs](decisions/README.md). Add new entries at the top.
 
+## 2026-10-23 18:40 (Europe/Warsaw): expense amounts are red
+
+- **Decision:** negative (expense) amounts use a calm red `expense` token (light `#B03A48`, dark `#EE8796`, AA on cards and
+  popovers), separate from `destructive`. Asked by the owner on the Month tab: "a czy kwoty na minusie mogą być czerwone?"
+  (chat, 2026-10-23 18:40); decided: yes. Values in [design/tokens.md](design/tokens.md).
+- **Issues:** [#258](https://github.com/alimek/budget-lens-offline/issues/258), [#259](https://github.com/alimek/budget-lens-offline/issues/259)
+
 ## 2026-10-23 16:15 (Europe/Warsaw): the first month's opening balance is 0 until the first private account
 
 - **Question:** where does the first month's opening balance come from, now that onboarding doesn't ask for it?
