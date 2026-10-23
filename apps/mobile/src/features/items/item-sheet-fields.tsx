@@ -165,7 +165,7 @@ function AmountField({ fields }: { readonly fields: SheetFields }) {
         code: form.currency,
         name: tShared(`currency.names.${form.currency}`),
       })}
-      accessibilityLabel={amountLabel(form, t, tShared)}
+      kindLabel={tShared(amountKind(form.kind))}
     />
   );
 }
@@ -443,10 +443,11 @@ function currencyHint(
   return currency === base ? undefined : tShared("amountInput.hint.noRate");
 }
 
-/** The accessible name of the amount: the kind and the amount typed (#61, `a11y.value`). */
-function amountLabel(form: ItemFormState, t: TFunction<"items">, tShared: TFunction): string {
-  const kind = t(form.kind === "income" ? "form.income" : "form.expense");
-  return tShared("amountInput.a11y.value", { kind, amount: form.amountText });
+/** The kind the amount field announces with its label (#61). */
+function amountKind(
+  kind: ItemType,
+): "amountInput.a11y.kindExpense" | "amountInput.a11y.kindIncome" {
+  return kind === "income" ? "amountInput.a11y.kindIncome" : "amountInput.a11y.kindExpense";
 }
 
 /** The currencies of the picker, in the order of #61 decision 4, labelled "PLN · Polish zloty". */

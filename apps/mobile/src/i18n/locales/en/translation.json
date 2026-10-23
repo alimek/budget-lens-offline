@@ -167,10 +167,8 @@
       "enterRate": "Enter rate manually"
     },
     "a11y": {
-      "value": "{{kind}}, {{amount}}",
       "kindExpense": "expense",
-      "kindIncome": "income",
-      "kindBalance": "balance"
+      "kindIncome": "income"
     }
   },
   "boot": {

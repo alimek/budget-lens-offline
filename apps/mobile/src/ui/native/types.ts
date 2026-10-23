@@ -131,8 +131,11 @@ export interface AmountInputProps {
   doneLabel: string;
   /** Accessible name of the currency control, read with its value (#61 `currencyA11y`). */
   currencyAccessibilityLabel?: string | undefined;
-  /** Accessible name of the amount itself, e.g. "expense, 240,00" (#61 `a11y.value`). */
-  accessibilityLabel?: string | undefined;
+  /**
+   * Translated kind of the amount ("expense", "income"), which the field announces with its label so the value
+   * is heard as a sentence (#61 `a11y`): "Amount, expense, 240,00". Omitted for a plain amount field.
+   */
+  kindLabel?: string | undefined;
   /** Test ID of the field; the currency control takes `<testID>-currency`. */
   testID: string;
 }

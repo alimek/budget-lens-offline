@@ -117,7 +117,7 @@ function AmountField({
       colors={colors}
       modifiers={[
         fillMaxWidth(),
-        semantics({ contentDescription: props.accessibilityLabel ?? props.label }),
+        semantics({ contentDescription: fieldDescription(props) }),
         testIDModifier(props.testID),
       ]}
     >
@@ -131,6 +131,16 @@ function AmountField({
       <FieldError text={props.error} testID={`${props.testID}-error`} />
     </OutlinedTextField>
   );
+}
+
+/**
+ * What the field announces: its name, the kind of amount and the amount itself, as one sentence (#61). Compose
+ * reads the content description instead of the text of a field that has one, so the value belongs in it.
+ */
+function fieldDescription(props: AmountInputProps): string {
+  return [props.label, props.kindLabel, props.value]
+    .filter((part) => part !== undefined && part !== "")
+    .join(", ");
 }
 
 /** The empty field's placeholder, which Compose only renders when the caller gives one. */

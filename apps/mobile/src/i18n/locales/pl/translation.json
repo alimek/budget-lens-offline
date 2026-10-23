@@ -169,10 +169,8 @@
       "enterRate": "Wpisz kurs ręcznie"
     },
     "a11y": {
-      "value": "{{kind}}, {{amount}}",
       "kindExpense": "wydatek",
-      "kindIncome": "przychód",
-      "kindBalance": "saldo"
+      "kindIncome": "przychód"
     }
   },
   "boot": {

@@ -11,7 +11,6 @@ import {
 import {
   accessibilityHint,
   accessibilityLabel,
-  accessibilityValue,
   keyboardType,
   monospacedDigit,
   multilineTextAlignment,
@@ -133,7 +132,7 @@ function AmountValue({ props, text, onTextChange, field, accent }: AmountValuePr
           />
           <Toolbar.Content>
             <ToolbarItem placement="keyboard">
-              <Button label={props.doneLabel} onPress={done} />
+              <Button label={props.doneLabel} onPress={done} testID={`${props.testID}-done`} />
             </ToolbarItem>
           </Toolbar.Content>
         </Toolbar>
@@ -157,6 +156,14 @@ function reformat(
   return formatted;
 }
 
+/**
+ * The name the field answers to: its label and the kind of amount it holds, so the value the system reads out is
+ * the sentence of #61 – "Amount, expense, 240,00" – while the field's own value stays the amount as typed.
+ */
+function fieldName(props: AmountInputProps): string {
+  return props.kindLabel === undefined ? props.label : `${props.label}, ${props.kindLabel}`;
+}
+
 /** The field's modifiers: the keyboard of the currency's digits, the trailing tabular value, its name (#61). */
 function fieldModifiers(props: AmountInputProps, accent: string): FieldModifiers {
   return [
@@ -166,8 +173,7 @@ function fieldModifiers(props: AmountInputProps, accent: string): FieldModifiers
     multilineTextAlignment("trailing"),
     monospacedDigit(),
     tint(accent),
-    accessibilityLabel(props.label),
-    accessibilityValue(props.accessibilityLabel ?? ""),
+    accessibilityLabel(fieldName(props)),
     accessibilityHint(props.error ?? ""),
   ];
 }
