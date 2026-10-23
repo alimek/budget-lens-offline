@@ -45,11 +45,10 @@ first launch guides the user through a short onboarding.
   On Android onboarding additionally has one **"Enable backup to Google Drive"** step (Google Sign-In consent for
   `appDataFolder`); iOS needs no prompt ([owner review #48](https://github.com/alimek/budget-lens-offline/issues/48#issuecomment-6263841345)). It looks up an existing backup in the user's own iCloud / Google Drive
   ([#116](https://github.com/alimek/budget-lens-offline/issues/116)).
-- **Open question (pending owner answer):** where the first month's balance comes from. Onboarding
-  ([#111](https://github.com/alimek/budget-lens-offline/issues/111)) creates the first month with `createInitialMonth(month, openingBalance)`
-  ([month-closing](../domain/month-closing.md)), and the source of that `openingBalance` is undefined now that
-  onboarding does not ask for it. Proposal, not decided: `0`, with the amounts of the private accounts
-  ([#66](https://github.com/alimek/budget-lens-offline/issues/66)) added later in the app.
+- The first month's opening balance is **0**: onboarding ([#111](https://github.com/alimek/budget-lens-offline/issues/111)) creates the first month with
+  `createInitialMonth(month, 0)` ([month-closing](../domain/month-closing.md)). It stays 0 until the user adds at least
+  one private account with its current amount ([#66](https://github.com/alimek/budget-lens-offline/issues/66)); from then on the balance is calculated from the sum of
+  the account amounts ([owner decision, 2026-10-23 16:15](../decisions.md)).
 - Main navigation: five Expo Router `NativeTabs`: **Overview** (the Dashboard, first and default), Month, Forecast,
   Items, Settings ([#36 Q1](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6263044426); [Variant A, chosen by @alimek](https://github.com/alimek/budget-lens-offline/issues/36#issuecomment-6276141530)). **Savings** is not a tab: it is a
   screen pushed from the Savings card on Overview. "Add item" is a toolbar `+` (iOS) / FAB (Android), never a tab.
